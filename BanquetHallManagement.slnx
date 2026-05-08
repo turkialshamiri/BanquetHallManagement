@@ -1,0 +1,23 @@
+<Solution>
+    <Configurations>
+        <Platform Name="Any CPU" />
+    </Configurations>
+    <Folder Name="/src/">
+        <Project Path="src/BanquetHallManagement.Domain/BanquetHallManagement.Domain.csproj" />
+        <Project Path="src/BanquetHallManagement.Application/BanquetHallManagement.Application.csproj" />
+        <Project Path="src/BanquetHallManagement.EntityFrameworkCore/BanquetHallManagement.EntityFrameworkCore.csproj" />
+        <Project Path="src/BanquetHallManagement.Domain.Shared/BanquetHallManagement.Domain.Shared.csproj" />
+        <Project Path="src/BanquetHallManagement.Application.Contracts/BanquetHallManagement.Application.Contracts.csproj" />
+        <Project Path="src/BanquetHallManagement.HttpApi/BanquetHallManagement.HttpApi.csproj" />
+        <Project Path="src/BanquetHallManagement.HttpApi.Client/BanquetHallManagement.HttpApi.Client.csproj" />
+        <Project Path="src/BanquetHallManagement.HttpApi.Host/BanquetHallManagement.HttpApi.Host.csproj" />
+        <Project Path="src/BanquetHallManagement.DbMigrator/BanquetHallManagement.DbMigrator.csproj" />
+    </Folder>
+    <Folder Name="/test/">
+        <Project Path="test/BanquetHallManagement.Application.Tests/BanquetHallManagement.Application.Tests.csproj" />
+        <Project Path="test/BanquetHallManagement.EntityFrameworkCore.Tests/BanquetHallManagement.EntityFrameworkCore.Tests.csproj" />
+        <Project Path="test/BanquetHallManagement.TestBase/BanquetHallManagement.TestBase.csproj" />
+        <Project Path="test/BanquetHallManagement.Domain.Tests/BanquetHallManagement.Domain.Tests.csproj" />
+        <Project Path="test/BanquetHallManagement.HttpApi.Client.ConsoleTestApp/BanquetHallManagement.HttpApi.Client.ConsoleTestApp.csproj" />
+    </Folder>
+</Solution>

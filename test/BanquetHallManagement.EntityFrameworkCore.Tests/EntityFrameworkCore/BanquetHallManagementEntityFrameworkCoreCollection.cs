@@ -1,0 +1,9 @@
+﻿using Xunit;
+
+namespace BanquetHallManagement.EntityFrameworkCore;
+
+[CollectionDefinition(BanquetHallManagementTestConsts.CollectionDefinitionName)]
+public class BanquetHallManagementEntityFrameworkCoreCollection : ICollectionFixture<BanquetHallManagementEntityFrameworkCoreFixture>
+{
+
+}

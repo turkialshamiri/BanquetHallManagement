@@ -1,0 +1,109 @@
+{
+  "template": "app",
+  "imports": {
+    "Volo.Abp.LeptonXLiteTheme": {
+      "version": "5.3.0",
+      "isInstalled": true,
+      "creationTime": "05/08/2026 14:27:34 +00:00"
+    },
+    "Volo.Abp.Account": {
+      "version": "10.3.0",
+      "isInstalled": true,
+      "creationTime": "05/08/2026 14:27:34 +00:00"
+    },
+    "Volo.Abp.OpenIddict": {
+      "version": "10.3.0",
+      "isInstalled": true,
+      "creationTime": "05/08/2026 14:27:34 +00:00"
+    },
+    "Volo.Abp.Identity": {
+      "version": "10.3.0",
+      "isInstalled": true,
+      "creationTime": "05/08/2026 14:27:34 +00:00"
+    },
+    "Volo.Abp.TenantManagement": {
+      "version": "10.3.0",
+      "isInstalled": true,
+      "creationTime": "05/08/2026 14:27:34 +00:00"
+    },
+    "Volo.Abp.SettingManagement": {
+      "version": "10.3.0",
+      "isInstalled": true,
+      "creationTime": "05/08/2026 14:27:34 +00:00"
+    },
+    "Volo.Abp.PermissionManagement": {
+      "version": "10.3.0",
+      "isInstalled": true,
+      "creationTime": "05/08/2026 14:27:34 +00:00"
+    },
+    "Volo.Abp.FeatureManagement": {
+      "version": "10.3.0",
+      "isInstalled": true,
+      "creationTime": "05/08/2026 14:27:34 +00:00"
+    }
+  },
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {}
+    }
+  },
+  "packages": {
+    "BanquetHallManagement.Application": {
+      "path": "src/BanquetHallManagement.Application/BanquetHallManagement.Application.abppkg",
+      "folder": "src"
+    },
+    "BanquetHallManagement.Application.Tests": {
+      "path": "test/BanquetHallManagement.Application.Tests/BanquetHallManagement.Application.Tests.abppkg",
+      "folder": "test"
+    },
+    "BanquetHallManagement.Domain.Shared": {
+      "path": "src/BanquetHallManagement.Domain.Shared/BanquetHallManagement.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "BanquetHallManagement.Application.Contracts": {
+      "path": "src/BanquetHallManagement.Application.Contracts/BanquetHallManagement.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "BanquetHallManagement.HttpApi": {
+      "path": "src/BanquetHallManagement.HttpApi/BanquetHallManagement.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "BanquetHallManagement.HttpApi.Client": {
+      "path": "src/BanquetHallManagement.HttpApi.Client/BanquetHallManagement.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "BanquetHallManagement.EntityFrameworkCore.Tests": {
+      "path": "test/BanquetHallManagement.EntityFrameworkCore.Tests/BanquetHallManagement.EntityFrameworkCore.Tests.abppkg",
+      "folder": "test"
+    },
+    "BanquetHallManagement.EntityFrameworkCore": {
+      "path": "src/BanquetHallManagement.EntityFrameworkCore/BanquetHallManagement.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "BanquetHallManagement.TestBase": {
+      "path": "test/BanquetHallManagement.TestBase/BanquetHallManagement.TestBase.abppkg",
+      "folder": "test"
+    },
+    "BanquetHallManagement.Domain.Tests": {
+      "path": "test/BanquetHallManagement.Domain.Tests/BanquetHallManagement.Domain.Tests.abppkg",
+      "folder": "test"
+    },
+    "BanquetHallManagement.HttpApi.Client.ConsoleTestApp": {
+      "path": "test/BanquetHallManagement.HttpApi.Client.ConsoleTestApp/BanquetHallManagement.HttpApi.Client.ConsoleTestApp.abppkg",
+      "folder": "test"
+    },
+    "BanquetHallManagement.DbMigrator": {
+      "path": "src/BanquetHallManagement.DbMigrator/BanquetHallManagement.DbMigrator.abppkg",
+      "folder": "src"
+    },
+    "BanquetHallManagement.HttpApi.Host": {
+      "path": "src/BanquetHallManagement.HttpApi.Host/BanquetHallManagement.HttpApi.Host.abppkg",
+      "folder": "src"
+    },
+    "BanquetHallManagement.Domain": {
+      "path": "src/BanquetHallManagement.Domain/BanquetHallManagement.Domain.abppkg",
+      "folder": "src"
+    }
+  }
+}

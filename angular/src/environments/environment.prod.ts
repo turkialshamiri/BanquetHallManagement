@@ -1,0 +1,35 @@
+import { Environment } from '@abp/ng.core';
+
+const baseUrl = 'http://localhost:4200';
+
+const oAuthConfig = {
+  issuer: 'https://localhost:44324/',
+  redirectUri: baseUrl,
+  clientId: 'BanquetHallManagement_App',
+  responseType: 'code',
+  scope: 'offline_access BanquetHallManagement',
+  requireHttps: true,
+};
+
+export const environment = {
+  production: true,
+  application: {
+    baseUrl,
+    name: 'BanquetHallManagement',
+  },
+  oAuthConfig,
+  apis: {
+    default: {
+      url: 'https://localhost:44324',
+      rootNamespace: 'BanquetHallManagement',
+    },
+    AbpAccountPublic: {
+      url: oAuthConfig.issuer,
+      rootNamespace: 'AbpAccountPublic',
+    },
+  },
+  remoteEnv: {
+    url: '/getEnvConfig',
+    mergeStrategy: 'deepmerge'
+  }
+} as Environment;

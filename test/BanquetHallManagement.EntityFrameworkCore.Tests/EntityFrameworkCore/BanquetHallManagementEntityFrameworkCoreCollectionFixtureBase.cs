@@ -1,0 +1,9 @@
+﻿using BanquetHallManagement.EntityFrameworkCore;
+using Xunit;
+
+namespace BanquetHallManagement.EntityFrameworkCore;
+
+public class BanquetHallManagementEntityFrameworkCoreCollectionFixtureBase : ICollectionFixture<BanquetHallManagementEntityFrameworkCoreFixture>
+{
+
+}
