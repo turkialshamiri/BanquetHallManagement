@@ -20,8 +20,5 @@ public partial class CreateUpdateHallDtoToHallMapper
 {
     public override partial Hall Map(CreateUpdateHallDto source);
 
-    public override partial void Map(
-        CreateUpdateHallDto source,
-        Hall destination
-    );
+    public override partial void Map( CreateUpdateHallDto source, Hall destination);
 }
