@@ -17,10 +17,13 @@ namespace BanquetHallManagement;
     typeof(AbpFeatureManagementApplicationModule),
     typeof(AbpIdentityApplicationModule),
     typeof(AbpAccountApplicationModule),
+
     typeof(AbpTenantManagementApplicationModule),
     typeof(AbpSettingManagementApplicationModule)
     )]
 public class BanquetHallManagementApplicationModule : AbpModule
 {
+    //context.Services.AddMapperly();
 
 }
+
