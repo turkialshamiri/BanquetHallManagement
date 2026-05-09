@@ -31,6 +31,8 @@ public class BanquetHallManagementDbContext :
     public DbSet<Hall> Halls { get; set; }
     public DbSet<Service> Services { get; set; }
     public DbSet<Customer> Customers { get; set; }
+    public DbSet<Reservation> Reservations { get; set; }
+    public DbSet<ReservationService> ReservationServices { get; set; }
     #region Entities from the modules
 
     /* Notice: We only implemented IIdentityProDbContext and ISaasDbContext
