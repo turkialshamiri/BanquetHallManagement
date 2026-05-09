@@ -1,3 +1,4 @@
+using BanquetHallManagement.Entities;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
@@ -28,6 +29,7 @@ public class BanquetHallManagementDbContext :
 {
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
     public DbSet<Hall> Halls { get; set; }
+    public DbSet<Service> Services { get; set; }
 
     #region Entities from the modules
 
