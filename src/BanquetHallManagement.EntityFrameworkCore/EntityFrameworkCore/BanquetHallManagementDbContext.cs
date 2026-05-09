@@ -30,7 +30,7 @@ public class BanquetHallManagementDbContext :
     /* Add DbSet properties for your Aggregate Roots / Entities here. */
     public DbSet<Hall> Halls { get; set; }
     public DbSet<Service> Services { get; set; }
-
+    public DbSet<Customer> Customers { get; set; }
     #region Entities from the modules
 
     /* Notice: We only implemented IIdentityProDbContext and ISaasDbContext
