@@ -1,5 +1,6 @@
-﻿using BanquetHallManagement.Entities;
-using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
+﻿using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
+using BanquetHallManagement.ReservationServices;
+using BanquetHallManagement.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,97 +13,241 @@ using Volo.Abp.Domain.Repositories;
 namespace BanquetHallManagement.Reservations
 {
     public class ReservationAppService :
-        CrudAppService<
-            Reservation,
-            ReservationDto,
-            Guid,
-            PagedAndSortedResultRequestDto,
-            CreateUpdateReservationDto>,
+        ApplicationService,
         IReservationAppService
     {
-        private readonly IRepository<Hall, Guid> _hallRepo;
-        private readonly IRepository<Service, Guid> _serviceRepo;
-        private readonly IRepository<ReservationService, Guid> _reservationServiceRepo;
+        private readonly IRepository<Reservation, Guid> _reservationRepository;
+
+        private readonly IRepository<Hall, Guid> _hallRepository;
+
+        private readonly IRepository<Service, Guid> _serviceRepository;
+
+        private readonly IRepository<ReservationService, Guid>
+            _reservationServiceRepository;
 
         public ReservationAppService(
-            IRepository<Reservation, Guid> repository,
-            IRepository<Hall, Guid> hallRepo,
-            IRepository<Service, Guid> serviceRepo)
-            : base(repository)
+            IRepository<Reservation, Guid> reservationRepository,
+            IRepository<Hall, Guid> hallRepository,
+            IRepository<Service, Guid> serviceRepository,
+            IRepository<ReservationService, Guid> reservationServiceRepository)
         {
-            _hallRepo = hallRepo;
-            _serviceRepo = serviceRepo;
+            _reservationRepository = reservationRepository;
+
+            _hallRepository = hallRepository;
+
+            _serviceRepository = serviceRepository;
+
+            _reservationServiceRepository =
+                reservationServiceRepository;
         }
 
-        public override async Task<ReservationDto> CreateAsync(CreateUpdateReservationDto input)
+        public async Task<ReservationDto> GetAsync(Guid id)
         {
-            //  جلب القاعة
-            var hall = await _hallRepo.GetAsync(input.HallId);
+            var reservation =
+                await _reservationRepository.GetAsync(id);
+
+            return ObjectMapper.Map<
+                Reservation,
+                ReservationDto>(reservation);
+        }
+
+        public async Task<PagedResultDto<ReservationDto>>
+            GetListAsync(PagedAndSortedResultRequestDto input)
+        {
+            var query =
+                await _reservationRepository.GetQueryableAsync();
+
+            var totalCount = query.Count();
+
+            var reservations = query
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount)
+                .ToList();
+
+            return new PagedResultDto<ReservationDto>
+            {
+                TotalCount = totalCount,
+
+                Items = ObjectMapper.Map<
+                    List<Reservation>,
+                    List<ReservationDto>>(reservations)
+            };
+        }
+
+        public async Task<ReservationDto> CreateAsync(
+            CreateUpdateReservationDto input)
+        {
+            // =========================
+            // Validation
+            // =========================
+
+            if (input.StartTime >= input.EndTime)
+            {
+                throw new UserFriendlyException(
+                    "وقت البداية يجب أن يكون أقل من وقت النهاية");
+            }
+
+            if (input.GuestsCount <= 0)
+            {
+                throw new UserFriendlyException(
+                    "عدد الضيوف يجب أن يكون أكبر من صفر");
+            }
+
+            // =========================
+            // Hall Validation
+            // =========================
+
+            var hall =
+                await _hallRepository.GetAsync(input.HallId);
 
             if (hall == null)
-                throw new UserFriendlyException("Hall not found");
+            {
+                throw new UserFriendlyException(
+                    "القاعة غير موجودة");
+            }
 
-            // منع التعارض (Booking Conflict)
-            var query = await Repository.GetQueryableAsync();
+            if (input.GuestsCount > hall.Capacity)
+            {
+                throw new UserFriendlyException(
+                    "عدد الضيوف يتجاوز سعة القاعة");
+            }
+
+            // =========================
+            // Conflict Validation
+            // =========================
+
+            var query =
+                await _reservationRepository.GetQueryableAsync();
 
             var hasConflict = query.Any(r =>
                 r.HallId == input.HallId &&
-                r.EventDate == input.EventDate &&
+                r.EventDate.Date == input.EventDate.Date &&
                 r.Status != "Cancelled" &&
-                (input.StartTime < r.EndTime &&
-                 input.EndTime > r.StartTime)
+                input.StartTime < r.EndTime &&
+                input.EndTime > r.StartTime
             );
 
             if (hasConflict)
             {
-                throw new UserFriendlyException("هذه القاعة محجوزة في هذا الوقت");
+                throw new UserFriendlyException(
+                    "هذه القاعة محجوزة بالفعل في هذا الوقت");
             }
 
-            //  إنشاء الحجز
+            // =========================
+            // Calculate Total Price
+            // =========================
+
+            var reservationHours =
+                (input.EndTime - input.StartTime).TotalHours;
+
+            decimal totalPrice =
+                (decimal)reservationHours *
+                hall.PricePerHour;
+
+            // =========================
+            // Create Reservation
+            // =========================
+
             var reservation = new Reservation
             {
                 HallId = input.HallId,
+
                 CustomerId = input.CustomerId,
+
                 EventDate = input.EventDate,
+
                 StartTime = input.StartTime,
+
                 EndTime = input.EndTime,
+
                 GuestsCount = input.GuestsCount,
-                Status = "Pending"
+
+                Status = "Pending",
+
+                TotalPrice = 0
             };
 
-            //  حساب السعر الأساسي (Hall)
-            var hours = (input.EndTime - input.StartTime).TotalHours;
-            var total = (decimal)hours * hall.PricePerHour;
+            await _reservationRepository.InsertAsync(
+                reservation,
+                autoSave: true);
 
-            //  إضافة الخدمات
-            if (input.ServiceIds != null && input.ServiceIds.Any())
+            // =========================
+            // Add Services
+            // =========================
+
+            if (input.ServiceIds != null &&
+                input.ServiceIds.Any())
             {
-                var services = await _serviceRepo.GetListAsync(
-                    s => input.ServiceIds.Contains(s.Id)
-                );
+                var services =
+                    await _serviceRepository.GetListAsync(
+                        s => input.ServiceIds.Contains(s.Id));
 
-                total += services.Sum(s => s.Price);
+                totalPrice += services.Sum(s => s.Price);
 
-                //  (اختياري احترافي) ربط الخدمات بالحجز
                 foreach (var service in services)
                 {
-                    await _reservationServiceRepo.InsertAsync(
-                        new ReservationService
-                        {
-                            ReservationId = reservation.Id,
-                            ServiceId = service.Id
-                        }
-                    );
+                    await _reservationServiceRepository
+                        .InsertAsync(
+                            new ReservationService
+                            {
+                                ReservationId = reservation.Id,
+
+                                ServiceId = service.Id
+                            }
+                        );
                 }
             }
 
-            reservation.TotalPrice = total;
+            // =========================
+            // Update Total Price
+            // =========================
 
-            // حفظ الحجز
-            await Repository.InsertAsync(reservation);
+            reservation.TotalPrice = totalPrice;
 
-            // الإرجاع
-            return ObjectMapper.Map<Reservation, ReservationDto>(reservation);
+            await _reservationRepository.UpdateAsync(
+                reservation);
+
+            return ObjectMapper.Map<
+                Reservation,
+                ReservationDto>(reservation);
+        }
+
+        public async Task<ReservationDto> UpdateAsync(
+            Guid id,
+            CreateUpdateReservationDto input)
+        {
+            var reservation =
+                await _reservationRepository.GetAsync(id);
+
+            reservation.EventDate = input.EventDate;
+
+            reservation.StartTime = input.StartTime;
+
+            reservation.EndTime = input.EndTime;
+
+            reservation.GuestsCount = input.GuestsCount;
+
+            await _reservationRepository.UpdateAsync(
+                reservation);
+
+            return ObjectMapper.Map<
+                Reservation,
+                ReservationDto>(reservation);
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            var exists =
+                await _reservationRepository.AnyAsync(
+                    x => x.Id == id);
+
+            if (!exists)
+            {
+                throw new UserFriendlyException(
+                    "الحجز غير موجود");
+            }
+
+            await _reservationRepository.DeleteAsync(id);
         }
     }
 }

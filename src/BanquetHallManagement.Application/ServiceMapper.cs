@@ -1,5 +1,4 @@
-﻿using BanquetHallManagement.Entities;
-using BanquetHallManagement.Services;
+﻿using BanquetHallManagement.Services;
 using Riok.Mapperly.Abstractions;
 using Volo.Abp.Mapperly;
 

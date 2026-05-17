@@ -1,5 +1,4 @@
-﻿using BanquetHallManagement.Entities;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;

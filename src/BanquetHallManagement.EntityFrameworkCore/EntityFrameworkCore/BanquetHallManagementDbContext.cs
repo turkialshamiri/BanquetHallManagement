@@ -1,5 +1,13 @@
-using BanquetHallManagement.Entities;
+using BanquetHallManagement.Configurations.CustomerConfigurations;
+using BanquetHallManagement.Configurations.HallConfigurations;
+using BanquetHallManagement.Configurations.ReservationConfigurations;
+using BanquetHallManagement.Configurations.ReservationServiceConfigurations;
+using BanquetHallManagement.Configurations.ServiceConfigurations;
+using BanquetHallManagement.Customers;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
+using BanquetHallManagement.Reservations;
+using BanquetHallManagement.ReservationServices;
+using BanquetHallManagement.Services;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
@@ -83,7 +91,7 @@ public class BanquetHallManagementDbContext :
         builder.ConfigureOpenIddict();
         builder.ConfigureTenantManagement();
         builder.ConfigureBlobStoring();
-        
+
         /* Configure your own tables/entities inside here */
 
         //builder.Entity<YourEntity>(b =>
@@ -92,5 +100,12 @@ public class BanquetHallManagementDbContext :
         //    b.ConfigureByConvention(); //auto configure for the base class props
         //    //...
         //});
+
+
+        builder.ApplyConfiguration(new HallConfiguration());
+        builder.ApplyConfiguration(new ReservationConfiguration());
+        builder.ApplyConfiguration(new ReservationServiceConfiguration());
+        builder.ApplyConfiguration(new ServiceConfiguration());
+        builder.ApplyConfiguration(new CustomerConfiguration());
     }
 }

@@ -1,5 +1,4 @@
 ﻿using BanquetHallManagement.Customers;
-using BanquetHallManagement.Entities;
 using Riok.Mapperly.Abstractions;
 using System;
 using System.Collections.Generic;

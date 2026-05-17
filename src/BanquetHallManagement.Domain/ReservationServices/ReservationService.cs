@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Volo.Abp.Domain.Entities;
 
-namespace BanquetHallManagement.Entities
+namespace BanquetHallManagement.ReservationServices
 {
     public class ReservationService : Entity<Guid>
     {

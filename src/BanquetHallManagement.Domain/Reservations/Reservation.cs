@@ -1,9 +1,10 @@
-﻿using System;
+﻿using BanquetHallManagement.ReservationServices;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Volo.Abp.Domain.Entities.Auditing;
 
-namespace BanquetHallManagement.Entities
+namespace BanquetHallManagement.Reservations
 {
     public class Reservation : FullAuditedAggregateRoot<Guid>
     {

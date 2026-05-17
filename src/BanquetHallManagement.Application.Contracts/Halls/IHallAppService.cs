@@ -7,13 +7,18 @@ using Volo.Abp.Application.Services;
 
 namespace BanquetHallManagement.Halls
 {
-    public interface IHallAppService :
-        ICrudAppService<
-            HallDto,
-            Guid,
-            PagedAndSortedResultRequestDto,
-            CreateUpdateHallDto>
+    public interface IHallAppService : IApplicationService
     {
+        Task<HallDto> GetAsync(Guid id);
+
+        Task<PagedResultDto<HallDto>> GetListAsync(PagedAndSortedResultRequestDto input);
+
+        Task<HallDto> CreateAsync(CreateUpdateHallDto input);
+
+        Task<HallDto> UpdateAsync(Guid id, CreateUpdateHallDto input);
+
+        Task DeleteAsync(Guid id);
+
         Task<List<HallDto>> GetByStatusAsync(HallStatus status);
     }
 }
