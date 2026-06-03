@@ -1,6 +1,6 @@
 import { Environment } from '@abp/ng.core';
 
-const baseUrl = 'http://localhost:4200';
+const baseUrl = 'http://localhost:51666';
 
 const oAuthConfig = {
   issuer: 'https://localhost:44324/',
