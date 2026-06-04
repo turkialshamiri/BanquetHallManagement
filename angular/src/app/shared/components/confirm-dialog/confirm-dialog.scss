@@ -1,0 +1,87 @@
+.dialog-container {
+    padding: 24px;
+    text-align: center;
+    width: 400px;
+}
+
+.icon-wrapper {
+
+    width: 72px;
+    height: 72px;
+
+    margin: 0 auto 20px;
+
+    border-radius: 50%;
+
+    background: rgba(239, 68, 68, 0.12);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.icon-wrapper mat-icon {
+
+    color: var(--danger);
+
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+}
+
+h2 {
+
+    margin-bottom: 12px;
+
+    color: var(--text-primary);
+}
+
+p {
+
+    color: var(--text-secondary);
+
+    line-height: 1.7;
+
+    margin-bottom: 24px;
+}
+
+.actions {
+
+    display: flex;
+
+    gap: 12px;
+}
+
+.actions button {
+
+    flex: 1;
+
+    height: 44px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-weight: 600;
+}
+
+.cancel-btn {
+
+    background: #f1f5f9;
+
+    color: var(--text-primary);
+}
+
+.delete-btn {
+
+    background: var(--danger);
+
+    color: white;
+}
+
+.delete-btn:hover {
+
+    opacity: .9;
+}

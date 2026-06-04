@@ -1,0 +1,33 @@
+<div class="dialog-container">
+
+    <div class="icon-wrapper">
+        <mat-icon>delete</mat-icon>
+    </div>
+
+    <h2>{{ data.title }}</h2>
+
+    <p>
+        {{ data.message }}
+    </p>
+
+    <div class="actions">
+
+        <button
+            class="cancel-btn"
+            (click)="cancel()">
+
+            إلغاء
+
+        </button>
+
+        <button
+            class="delete-btn"
+            (click)="confirm()">
+
+            حذف
+
+        </button>
+
+    </div>
+
+</div>
