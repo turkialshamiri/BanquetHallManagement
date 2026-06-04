@@ -18,7 +18,13 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+     overflow-y: auto;
 }
+// .main-layout {
+//     flex: 1;
+//     height: 100vh;
+//     overflow-y: auto;
+// }
 
 .page-container {
     flex: 1;

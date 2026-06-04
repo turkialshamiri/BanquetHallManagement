@@ -1,0 +1,194 @@
+<div class="table-card">
+
+    <div class="table-header">
+
+        <div>
+
+            <h2>القاعات</h2>
+
+            <span>
+                جميع القاعات المسجلة بالنظام
+            </span>
+
+        </div>
+
+        <button class="add-btn">
+
+            + إضافة قاعة
+
+        </button>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>اسم القاعة</th>
+
+                    <th>الموقع</th>
+
+                    <th>السعة</th>
+
+                    <th>السعر / ساعة</th>
+
+                    <th>الحالة</th>
+
+                    <th>النوع</th>
+
+                    <th>تاريخ الإنشاء</th>
+
+                    <th>العمليات</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @if(halls.length > 0){
+
+                    @for(hall of halls; track hall.id){
+
+                        <tr>
+
+                            <td>
+
+                                <div class="hall-info">
+
+                                    <div class="hall-avatar">
+
+                                        🏛️
+
+                                    </div>
+
+                                    <div>
+
+                                        <strong>
+
+                                            {{ hall.name }}
+
+                                        </strong>
+
+                                        <span>
+
+                                            {{ hall.description }}
+
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                {{ hall.location }}
+
+                            </td>
+
+                            <td>
+
+                                {{ hall.capacity }}
+
+                            </td>
+
+                            <td>
+
+                                {{ hall.pricePerHour | number }}
+
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="status"
+                                    [ngClass]="{
+                                        'available': hall.status === 1,
+                                        'booked': hall.status === 2,
+                                        'occupied': hall.status === 3,
+                                        'maintenance': hall.status === 4
+                                    }">
+
+                                    {{ getStatusText(hall.status) }}
+
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                {{ getTypeText(hall.type) }}
+
+                            </td>
+
+                            <td>
+
+                                {{ hall.creationTime | date:'yyyy/MM/dd' }}
+
+                            </td>
+
+                            <td>
+
+                                <div class="actions">
+
+                                    <button
+                                        class="action-btn edit-btn"
+                                        (click)="editHall(hall.id)">
+
+                                        <mat-icon>
+
+                                            edit
+
+                                        </mat-icon>
+
+                                    </button>
+
+                                    <button
+                                        class="action-btn delete-btn"
+                                        (click)="deleteHall(hall.id)">
+
+                                        <mat-icon>
+
+                                            delete
+
+                                        </mat-icon>
+
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    }
+
+                } @else {
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="empty-state">
+
+                            لا توجد قاعات مسجلة حالياً
+
+                        </td>
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

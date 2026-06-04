@@ -1,162 +1,145 @@
 <mat-toolbar class="navbar">
 
-  <!-- معلومات الصفحة -->
+    <!-- معلومات الصفحة -->
 
-  <div class="navbar-right">
+    <div class="navbar-right">
 
-    <div class="page-section">
+        <div class="page-section">
 
-      <h2>لوحة التحكم</h2>
+            <h2>لوحة التحكم</h2>
 
-      <span>
-        إدارة القاعات والحجوزات
-      </span>
+            <span>
+                إدارة القاعات والحجوزات
+            </span>
+
+        </div>
 
     </div>
 
-  </div>
+    <!-- البحث -->
 
-  <!-- البحث -->
+    <div class="search-wrapper">
 
-  <div class="search-wrapper">
+        <mat-icon class="search-icon">
+            search
+        </mat-icon>
 
-    <mat-icon class="search-icon">
-      search
-    </mat-icon>
+        <input type="text" placeholder="ابحث عن قاعة، عميل، حجز..." />
 
-    <input
-      type="text"
-      placeholder="ابحث عن قاعة، عميل، حجز..." />
+    </div>
 
-  </div>
+    <!-- العمليات -->
 
-  <!-- العمليات -->
+    <div class="navbar-actions">
 
-  <div class="navbar-actions">
+        <!-- الوضع الليلي -->
 
-    <!-- الوضع الليلي -->
+        <button mat-icon-button class="nav-btn">
 
-    <button
-      mat-icon-button
-      class="nav-btn">
+            <mat-icon>
+                dark_mode
+            </mat-icon>
 
-      <mat-icon>
-        dark_mode
-      </mat-icon>
+        </button>
 
-    </button>
+        <!-- اللغة -->
 
-    <!-- اللغة -->
+        <button mat-icon-button class="nav-btn">
 
-    <button
-      mat-icon-button
-      class="nav-btn">
+            <mat-icon>
+                language
+            </mat-icon>
 
-      <mat-icon>
-        language
-      </mat-icon>
+        </button>
 
-    </button>
+        <!-- الإشعارات -->
 
-    <!-- الإشعارات -->
+        <button mat-icon-button class="nav-btn" [matBadge]="5" matBadgeColor="warn">
 
-    <button
-      mat-icon-button
-      class="nav-btn"
-      [matBadge]="5"
-      matBadgeColor="warn">
+            <mat-icon>
+                notifications
+            </mat-icon>
 
-      <mat-icon>
-        notifications
-      </mat-icon>
+        </button>
 
-    </button>
+        <!-- الرسائل -->
 
-    <!-- الرسائل -->
+        <button mat-icon-button class="nav-btn" [matBadge]="2" matBadgeColor="accent">
 
-    <button
-      mat-icon-button
-      class="nav-btn"
-      [matBadge]="2"
-      matBadgeColor="accent">
+            <mat-icon>
+                mail
+            </mat-icon>
 
-      <mat-icon>
-        mail
-      </mat-icon>
+        </button>
 
-    </button>
+        <!-- المستخدم -->
 
-    <!-- المستخدم -->
+        <button mat-button [matMenuTriggerFor]="userMenu" class="user-profile">
 
-    <button
-      mat-button
-      [matMenuTriggerFor]="userMenu"
-      class="user-profile">
+            <mat-icon class="dropdown-icon">
+                keyboard_arrow_down
+            </mat-icon>
 
-      <mat-icon class="dropdown-icon">
-        keyboard_arrow_down
-      </mat-icon>
+            <div class="avatar">
+                م
+            </div>
 
-      <div class="avatar">
-        م
-      </div>
+            <span class="user-name">
+                مدير النظام
+            </span>
 
-      <span class="user-name">
-        مدير النظام
-      </span>
+        </button>
 
-    </button>
+        <!-- القائمة -->
 
-    <!-- القائمة -->
+        <mat-menu #userMenu="matMenu">
 
-    <mat-menu #userMenu="matMenu">
+            <div class="user-menu-header">
 
-      <div class="user-menu-header">
+                <div class="avatar large">
+                    م
+                </div>
 
-        <div class="avatar large">
-          م
-        </div>
+                <div class="menu-user-info">
 
-        <div class="menu-user-info">
+                    <div class="menu-user-name">
+                        مدير النظام
+                    </div>
 
-          <div class="menu-user-name">
-            مدير النظام
-          </div>
+                    <div class="menu-user-role">
+                        Administrator
+                    </div>
 
-          <div class="menu-user-role">
-            Administrator
-          </div>
+                </div>
 
-        </div>
+            </div>
 
-      </div>
+            <mat-divider></mat-divider>
 
-      <mat-divider></mat-divider>
+            <button mat-menu-item>
+                <mat-icon>person</mat-icon>
+                <span>الملف الشخصي</span>
+            </button>
 
-      <button mat-menu-item>
-        <mat-icon>person</mat-icon>
-        <span>الملف الشخصي</span>
-      </button>
+            <button mat-menu-item>
+                <mat-icon>settings</mat-icon>
+                <span>الإعدادات</span>
+            </button>
 
-      <button mat-menu-item>
-        <mat-icon>settings</mat-icon>
-        <span>الإعدادات</span>
-      </button>
+            <button mat-menu-item>
+                <mat-icon>vpn_key</mat-icon>
+                <span>تغيير كلمة المرور</span>
+            </button>
 
-      <button mat-menu-item>
-        <mat-icon>vpn_key</mat-icon>
-        <span>تغيير كلمة المرور</span>
-      </button>
+            <mat-divider></mat-divider>
 
-      <mat-divider></mat-divider>
+            <button mat-menu-item>
+                <mat-icon>logout</mat-icon>
+                <span>تسجيل الخروج</span>
+            </button>
 
-      <button mat-menu-item>
-        <mat-icon>logout</mat-icon>
-        <span>تسجيل الخروج</span>
-      </button>
+        </mat-menu>
 
-    </mat-menu>
-
-  </div>
+    </div>
 
 </mat-toolbar>
