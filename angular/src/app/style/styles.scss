@@ -1,0 +1,48 @@
+@use '@angular/material' as mat;
+
+@use './abstracts/colors';
+@use './abstracts/spacing';
+@use './abstracts/typography';
+@use './abstracts/variables';
+
+@use './base/reset';
+@use './base/global';
+
+html {
+  height: 100%;
+
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: Cairo, sans-serif;
+  background: #f8fafc;
+  color: #1e293b;
+}

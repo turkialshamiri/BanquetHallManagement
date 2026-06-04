@@ -1,0 +1,84 @@
+<mat-sidenav-container class="sidebar-container">
+
+  <mat-sidenav
+    mode="side"
+    opened
+    class="sidebar">
+
+    <!-- Logo -->
+
+    <div class="logo">
+
+      <div class="logo-circle">
+        🏛️
+      </div>
+
+      <h2>نظام إدارة القاعات</h2>
+
+      <span>Hall Booking System</span>
+
+    </div>
+
+    <!-- Menu -->
+
+    <mat-accordion multi>
+
+      <mat-expansion-panel
+        *ngFor="let item of menuItems"
+        class="menu-panel">
+
+        <mat-expansion-panel-header>
+
+          <div class="menu-header">
+
+            <div class="menu-icon-wrapper">
+
+              <mat-icon>
+                {{ item.icon }}
+              </mat-icon>
+
+            </div>
+
+            <span class="menu-title">
+
+              {{ item.title }}
+
+            </span>
+
+          </div>
+
+        </mat-expansion-panel-header>
+
+        <div class="submenu">
+
+          <a
+            *ngFor="let child of item.children"
+            [routerLink]="child.route"
+            routerLinkActive="active-link"
+            class="submenu-item">
+
+            <div class="submenu-icon">
+
+              <mat-icon>
+                {{ child.icon }}
+              </mat-icon>
+
+            </div>
+
+            <span class="submenu-title">
+
+              {{ child.title }}
+
+            </span>
+
+          </a>
+
+        </div>
+
+      </mat-expansion-panel>
+
+    </mat-accordion>
+
+  </mat-sidenav>
+
+</mat-sidenav-container>

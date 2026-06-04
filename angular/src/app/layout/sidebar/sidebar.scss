@@ -1,0 +1,297 @@
+/* ===========================
+   Sidebar Container
+=========================== */
+
+.sidebar-container {
+  height: 100vh;
+}
+
+/* ===========================
+   Sidebar
+=========================== */
+
+.sidebar {
+
+  width: var(--sidebar-width);
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--sidebar-bg-start),
+      var(--sidebar-bg-end)
+    );
+
+  color: var(--sidebar-text);
+
+  border-left: 1px solid var(--sidebar-border);
+
+  direction: rtl;
+
+  border-radius: 0 !important;
+
+  overflow-y: auto;
+}
+
+/* ===========================
+   Logo
+=========================== */
+
+.logo {
+
+  text-align: center;
+
+  padding: 30px 20px;
+
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.logo-circle {
+
+  width: 80px;
+  height: 80px;
+
+  margin: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #1e293b,
+      #334155
+    );
+
+  font-size: 38px;
+}
+
+.logo h2 {
+
+  margin-top: 15px;
+  margin-bottom: 6px;
+
+  font-size: 22px;
+
+  font-weight: 700;
+}
+
+.logo span {
+
+  color: var(--sidebar-muted);
+
+  font-size: 13px;
+}
+
+/* ===========================
+   Main Menu
+=========================== */
+
+.menu-panel {
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+
+  margin: 8px;
+}
+
+.menu-panel:hover {
+
+  background: rgba(255,255,255,.03);
+}
+
+.menu-header {
+
+  display: flex;
+
+  align-items: center;
+
+  width: 100%;
+
+  gap: 12px;
+}
+
+.menu-icon-wrapper {
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: rgba(59,130,246,.15);
+}
+
+.menu-icon-wrapper mat-icon {
+
+  color: #60a5fa;
+}
+
+.menu-title {
+
+  color: var(--sidebar-text);
+
+  font-size: 15px;
+
+  font-weight: 600;
+}
+
+/* ===========================
+   Material Fixes
+=========================== */
+
+::ng-deep .mat-expansion-panel-body {
+
+  padding: 0 !important;
+}
+
+::ng-deep .mat-expansion-indicator::after {
+
+  color: white;
+}
+
+::ng-deep .mat-expansion-panel {
+
+  background: transparent !important;
+}
+
+::ng-deep .mat-expansion-panel-header {
+
+  padding: 0 16px !important;
+}
+
+::ng-deep .mat-expansion-panel-header:hover {
+
+  background: transparent !important;
+}
+
+/* ===========================
+   Sub Menu
+=========================== */
+
+.submenu {
+
+  padding: 8px;
+}
+
+.submenu-item {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 12px 14px;
+
+  margin-bottom: 6px;
+
+  text-decoration: none;
+
+  color: #cbd5e1;
+
+  transition: all .25s ease;
+
+  border-radius: 12px;
+}
+
+/* Icon */
+
+.submenu-icon {
+
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: rgba(255,255,255,.04);
+}
+
+.submenu-icon mat-icon {
+
+  font-size: 18px;
+
+  color: var(--sidebar-muted);
+}
+
+/* Text */
+
+.submenu-title {
+
+  font-size: 14px;
+
+  font-weight: 500;
+}
+
+/* Hover */
+
+.submenu-item:hover {
+
+  background: rgba(255,255,255,.05);
+
+  color: white;
+
+  transform: translateX(-4px);
+}
+
+.submenu-item:hover .submenu-icon {
+
+  background: rgba(59,130,246,.15);
+}
+
+.submenu-item:hover mat-icon {
+
+  color: #60a5fa;
+}
+
+/* Active */
+
+.active-link {
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(37,99,235,.25),
+      rgba(59,130,246,.05)
+    );
+
+  border-right: 4px solid var(--primary-color);
+
+  color: white !important;
+}
+
+.active-link .submenu-icon {
+
+  background: var(--primary-color);
+}
+
+.active-link mat-icon {
+
+  color: white !important;
+}
+
+/* ===========================
+   Scrollbar
+=========================== */
+
+.sidebar::-webkit-scrollbar {
+
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+
+  background: var(--sidebar-border);
+
+  border-radius: 10px;
+}

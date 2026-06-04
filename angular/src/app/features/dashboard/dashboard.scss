@@ -1,0 +1,82 @@
+/* =========================================
+   MAIN LAYOUT
+========================================= */
+
+.dashboard-layout {
+
+    display: flex;
+
+    height: 100vh;
+
+    overflow: hidden;
+
+    background: var(--background);
+}
+
+/* =========================================
+   CONTENT SIDE
+========================================= */
+
+.dashboard-content {
+
+    flex: 1;
+
+    display: flex;
+
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
+/* =========================================
+   PAGE CONTENT
+========================================= */
+
+.content-area {
+
+    flex: 1;
+
+    padding: 24px;
+
+    overflow-y: auto;
+
+    background: var(--background);
+}
+
+/* =========================================
+   CUSTOM SCROLLBAR
+========================================= */
+
+.content-area::-webkit-scrollbar {
+
+    width: 8px;
+}
+
+.content-area::-webkit-scrollbar-thumb {
+
+    background: #cbd5e1;
+
+    border-radius: 20px;
+}
+
+.content-area::-webkit-scrollbar-thumb:hover {
+
+    background: #94a3b8;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 992px) {
+
+    .dashboard-layout {
+
+        flex-direction: column;
+    }
+
+    .content-area {
+
+        padding: 16px;
+    }
+}

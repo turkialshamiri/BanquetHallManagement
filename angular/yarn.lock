@@ -428,6 +428,14 @@
     parse5 "^8.0.0"
     tslib "^2.3.0"
 
+"@angular/cdk@^21.2.10":
+  version "21.2.14"
+  resolved "https://registry.yarnpkg.com/@angular/cdk/-/cdk-21.2.14.tgz#26872a5b2ad5ced498f7e1c1e5a3180bf8026a45"
+  integrity sha512-806REq/CLf37nEhmmd8Q+ILN8z/RVG2vk2n8YZ/4TdHpcBCi5ux4AxLbpMmduLwGPOzPagJ6ggRzE5fnX0rmcQ==
+  dependencies:
+    parse5 "^8.0.0"
+    tslib "^2.3.0"
+
 "@angular/cli@~21.2.0":
   version "21.2.10"
   resolved "https://registry.yarnpkg.com/@angular/cli/-/cli-21.2.10.tgz#fe15416082c7e1445f62a12f1d8d46413da80f42"
@@ -509,6 +517,13 @@
     "@types/babel__core" "7.20.5"
     tinyglobby "^0.2.12"
     yargs "^18.0.0"
+
+"@angular/material@^21.2.10":
+  version "21.2.14"
+  resolved "https://registry.yarnpkg.com/@angular/material/-/material-21.2.14.tgz#66c17f1a1ae2d0671eb5f5924f5bbc75b936a698"
+  integrity sha512-fMQca8VRtei93JRRG9qQ+u08DCb0nga59Esoakq5yx3+A1NfdpFeUS1tBns56U04o8KAaIAwZK3NBqXz8ZKNqg==
+  dependencies:
+    tslib "^2.3.0"
 
 "@angular/platform-browser-dynamic@~21.2.0":
   version "21.2.12"
