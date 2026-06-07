@@ -17,6 +17,7 @@ import {
   toTimeInputValue,
 } from 'src/app/core/models/reservation.model';
 import { ServiceItem } from 'src/app/core/models/service.model';
+import { HALL_STATUS } from 'src/app/core/utils/hall-status.util';
 import { CustomerService } from 'src/app/core/services/customer.service';
 import { HallService } from 'src/app/core/services/hall.service';
 import { ServiceService } from 'src/app/core/services/service.service';
@@ -164,7 +165,9 @@ export class AddReservationDialog implements OnInit {
     }).subscribe({
       next: ({ customers, halls, services }) => {
         this.customers = customers.items;
-        this.halls = halls.items;
+        this.halls = halls.items.filter(
+          (hall) => hall.operationalStatus !== HALL_STATUS.Maintenance
+        );
         this.services = services.items;
         this.isLoading = false;
         this.cdr.markForCheck();

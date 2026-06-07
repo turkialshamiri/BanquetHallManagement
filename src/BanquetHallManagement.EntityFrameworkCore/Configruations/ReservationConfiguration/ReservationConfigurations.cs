@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Volo.Abp.EntityFrameworkCore.Modeling;
+using BanquetHallManagement.Enums;
 
 namespace BanquetHallManagement.Configurations.ReservationConfigurations
 {
@@ -47,8 +48,10 @@ namespace BanquetHallManagement.Configurations.ReservationConfigurations
 
             builder.Property(x => x.Status)
                 .IsRequired()
+                .HasConversion<string>()
                 .HasMaxLength(50)
-                .HasComment("الحالة الحالية للحجز مثل قيد الانتظار أو مؤكد أو ملغي.");
+                .HasDefaultValue(ReservationStatus.Pending)
+                .HasComment("الحالة الحالية للحجز مثل قيد الانتظار أو مؤكد أو ملغي أو مكتمل.");
 
             builder.HasMany(x => x.Services)
                 .WithOne()

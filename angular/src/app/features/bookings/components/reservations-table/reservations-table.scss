@@ -239,6 +239,42 @@ tr:hover {
     transform: translateY(-2px);
 }
 
+.confirm-btn {
+
+    background: #dcfce7;
+}
+
+.confirm-btn:hover {
+
+    background: #bbf7d0;
+
+    transform: translateY(-2px);
+}
+
+.complete-btn {
+
+    background: #dbeafe;
+}
+
+.complete-btn:hover {
+
+    background: #bfdbfe;
+
+    transform: translateY(-2px);
+}
+
+.cancel-btn {
+
+    background: #ffedd5;
+}
+
+.cancel-btn:hover {
+
+    background: #fed7aa;
+
+    transform: translateY(-2px);
+}
+
 .delete-btn {
 
     background: #fee2e2;

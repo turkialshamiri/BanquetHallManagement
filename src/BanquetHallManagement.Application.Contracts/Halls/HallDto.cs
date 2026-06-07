@@ -20,6 +20,8 @@ namespace BanquetHallManagement.Halls
 
         public HallStatus Status { get; set; }
 
+        public HallStatus OperationalStatus { get; set; }
+
         public HallType Type { get; set; }
     }
 }

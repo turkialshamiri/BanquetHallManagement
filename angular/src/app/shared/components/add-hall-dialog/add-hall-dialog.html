@@ -61,10 +61,8 @@
 
             <select [(ngModel)]="hall.status">
 
-                <option [value]="1">متاحة</option>
-                <option [value]="2">محجوزة</option>
-                <option [value]="3">مشغولة</option>
-                <option [value]="4">تحت الصيانة</option>
+                <option [ngValue]="hallStatus.Available">متاحة</option>
+                <option [ngValue]="hallStatus.Maintenance">تحت الصيانة</option>
 
             </select>
 

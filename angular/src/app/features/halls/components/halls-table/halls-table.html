@@ -50,7 +50,22 @@
 
             <tbody>
 
-                @if (halls.length > 0) {
+                @if (isLoading) {
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            جاري تحميل القاعات...
+                        </td>
+                    </tr>
+                } @else if (loadError) {
+                    <tr>
+                        <td colspan="8" class="empty-state error-state">
+                            {{ loadError }}
+                            <button type="button" class="retry-btn" (click)="loadHalls()">
+                                إعادة المحاولة
+                            </button>
+                        </td>
+                    </tr>
+                } @else if (halls.length > 0) {
 
                     @for (hall of halls; track hall.id) {
 
@@ -106,14 +121,11 @@
 
                             <td>
 
-                                <span class="status" [ngClass]="{
-                                    'available': hall.status === 1,
-                                    'booked': hall.status === 2,
-                                    'occupied': hall.status === 3,
-                                    'maintenance': hall.status === 4
-                                }">
+                                <span
+                                    class="status"
+                                    [ngClass]="getHallStatusClass(hall.status)">
 
-                                    {{ getStatusText(hall.status) }}
+                                    {{ getHallStatusLabel(hall.status) }}
 
                                 </span>
 

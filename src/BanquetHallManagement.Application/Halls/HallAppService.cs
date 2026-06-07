@@ -1,5 +1,6 @@
 ﻿using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Enums;
+using BanquetHallManagement.Reservations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,40 +15,105 @@ namespace BanquetHallManagement.Halls
     public class HallAppService : ApplicationService, IHallAppService
     {
         private readonly IRepository<Hall, Guid> _hallRepository;
+        private readonly IRepository<Reservation, Guid> _reservationRepository;
+        private readonly HallAvailabilityManager _hallAvailabilityManager;
 
-        public HallAppService(IRepository<Hall, Guid> hallRepository)
+        public HallAppService(
+            IRepository<Hall, Guid> hallRepository,
+            IRepository<Reservation, Guid> reservationRepository,
+            HallAvailabilityManager hallAvailabilityManager)
         {
             _hallRepository = hallRepository;
+            _reservationRepository = reservationRepository;
+            _hallAvailabilityManager = hallAvailabilityManager;
         }
 
         public async Task<HallDto> GetAsync(Guid id)
         {
             var hall = await _hallRepository.GetAsync(id);
+            var bookedHallIds = await GetHallIdsWithActiveConfirmedReservationsAsync();
 
-            return ObjectMapper.Map<Hall, HallDto>(hall);
+            return MapToHallDto(hall, bookedHallIds);
         }
 
         public async Task<PagedResultDto<HallDto>> GetListAsync(PagedAndSortedResultRequestDto input)
         {
             var query = await _hallRepository.GetQueryableAsync();
+            var bookedHallIds = await GetHallIdsWithActiveConfirmedReservationsAsync();
 
-            var totalCount = query.Count();
+            var totalCount = await AsyncExecuter.CountAsync(query);
 
-            var halls = query
-                .Skip(input.SkipCount)
-                .Take(input.MaxResultCount)
-                .ToList();
+            var halls = await AsyncExecuter.ToListAsync(
+                query
+                    .OrderBy(x => x.Name)
+                    .Skip(input.SkipCount)
+                    .Take(input.MaxResultCount));
 
             return new PagedResultDto<HallDto>
             {
                 TotalCount = totalCount,
-                Items = ObjectMapper.Map<List<Hall>, List<HallDto>>(halls)
+                Items = halls
+                    .Select(hall => MapToHallDto(hall, bookedHallIds))
+                    .ToList()
             };
         }
 
         public async Task<HallDto> CreateAsync(CreateUpdateHallDto input)
         {
-            // Validation
+            ValidateInput(input);
+
+            _hallAvailabilityManager.EnsureOperationalStatus(input.Status);
+
+            var hall = ObjectMapper.Map<CreateUpdateHallDto, Hall>(input);
+            hall.Status = _hallAvailabilityManager.GetOperationalStatus(hall);
+
+            await _hallRepository.InsertAsync(hall);
+
+            return MapToHallDto(hall, new HashSet<Guid>());
+        }
+
+        public async Task<HallDto> UpdateAsync(Guid id, CreateUpdateHallDto input)
+        {
+            ValidateInput(input);
+
+            _hallAvailabilityManager.EnsureOperationalStatus(input.Status);
+
+            var hall = await _hallRepository.GetAsync(id);
+
+            hall.Name = input.Name;
+            hall.Description = input.Description;
+            hall.Capacity = input.Capacity;
+            hall.PricePerHour = input.PricePerHour;
+            hall.Location = input.Location;
+            hall.Status = input.Status;
+            hall.Type = input.Type;
+
+            await _hallRepository.UpdateAsync(hall);
+
+            var bookedHallIds = await GetHallIdsWithActiveConfirmedReservationsAsync();
+
+            return MapToHallDto(hall, bookedHallIds);
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            await _hallRepository.DeleteAsync(id);
+        }
+
+        public async Task<List<HallDto>> GetByStatusAsync(HallStatus status)
+        {
+            var query = await _hallRepository.GetQueryableAsync();
+            var bookedHallIds = await GetHallIdsWithActiveConfirmedReservationsAsync();
+            var halls = await AsyncExecuter.ToListAsync(query.OrderBy(x => x.Name));
+
+            return halls
+                .Select(hall => MapToHallDto(hall, bookedHallIds))
+                .Where(dto => dto.Status == status)
+                .ToList();
+        }
+
+        private static void ValidateInput(CreateUpdateHallDto input)
+        {
             if (string.IsNullOrWhiteSpace(input.Name))
             {
                 throw new UserFriendlyException("اسم القاعة مطلوب");
@@ -62,45 +128,37 @@ namespace BanquetHallManagement.Halls
             {
                 throw new UserFriendlyException("السعر يجب أن يكون أكبر من صفر");
             }
-
-            var hall = ObjectMapper.Map<CreateUpdateHallDto, Hall>(input);
-
-            await _hallRepository.InsertAsync(hall);
-
-            return ObjectMapper.Map<Hall, HallDto>(hall);
         }
 
-        public async Task<HallDto> UpdateAsync(Guid id, CreateUpdateHallDto input)
+        private async Task<HashSet<Guid>> GetHallIdsWithActiveConfirmedReservationsAsync()
         {
-            var hall = await _hallRepository.GetAsync(id);
+            var now = Clock.Now;
+            var today = now.Date;
+            var currentTime = now.TimeOfDay;
 
-            hall.Name = input.Name;
-            hall.Description = input.Description;
-            hall.Capacity = input.Capacity;
-            hall.PricePerHour = input.PricePerHour;
-            hall.Location = input.Location;
-            hall.Status = input.Status;
-            hall.Type = input.Type;
+            var query = await _reservationRepository.GetQueryableAsync();
 
-            await _hallRepository.UpdateAsync(hall);
+            var hallIds = await AsyncExecuter.ToListAsync(
+                query
+                    .Where(r => r.Status == ReservationStatus.Confirmed)
+                    .Where(r =>
+                        r.EventDate.Date > today ||
+                        (r.EventDate.Date == today && r.EndTime > currentTime))
+                    .Select(r => r.HallId)
+                    .Distinct());
 
-            return ObjectMapper.Map<Hall, HallDto>(hall);
+            return hallIds.ToHashSet();
         }
 
-        public async Task DeleteAsync(Guid id)
+        private HallDto MapToHallDto(Hall hall, HashSet<Guid> bookedHallIds)
         {
-            await _hallRepository.DeleteAsync(id);
-        }
+            var dto = ObjectMapper.Map<Hall, HallDto>(hall);
+            dto.OperationalStatus = _hallAvailabilityManager.GetOperationalStatus(hall);
+            dto.Status = _hallAvailabilityManager.ResolveEffectiveStatus(
+                hall,
+                bookedHallIds.Contains(hall.Id));
 
-        public async Task<List<HallDto>> GetByStatusAsync(HallStatus status)
-        {
-            var query = await _hallRepository.GetQueryableAsync();
-
-            var halls = await AsyncExecuter.ToListAsync(
-                query.Where(x => x.Status == status)
-            );
-
-            return ObjectMapper.Map<List<Hall>, List<HallDto>>(halls);
+            return dto;
         }
     }
 }

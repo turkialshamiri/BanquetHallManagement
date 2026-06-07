@@ -37,6 +37,14 @@
     "Unspecified": "نظام",
     "SeeAllUsers": "رؤية كافة المستخدمين",
     "TakePhoto": "تصوير",
-    "ChoosePhoto": "اختر صورة"
+    "ChoosePhoto": "اختر صورة",
+    "BanquetHallManagement:Reservation:CannotConfirm": "لا يمكن تأكيد الحجز إلا إذا كان في حالة قيد الانتظار.",
+    "BanquetHallManagement:Reservation:CannotCancel": "لا يمكن إلغاء الحجز في حالته الحالية.",
+    "BanquetHallManagement:Reservation:CannotComplete": "لا يمكن إكمال الحجز إلا إذا كان في حالة مؤكد.",
+    "BanquetHallManagement:Reservation:CannotUpdate": "لا يمكن تعديل الحجز في حالته الحالية.",
+    "BanquetHallManagement:Reservation:CannotDelete": "لا يمكن حذف الحجز إلا إذا كان في حالة قيد الانتظار.",
+    "BanquetHallManagement:Hall:UnderMaintenance": "لا يمكن حجز القاعة لأنها تحت الصيانة.",
+    "BanquetHallManagement:Hall:StatusCannotBeBooked": "لا يمكن تعيين حالة القاعة إلى محجوزة يدوياً. يتم تحديد ذلك تلقائياً من الحجوزات.",
+    "BanquetHallManagement:Hall:StatusInvalid": "حالة القاعة غير صالحة. يُسمح فقط بالمتاحة أو تحت الصيانة."
   }
 }

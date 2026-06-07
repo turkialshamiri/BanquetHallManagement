@@ -2,13 +2,21 @@
 using Riok.Mapperly.Abstractions;
 using Volo.Abp.Mapperly;
 
+
+
+using BanquetHallManagement.Reservations;
+using Riok.Mapperly.Abstractions;
+using Volo.Abp.Mapperly;
+
 namespace BanquetHallManagement;
 
 [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
 public partial class ReservationToReservationDtoMapper : MapperBase<Reservation, ReservationDto>
 {
+    [MapperIgnoreTarget(nameof(ReservationDto.Status))]
     public override partial ReservationDto Map(Reservation source);
 
+    [MapperIgnoreTarget(nameof(ReservationDto.Status))]
     public override partial void Map(Reservation source, ReservationDto destination);
 }
 

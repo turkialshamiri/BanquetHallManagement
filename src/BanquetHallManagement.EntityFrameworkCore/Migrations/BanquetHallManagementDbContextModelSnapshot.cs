@@ -284,9 +284,11 @@ namespace BanquetHallManagement.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
-                        .HasComment("الحالة الحالية للحجز مثل قيد الانتظار أو مؤكد أو ملغي.");
+                        .HasDefaultValue("Pending")
+                        .HasComment("الحالة الحالية للحجز مثل قيد الانتظار أو مؤكد أو ملغي أو مكتمل.");
 
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)")

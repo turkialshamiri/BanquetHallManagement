@@ -1,3 +1,5 @@
+using BanquetHallManagement.EntityFrameworkCore.Reports;
+using BanquetHallManagement.Reports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -47,6 +49,8 @@ public class BanquetHallManagementEntityFrameworkCoreModule : AbpModule
                  * default repositories only for aggregate roots */
             options.AddDefaultRepositories(includeAllEntities: true);
         });
+
+        context.Services.AddTransient<IReportQueryExecutor, EfCoreReportQueryExecutor>();
 
         if (AbpStudioAnalyzeHelper.IsInAnalyzeMode)
         {

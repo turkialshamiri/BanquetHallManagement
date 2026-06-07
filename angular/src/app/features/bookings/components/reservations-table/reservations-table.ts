@@ -20,6 +20,11 @@ import { CustomerService } from 'src/app/core/services/customer.service';
 import { HallService } from 'src/app/core/services/hall.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 import {
+  canCancelReservation,
+  canCompleteReservation,
+  canConfirmReservation,
+  canDeleteReservation,
+  canEditReservation,
   getReservationStatusClass,
   getReservationStatusLabel,
 } from 'src/app/core/utils/reservation-status.util';
@@ -50,6 +55,11 @@ export class ReservationsTableComponent implements OnInit {
 
   getReservationStatusLabel = getReservationStatusLabel;
   getReservationStatusClass = getReservationStatusClass;
+  canConfirmReservation = canConfirmReservation;
+  canCancelReservation = canCancelReservation;
+  canCompleteReservation = canCompleteReservation;
+  canEditReservation = canEditReservation;
+  canDeleteReservation = canDeleteReservation;
   formatTime = toTimeInputValue;
 
   ngOnInit(): void {
@@ -125,11 +135,77 @@ export class ReservationsTableComponent implements OnInit {
   editReservation(id: string): void {
     const reservation = this.reservations.find((item) => item.id === id);
 
-    if (!reservation) {
+    if (!reservation || !canEditReservation(reservation.status)) {
       return;
     }
 
     this.openEditReservationDialog(reservation);
+  }
+
+  confirmReservation(id: string): void {
+    this.dialogService
+      .confirm(
+        'تأكيد الحجز',
+        'هل أنت متأكد من تأكيد هذا الحجز؟'
+      )
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+
+        this.reservationService.confirmReservation(id).subscribe({
+          next: () => {
+            this.loadData();
+          },
+          error: (error) => {
+            console.error(getAbpErrorMessage(error));
+          },
+        });
+      });
+  }
+
+  cancelReservation(id: string): void {
+    this.dialogService
+      .confirm(
+        'إلغاء الحجز',
+        'هل أنت متأكد من إلغاء هذا الحجز؟'
+      )
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+
+        this.reservationService.cancelReservation(id).subscribe({
+          next: () => {
+            this.loadData();
+          },
+          error: (error) => {
+            console.error(getAbpErrorMessage(error));
+          },
+        });
+      });
+  }
+
+  completeReservation(id: string): void {
+    this.dialogService
+      .confirm(
+        'إكمال الحجز',
+        'هل أنت متأكد من إكمال هذا الحجز؟'
+      )
+      .subscribe((confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+
+        this.reservationService.completeReservation(id).subscribe({
+          next: () => {
+            this.loadData();
+          },
+          error: (error) => {
+            console.error(getAbpErrorMessage(error));
+          },
+        });
+      });
   }
 
   private openEditReservationDialog(

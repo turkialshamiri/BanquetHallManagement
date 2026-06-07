@@ -39,16 +39,7 @@ export const APP_ROUTES: Routes = [
     loadComponent: hallsPage,
     data: {
       pageTitle: 'القاعات المحجوزة',
-      pageSubtitle: 'القاعات التي تم حجزها',
-      statusFilter: 2,
-    },
-  },
-  {
-    path: 'halls/occupied',
-    loadComponent: hallsPage,
-    data: {
-      pageTitle: 'القاعات المشغولة',
-      pageSubtitle: 'القاعات قيد الاستخدام',
+      pageSubtitle: 'القاعات ذات حجوزات مؤكدة نشطة',
       statusFilter: 3,
     },
   },
@@ -58,8 +49,13 @@ export const APP_ROUTES: Routes = [
     data: {
       pageTitle: 'قاعات تحت الصيانة',
       pageSubtitle: 'القاعات غير المتاحة مؤقتاً',
-      statusFilter: 4,
+      statusFilter: 2,
     },
+  },
+  {
+    path: 'halls/occupied',
+    redirectTo: '/halls/booked',
+    pathMatch: 'full',
   },
   {
     path: 'customers',
@@ -95,40 +91,29 @@ export const APP_ROUTES: Routes = [
     data: { openAddDialog: true },
   },
   {
-    path: 'reports/daily',
+    path: 'reports',
     loadComponent: () =>
       import('./features/reports/reports').then((m) => m.Reports),
-    data: {
-      pageTitle: 'التقارير اليومية',
-      pageDescription: 'ملخص العمليات والحجوزات لليوم الحالي',
-    },
+  },
+  {
+    path: 'reports/daily',
+    redirectTo: '/reports',
+    pathMatch: 'full',
   },
   {
     path: 'reports/monthly',
-    loadComponent: () =>
-      import('./features/reports/reports').then((m) => m.Reports),
-    data: {
-      pageTitle: 'التقارير الشهرية',
-      pageDescription: 'تحليل الأداء والحجوزات خلال الشهر',
-    },
+    redirectTo: '/reports',
+    pathMatch: 'full',
   },
   {
     path: 'reports/yearly',
-    loadComponent: () =>
-      import('./features/reports/reports').then((m) => m.Reports),
-    data: {
-      pageTitle: 'التقارير السنوية',
-      pageDescription: 'نظرة شاملة على أداء النظام خلال السنة',
-    },
+    redirectTo: '/reports',
+    pathMatch: 'full',
   },
   {
     path: 'reports/revenue',
-    loadComponent: () =>
-      import('./features/reports/reports').then((m) => m.Reports),
-    data: {
-      pageTitle: 'تقارير الإيرادات',
-      pageDescription: 'متابعة الإيرادات والتسعير',
-    },
+    redirectTo: '/reports',
+    pathMatch: 'full',
   },
   {
     path: 'about',

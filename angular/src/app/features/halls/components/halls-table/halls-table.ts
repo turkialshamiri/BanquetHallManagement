@@ -10,6 +10,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Hall } from 'src/app/core/models/hall.model';
 import { HallService } from 'src/app/core/services/hall.service';
+import {
+  getHallStatusClass,
+  getHallStatusLabel,
+} from 'src/app/core/utils/hall-status.util';
+import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 import { AddHallDialog } from 'src/app/shared/components/add-hall-dialog/add-hall-dialog';
 import { DialogService } from 'src/app/shared/services/dialog.service';
 
@@ -31,6 +36,11 @@ export class HallsTableComponent implements OnInit {
   pageTitle = 'القاعات';
   pageSubtitle = 'جميع القاعات المسجلة بالنظام';
   statusFilter: number | null = null;
+  isLoading = false;
+  loadError: string | null = null;
+
+  getHallStatusLabel = getHallStatusLabel;
+  getHallStatusClass = getHallStatusClass;
 
   ngOnInit(): void {
     this.route.data.subscribe((data) => {
@@ -41,21 +51,22 @@ export class HallsTableComponent implements OnInit {
   }
 
   loadHalls(): void {
-    this.hallService.getHalls().subscribe({
-      next: (response) => {
-        let items: Hall[] = response.items;
+    this.isLoading = true;
+    this.loadError = null;
 
-        if (this.statusFilter != null) {
-          items = items.filter(
-            (hall) => hall.status === this.statusFilter
-          );
-        }
-
-        this.halls = items;
+    this.hallService.getHallsList(this.statusFilter).subscribe({
+      next: (halls) => {
+        this.halls = halls;
+        this.isLoading = false;
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error(error);
+        this.loadError = getAbpErrorMessage(
+          error,
+          'تعذّر تحميل بيانات القاعات'
+        );
+        this.isLoading = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -75,25 +86,10 @@ export class HallsTableComponent implements OnInit {
           this.loadHalls();
         },
         error: (error) => {
-          console.error(error);
+          console.error(getAbpErrorMessage(error));
         },
       });
     });
-  }
-
-  getStatusText(status: number): string {
-    switch (status) {
-      case 1:
-        return 'متاحة';
-      case 2:
-        return 'محجوزة';
-      case 3:
-        return 'مشغولة';
-      case 4:
-        return 'تحت الصيانة';
-      default:
-        return 'غير معروف';
-    }
   }
 
   getTypeText(type: number): string {
@@ -132,7 +128,7 @@ export class HallsTableComponent implements OnInit {
           this.loadHalls();
         },
         error: (error) => {
-          console.error(error);
+          console.error(getAbpErrorMessage(error));
         },
       });
     });
@@ -154,7 +150,7 @@ export class HallsTableComponent implements OnInit {
             this.loadHalls();
           },
           error: (error) => {
-            console.error(error);
+            console.error(getAbpErrorMessage(error));
           },
         });
       });

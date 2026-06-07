@@ -4,6 +4,11 @@ import {
   MatDialogRef,
   MAT_DIALOG_DATA
 } from '@angular/material/dialog';
+import { Hall, HallFormModel } from 'src/app/core/models/hall.model';
+import {
+  HALL_STATUS,
+  OperationalHallStatus,
+} from 'src/app/core/utils/hall-status.util';
 
 @Component({
   selector: 'app-add-hall-dialog',
@@ -18,20 +23,20 @@ export class AddHallDialog implements OnInit {
 
   data = inject(MAT_DIALOG_DATA, {
     optional: true
-  });
+  }) as Hall | undefined;
 
   isEditMode = false;
 
-  hall = {
+  readonly hallStatus = HALL_STATUS;
 
+  hall: HallFormModel = {
     name: '',
     description: '',
     capacity: 0,
     location: '',
     pricePerHour: 0,
-    status: 1,
+    status: HALL_STATUS.Available,
     type: 1
-
   };
 
   ngOnInit(): void {
@@ -41,15 +46,13 @@ export class AddHallDialog implements OnInit {
       this.isEditMode = true;
 
       this.hall = {
-
         name: this.data.name ?? '',
         description: this.data.description ?? '',
         capacity: this.data.capacity ?? 0,
         location: this.data.location ?? '',
         pricePerHour: this.data.pricePerHour ?? 0,
-        status: this.data.status ?? 1,
+        status: this.resolveOperationalStatus(this.data.operationalStatus),
         type: this.data.type ?? 1
-
       };
 
     }
@@ -66,6 +69,14 @@ export class AddHallDialog implements OnInit {
 
     this.dialogRef.close();
 
+  }
+
+  private resolveOperationalStatus(status: number): OperationalHallStatus {
+    if (status === HALL_STATUS.Maintenance) {
+      return HALL_STATUS.Maintenance;
+    }
+
+    return HALL_STATUS.Available;
   }
 
 }

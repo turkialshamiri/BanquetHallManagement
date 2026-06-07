@@ -141,11 +141,42 @@ tr:hover {
     color: #64748b;
 }
 
-.status {
-
+.status.available {
     background: #dcfce7;
-
     color: #15803d;
+}
+
+.status.maintenance {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.status.booked {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.status.unknown {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.retry-btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color, #e2e8f0);
+    background: #fff;
+    cursor: pointer;
+}
+
+.status {
 
     padding: 6px 12px;
 

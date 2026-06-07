@@ -1,4 +1,4 @@
-<div class="app-layout">
+<div class="app-layout reports-page">
 
     <app-sidebar></app-sidebar>
 
@@ -6,21 +6,273 @@
 
         <app-navbar></app-navbar>
 
-        <div class="page-container">
+        <div class="reports-content">
 
-            <div class="content-card">
+            <header class="reports-header">
+                <div>
+                    <h1>التقارير والتحليلات</h1>
+                    <p>عرض وتحليل أداء القاعات والحجوزات والإيرادات</p>
+                </div>
+            </header>
 
-                <h2>{{ pageTitle }}</h2>
+            <section class="filter-card">
+                <h3>تصفية التقارير</h3>
 
-                <p>{{ pageDescription }}</p>
+                <div class="filter-grid">
+                    <mat-form-field appearance="outline">
+                        <mat-label>من تاريخ</mat-label>
+                        <input matInput type="date" [(ngModel)]="filters.dateFrom">
+                    </mat-form-field>
 
-                <div class="notice">
+                    <mat-form-field appearance="outline">
+                        <mat-label>إلى تاريخ</mat-label>
+                        <input matInput type="date" [(ngModel)]="filters.dateTo">
+                    </mat-form-field>
 
-                    سيتم تفعيل هذه الصفحة قريباً ضمن الإصدار القادم من النظام.
+                    <mat-form-field appearance="outline">
+                        <mat-label>القاعة</mat-label>
+                        <mat-select [(ngModel)]="filters.hallId">
+                            <mat-option [value]="null">جميع القاعات</mat-option>
+                            @for (hall of halls; track hall.id) {
+                                <mat-option [value]="hall.id">{{ hall.name }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
 
+                    <mat-form-field appearance="outline">
+                        <mat-label>حالة الحجز</mat-label>
+                        <mat-select [(ngModel)]="filters.status">
+                            @for (option of statusOptions; track option.label) {
+                                <mat-option [value]="option.value">
+                                    {{ option.label }}
+                                </mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
                 </div>
 
-            </div>
+                <div class="filter-actions">
+                    <button mat-flat-button color="primary" type="button" (click)="applyFilters()">
+                        <mat-icon>filter_alt</mat-icon>
+                        تطبيق الفلاتر
+                    </button>
+                    <button mat-stroked-button type="button" (click)="resetFilters()">
+                        <mat-icon>restart_alt</mat-icon>
+                        إعادة تعيين
+                    </button>
+                </div>
+            </section>
+
+            @if (isLoading) {
+                <div class="reports-state loading">
+                    جاري تحميل التقارير...
+                </div>
+            } @else if (loadError) {
+                <div class="reports-state error">
+                    <p>{{ loadError }}</p>
+                    <button mat-stroked-button type="button" (click)="loadReports()">
+                        إعادة المحاولة
+                    </button>
+                </div>
+            } @else if (reports) {
+
+                <section class="stats-section">
+                    <h3 class="section-title">ملخص مؤشرات الأداء</h3>
+                    <div class="stats-grid kpi">
+                        <div class="stat-card bookings">
+                            <div class="card-icon"><span>📅</span></div>
+                            <div class="card-content">
+                                <span class="card-title">إجمالي الحجوزات</span>
+                                <h2>{{ reports.summary.totalReservations }}</h2>
+                            </div>
+                        </div>
+                        <div class="stat-card revenue">
+                            <div class="card-icon"><span>💰</span></div>
+                            <div class="card-content">
+                                <span class="card-title">إجمالي الإيرادات</span>
+                                <h2>{{ reports.summary.totalRevenue | number:'1.0-0' }} <small>ر.س</small></h2>
+                            </div>
+                        </div>
+                        <div class="stat-card average">
+                            <div class="card-icon"><span>📊</span></div>
+                            <div class="card-content">
+                                <span class="card-title">متوسط قيمة الحجز</span>
+                                <h2>{{ reports.summary.averageReservationValue | number:'1.0-0' }} <small>ر.س</small></h2>
+                            </div>
+                        </div>
+                        <div class="stat-card customers">
+                            <div class="card-icon"><span>👥</span></div>
+                            <div class="card-content">
+                                <span class="card-title">عدد العملاء النشطين</span>
+                                <h2>{{ reports.summary.activeCustomers }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="report-section">
+                    <h3 class="section-title">تحليل الإيرادات</h3>
+                    <div class="revenue-grid">
+                        <div class="analytics-card">
+                            <span class="analytics-label">إيرادات اليوم</span>
+                            <strong>{{ reports.revenueAnalytics.today.amount | number:'1.0-0' }} ر.س</strong>
+                            <span class="trend" [ngClass]="trendClass(reports.revenueAnalytics.today.changePercent)">
+                                {{ formatTrend(reports.revenueAnalytics.today.changePercent) }}
+                                <small>مقارنة بالأمس</small>
+                            </span>
+                        </div>
+                        <div class="analytics-card">
+                            <span class="analytics-label">إيرادات هذا الشهر</span>
+                            <strong>{{ reports.revenueAnalytics.thisMonth.amount | number:'1.0-0' }} ر.س</strong>
+                            <span class="trend" [ngClass]="trendClass(reports.revenueAnalytics.thisMonth.changePercent)">
+                                {{ formatTrend(reports.revenueAnalytics.thisMonth.changePercent) }}
+                                <small>مقارنة بالشهر السابق</small>
+                            </span>
+                        </div>
+                        <div class="analytics-card">
+                            <span class="analytics-label">إيرادات هذا العام</span>
+                            <strong>{{ reports.revenueAnalytics.thisYear.amount | number:'1.0-0' }} ر.س</strong>
+                            <span class="trend" [ngClass]="trendClass(reports.revenueAnalytics.thisYear.changePercent)">
+                                {{ formatTrend(reports.revenueAnalytics.thisYear.changePercent) }}
+                                <small>مقارنة بالعام السابق</small>
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="report-section">
+                    <h3 class="section-title">إحصائيات حالات الحجز</h3>
+                    <div class="stats-grid status">
+                        <div class="stat-card pending">
+                            <div class="card-icon"><span>⏳</span></div>
+                            <div class="card-content">
+                                <span class="card-title">قيد الانتظار</span>
+                                <h2>{{ reports.reservationStatistics.pendingCount }}</h2>
+                            </div>
+                        </div>
+                        <div class="stat-card confirmed">
+                            <div class="card-icon"><span>✔️</span></div>
+                            <div class="card-content">
+                                <span class="card-title">مؤكدة</span>
+                                <h2>{{ reports.reservationStatistics.confirmedCount }}</h2>
+                            </div>
+                        </div>
+                        <div class="stat-card cancelled">
+                            <div class="card-icon"><span>❌</span></div>
+                            <div class="card-content">
+                                <span class="card-title">ملغاة</span>
+                                <h2>{{ reports.reservationStatistics.cancelledCount }}</h2>
+                            </div>
+                        </div>
+                        <div class="stat-card completed">
+                            <div class="card-icon"><span>✅</span></div>
+                            <div class="card-content">
+                                <span class="card-title">مكتملة</span>
+                                <h2>{{ reports.reservationStatistics.completedCount }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="report-section table-card">
+                    <div class="table-header">
+                        <div>
+                            <h2>أداء القاعات</h2>
+                            <span>مرتبة حسب أعلى إيراد</span>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table mat-table [dataSource]="reports.hallPerformance" class="report-table">
+                            <ng-container matColumnDef="hallName">
+                                <th mat-header-cell *matHeaderCellDef>اسم القاعة</th>
+                                <td mat-cell *matCellDef="let row">{{ row.hallName }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="reservationCount">
+                                <th mat-header-cell *matHeaderCellDef>عدد الحجوزات</th>
+                                <td mat-cell *matCellDef="let row">{{ row.reservationCount }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="revenue">
+                                <th mat-header-cell *matHeaderCellDef>إجمالي الإيراد</th>
+                                <td mat-cell *matCellDef="let row">{{ row.revenue | number:'1.0-0' }} ر.س</td>
+                            </ng-container>
+                            <ng-container matColumnDef="averageGuests">
+                                <th mat-header-cell *matHeaderCellDef>متوسط الضيوف</th>
+                                <td mat-cell *matCellDef="let row">{{ row.averageGuests | number:'1.0-1' }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="occupancyRate">
+                                <th mat-header-cell *matHeaderCellDef>معدل الإشغال</th>
+                                <td mat-cell *matCellDef="let row">{{ row.occupancyRate | number:'1.0-1' }}%</td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="hallColumns"></tr>
+                            <tr mat-row *matRowDef="let row; columns: hallColumns"></tr>
+                            <tr class="empty-row" *matNoDataRow>
+                                <td [attr.colspan]="hallColumns.length">لا توجد بيانات للفترة المحددة</td>
+                            </tr>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="report-section table-card">
+                    <div class="table-header">
+                        <div>
+                            <h2>نشاط العملاء</h2>
+                            <span>أفضل العملاء حسب الإنفاق</span>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table mat-table [dataSource]="reports.customerActivity" class="report-table">
+                            <ng-container matColumnDef="customerName">
+                                <th mat-header-cell *matHeaderCellDef>اسم العميل</th>
+                                <td mat-cell *matCellDef="let row">{{ row.customerName }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="reservationCount">
+                                <th mat-header-cell *matHeaderCellDef>عدد الحجوزات</th>
+                                <td mat-cell *matCellDef="let row">{{ row.reservationCount }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="totalSpent">
+                                <th mat-header-cell *matHeaderCellDef>إجمالي الإنفاق</th>
+                                <td mat-cell *matCellDef="let row">{{ row.totalSpent | number:'1.0-0' }} ر.س</td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="customerColumns"></tr>
+                            <tr mat-row *matRowDef="let row; columns: customerColumns"></tr>
+                            <tr class="empty-row" *matNoDataRow>
+                                <td [attr.colspan]="customerColumns.length">لا توجد بيانات للفترة المحددة</td>
+                            </tr>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="report-section table-card">
+                    <div class="table-header">
+                        <div>
+                            <h2>التقرير الشهري</h2>
+                            <span>عدد الحجوزات والإيرادات حسب الشهر</span>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table mat-table [dataSource]="reports.monthlyReport" class="report-table">
+                            <ng-container matColumnDef="monthLabel">
+                                <th mat-header-cell *matHeaderCellDef>الشهر</th>
+                                <td mat-cell *matCellDef="let row">{{ row.monthLabel }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="reservationCount">
+                                <th mat-header-cell *matHeaderCellDef>عدد الحجوزات</th>
+                                <td mat-cell *matCellDef="let row">{{ row.reservationCount }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="revenue">
+                                <th mat-header-cell *matHeaderCellDef>الإيراد</th>
+                                <td mat-cell *matCellDef="let row">{{ row.revenue | number:'1.0-0' }} ر.س</td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="monthlyColumns"></tr>
+                            <tr mat-row *matRowDef="let row; columns: monthlyColumns"></tr>
+                            <tr class="empty-row" *matNoDataRow>
+                                <td [attr.colspan]="monthlyColumns.length">لا توجد بيانات للفترة المحددة</td>
+                            </tr>
+                        </table>
+                    </div>
+                </section>
+
+            }
 
         </div>
 

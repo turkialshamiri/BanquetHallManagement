@@ -134,29 +134,60 @@
 
                                 <div class="actions">
 
-                                    <button
-                                        class="action-btn edit-btn"
-                                        (click)="editReservation(reservation.id)">
+                                    @if (canConfirmReservation(reservation.status)) {
+                                        <button
+                                            class="action-btn confirm-btn"
+                                            title="تأكيد"
+                                            (click)="confirmReservation(reservation.id)">
 
-                                        <mat-icon>
+                                            <mat-icon>check_circle</mat-icon>
 
-                                            edit
+                                        </button>
+                                    }
 
-                                        </mat-icon>
+                                    @if (canCompleteReservation(reservation.status)) {
+                                        <button
+                                            class="action-btn complete-btn"
+                                            title="إكمال"
+                                            (click)="completeReservation(reservation.id)">
 
-                                    </button>
+                                            <mat-icon>task_alt</mat-icon>
 
-                                    <button
-                                        class="action-btn delete-btn"
-                                        (click)="deleteReservation(reservation.id)">
+                                        </button>
+                                    }
 
-                                        <mat-icon>
+                                    @if (canCancelReservation(reservation.status)) {
+                                        <button
+                                            class="action-btn cancel-btn"
+                                            title="إلغاء"
+                                            (click)="cancelReservation(reservation.id)">
 
-                                            delete
+                                            <mat-icon>cancel</mat-icon>
 
-                                        </mat-icon>
+                                        </button>
+                                    }
 
-                                    </button>
+                                    @if (canEditReservation(reservation.status)) {
+                                        <button
+                                            class="action-btn edit-btn"
+                                            title="تعديل"
+                                            (click)="editReservation(reservation.id)">
+
+                                            <mat-icon>edit</mat-icon>
+
+                                        </button>
+                                    }
+
+                                    @if (canDeleteReservation(reservation.status)) {
+                                        <button
+                                            class="action-btn delete-btn"
+                                            title="حذف"
+                                            (click)="deleteReservation(reservation.id)">
+
+                                            <mat-icon>delete</mat-icon>
+
+                                        </button>
+                                    }
 
                                 </div>
 

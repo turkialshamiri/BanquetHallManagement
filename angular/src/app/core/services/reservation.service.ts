@@ -35,4 +35,25 @@ export class ReservationService {
   deleteReservation(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  confirmReservation(id: string): Observable<Reservation> {
+    return this.http.post<Reservation>(
+      `${this.apiUrl}/${id}/confirm`,
+      {}
+    );
+  }
+
+  cancelReservation(id: string): Observable<Reservation> {
+    return this.http.post<Reservation>(
+      `${this.apiUrl}/${id}/cancel`,
+      {}
+    );
+  }
+
+  completeReservation(id: string): Observable<Reservation> {
+    return this.http.post<Reservation>(
+      `${this.apiUrl}/${id}/complete`,
+      {}
+    );
+  }
 }
