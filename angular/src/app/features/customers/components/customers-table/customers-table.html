@@ -1,0 +1,143 @@
+<div class="table-card">
+
+    <div class="table-header">
+
+        <div>
+
+            <h2>العملاء</h2>
+
+            <span>
+                جميع العملاء المسجلين بالنظام
+            </span>
+
+        </div>
+
+        <button class="add-btn" (click)="openAddCustomerDialog()">
+
+            + إضافة عميل
+
+        </button>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>اسم العميل</th>
+
+                    <th>رقم الهاتف</th>
+
+                    <th>اسم الشركة</th>
+
+                    <th>العمليات</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @if (customers.length > 0) {
+
+                    @for (customer of customers; track customer.id) {
+
+                        <tr>
+
+                            <td>
+
+                                <div class="customer-info">
+
+                                    <div class="customer-avatar">
+
+                                        👤
+
+                                    </div>
+
+                                    <div>
+
+                                        <strong>
+
+                                            {{ customer.name }}
+
+                                        </strong>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                {{ customer.phone }}
+
+                            </td>
+
+                            <td>
+
+                                {{ customer.company || '—' }}
+
+                            </td>
+
+                            <td>
+
+                                <div class="actions">
+
+                                    <button
+                                        class="action-btn edit-btn"
+                                        (click)="editCustomer(customer.id)">
+
+                                        <mat-icon>
+
+                                            edit
+
+                                        </mat-icon>
+
+                                    </button>
+
+                                    <button
+                                        class="action-btn delete-btn"
+                                        (click)="deleteCustomer(customer.id)">
+
+                                        <mat-icon>
+
+                                            delete
+
+                                        </mat-icon>
+
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    }
+
+                } @else {
+
+                    <tr>
+
+                        <td colspan="4" class="empty-state">
+
+                            لا يوجد عملاء مسجلون حالياً
+
+                        </td>
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

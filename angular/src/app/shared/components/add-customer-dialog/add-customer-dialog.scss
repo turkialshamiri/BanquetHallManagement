@@ -1,0 +1,135 @@
+.dialog-container {
+
+    width: 680px;
+    max-width: 100%;
+
+    padding: 24px;
+}
+
+h2 {
+
+    margin: 0 0 20px;
+
+    font-size: 24px;
+
+    font-weight: 700;
+
+    color: var(--text-primary);
+}
+
+.form-group {
+
+    display: flex;
+
+    flex-direction: column;
+
+    margin-bottom: 12px;
+}
+
+label {
+
+    margin-bottom: 6px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    color: var(--text-primary);
+}
+
+.required {
+
+    color: var(--danger);
+}
+
+input {
+
+    height: 44px;
+
+    padding: 0 14px;
+
+    border: 1px solid var(--border-color);
+
+    border-radius: 10px;
+
+    background: white;
+
+    font-size: 14px;
+
+    transition: .2s;
+}
+
+input:focus {
+
+    border-color: var(--primary-500);
+
+    box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+
+    outline: none;
+}
+
+input.invalid {
+
+    border-color: var(--danger);
+}
+
+.error-message {
+
+    margin-top: 4px;
+
+    font-size: 12px;
+
+    color: var(--danger);
+}
+
+.actions {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 20px;
+}
+
+.actions button {
+
+    min-width: 120px;
+
+    height: 42px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-weight: 600;
+
+    transition: .2s;
+}
+
+.cancel-btn {
+
+    background: #e2e8f0;
+
+    color: var(--text-primary);
+}
+
+.cancel-btn:hover {
+
+    background: #cbd5e1;
+}
+
+.save-btn {
+
+    background: var(--primary-600);
+
+    color: white;
+}
+
+.save-btn:hover {
+
+    background: var(--primary-700);
+}
