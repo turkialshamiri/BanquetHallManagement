@@ -1,35 +1,53 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatButtonModule } from '@angular/material/button';
+
+interface SidebarChildItem {
+  title: string;
+  icon: string;
+  route: string;
+  exact?: boolean;
+}
+
+interface SidebarMenuItem {
+  title: string;
+  icon: string;
+  children: SidebarChildItem[];
+}
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-
   imports: [
     CommonModule,
     RouterModule,
     MatSidenavModule,
     MatExpansionModule,
-    MatIconModule
+    MatIconModule,
   ],
-
   templateUrl: './sidebar.html',
-  styleUrls: ['./sidebar.scss']
+  styleUrls: ['./sidebar.scss'],
 })
 export class Sidebar {
+  private router = inject(Router);
 
-  menuItems = [
-
+  menuItems: SidebarMenuItem[] = [
+    {
+      title: 'لوحة التحكم',
+      icon: 'dashboard',
+      children: [
+        {
+          title: 'الرئيسية',
+          icon: 'home',
+          route: '/dashboard',
+          exact: true,
+        },
+      ],
+    },
     {
       title: 'القاعات',
       icon: 'apartment',
@@ -37,31 +55,35 @@ export class Sidebar {
         {
           title: 'جميع القاعات',
           icon: 'apartment',
-          route: '/halls/all'
+          route: '/halls/all',
+          exact: true,
         },
         {
           title: 'القاعات المتاحة',
           icon: 'check_circle',
-          route: '/halls/available'
+          route: '/halls/available',
+          exact: true,
         },
         {
           title: 'القاعات المحجوزة',
           icon: 'event_busy',
-          route: '/halls/booked'
+          route: '/halls/booked',
+          exact: true,
         },
         {
           title: 'القاعات المشغولة',
           icon: 'meeting_room',
-          route: '/halls/occupied'
+          route: '/halls/occupied',
+          exact: true,
         },
         {
           title: 'تحت الصيانة',
           icon: 'build',
-          route: '/halls/maintenance'
-        }
-      ]
+          route: '/halls/maintenance',
+          exact: true,
+        },
+      ],
     },
-
     {
       title: 'العملاء',
       icon: 'groups',
@@ -69,16 +91,35 @@ export class Sidebar {
         {
           title: 'عرض العملاء',
           icon: 'group',
-          route: '/customers'
+          route: '/customers',
+          exact: true,
         },
         {
           title: 'إضافة عميل',
           icon: 'person_add',
-          route: '/customers/create'
-        }
-      ]
+          route: '/customers/create',
+          exact: true,
+        },
+      ],
     },
-
+    {
+      title: 'الخدمات',
+      icon: 'room_service',
+      children: [
+        {
+          title: 'عرض الخدمات',
+          icon: 'list_alt',
+          route: '/services',
+          exact: true,
+        },
+        {
+          title: 'إضافة خدمة',
+          icon: 'add_circle',
+          route: '/services/create',
+          exact: true,
+        },
+      ],
+    },
     {
       title: 'الحجوزات',
       icon: 'event_available',
@@ -86,16 +127,17 @@ export class Sidebar {
         {
           title: 'عرض الحجوزات',
           icon: 'calendar_month',
-          route: '/bookings'
+          route: '/bookings',
+          exact: true,
         },
         {
           title: 'إضافة حجز',
           icon: 'add_circle',
-          route: '/bookings/create'
-        }
-      ]
+          route: '/bookings/create',
+          exact: true,
+        },
+      ],
     },
-
     {
       title: 'التقارير',
       icon: 'analytics',
@@ -103,26 +145,29 @@ export class Sidebar {
         {
           title: 'التقارير اليومية',
           icon: 'today',
-          route: '/reports/daily'
+          route: '/reports/daily',
+          exact: true,
         },
         {
           title: 'التقارير الشهرية',
           icon: 'date_range',
-          route: '/reports/monthly'
+          route: '/reports/monthly',
+          exact: true,
         },
         {
           title: 'التقارير السنوية',
           icon: 'assessment',
-          route: '/reports/yearly'
+          route: '/reports/yearly',
+          exact: true,
         },
         {
           title: 'تقارير الإيرادات',
           icon: 'payments',
-          route: '/reports/revenue'
-        }
-      ]
+          route: '/reports/revenue',
+          exact: true,
+        },
+      ],
     },
-
     {
       title: 'من نحن',
       icon: 'info',
@@ -130,11 +175,11 @@ export class Sidebar {
         {
           title: 'التعريف بالنظام',
           icon: 'info_outline',
-          route: '/about'
-        }
-      ]
+          route: '/about',
+          exact: true,
+        },
+      ],
     },
-
     {
       title: 'الدعم الفني',
       icon: 'support_agent',
@@ -142,16 +187,26 @@ export class Sidebar {
         {
           title: 'تواصل معنا',
           icon: 'contact_support',
-          route: '/support/contact'
+          route: '/support/contact',
+          exact: true,
         },
         {
           title: 'إرسال شكوى',
           icon: 'report_problem',
-          route: '/support/ticket'
-        }
-      ]
-    }
-
+          route: '/support/ticket',
+          exact: true,
+        },
+      ],
+    },
   ];
 
+  isSectionActive(item: SidebarMenuItem): boolean {
+    const currentUrl = this.router.url.split('?')[0];
+
+    return item.children.some((child) => this.isRouteActive(child.route, currentUrl));
+  }
+
+  isRouteActive(route: string, currentUrl: string = this.router.url.split('?')[0]): boolean {
+    return currentUrl === route;
+  }
 }

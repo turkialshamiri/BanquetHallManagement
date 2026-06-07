@@ -1,0 +1,189 @@
+<div class="table-card">
+
+    <div class="table-header">
+
+        <div>
+
+            <h2>الحجوزات</h2>
+
+            <span>
+                جميع حجوزات القاعات المسجلة بالنظام
+            </span>
+
+        </div>
+
+        <button class="add-btn" (click)="openAddReservationDialog()">
+
+            + إضافة حجز
+
+        </button>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>العميل</th>
+
+                    <th>القاعة</th>
+
+                    <th>تاريخ المناسبة</th>
+
+                    <th>وقت البداية</th>
+
+                    <th>وقت النهاية</th>
+
+                    <th>عدد الضيوف</th>
+
+                    <th>السعر الإجمالي</th>
+
+                    <th>الحالة</th>
+
+                    <th>العمليات</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @if (reservations.length > 0) {
+
+                    @for (reservation of reservations; track reservation.id) {
+
+                        <tr>
+
+                            <td>
+
+                                <div class="reservation-info">
+
+                                    <div class="reservation-avatar">
+
+                                        📅
+
+                                    </div>
+
+                                    <div>
+
+                                        <strong>
+
+                                            {{ getCustomerName(reservation.customerId) }}
+
+                                        </strong>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                {{ getHallName(reservation.hallId) }}
+
+                            </td>
+
+                            <td>
+
+                                {{ reservation.eventDate | date:'yyyy/MM/dd' }}
+
+                            </td>
+
+                            <td>
+
+                                {{ formatTime(reservation.startTime) }}
+
+                            </td>
+
+                            <td>
+
+                                {{ formatTime(reservation.endTime) }}
+
+                            </td>
+
+                            <td>
+
+                                {{ reservation.guestsCount }}
+
+                            </td>
+
+                            <td>
+
+                                {{ reservation.totalPrice | number }}
+
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="status-badge"
+                                    [ngClass]="getReservationStatusClass(reservation.status)">
+
+                                    {{ getReservationStatusLabel(reservation.status) }}
+
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                <div class="actions">
+
+                                    <button
+                                        class="action-btn edit-btn"
+                                        (click)="editReservation(reservation.id)">
+
+                                        <mat-icon>
+
+                                            edit
+
+                                        </mat-icon>
+
+                                    </button>
+
+                                    <button
+                                        class="action-btn delete-btn"
+                                        (click)="deleteReservation(reservation.id)">
+
+                                        <mat-icon>
+
+                                            delete
+
+                                        </mat-icon>
+
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    }
+
+                } @else {
+
+                    <tr>
+
+                        <td colspan="9" class="empty-state">
+
+                            لا توجد حجوزات مسجلة حالياً
+
+                        </td>
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

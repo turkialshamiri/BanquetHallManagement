@@ -1,4 +1,9 @@
-import { Component, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  inject,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -18,6 +23,7 @@ export class CustomersTableComponent implements OnInit {
   private customerService = inject(CustomerService);
   private dialog = inject(MatDialog);
   private dialogService = inject(DialogService);
+  private cdr = inject(ChangeDetectorRef);
 
   customers: Customer[] = [];
 
@@ -29,6 +35,7 @@ export class CustomersTableComponent implements OnInit {
     this.customerService.getCustomers().subscribe({
       next: (response) => {
         this.customers = response.items;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error(error);

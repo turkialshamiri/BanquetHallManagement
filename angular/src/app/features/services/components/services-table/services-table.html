@@ -1,0 +1,135 @@
+<div class="table-card">
+
+    <div class="table-header">
+
+        <div>
+
+            <h2>الخدمات</h2>
+
+            <span>
+                جميع الخدمات الإضافية المتاحة للحجز
+            </span>
+
+        </div>
+
+        <button class="add-btn" (click)="openAddServiceDialog()">
+
+            + إضافة خدمة
+
+        </button>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>اسم الخدمة</th>
+
+                    <th>السعر</th>
+
+                    <th>العمليات</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @if (services.length > 0) {
+
+                    @for (service of services; track service.id) {
+
+                        <tr>
+
+                            <td>
+
+                                <div class="service-info">
+
+                                    <div class="service-avatar">
+
+                                        🛎️
+
+                                    </div>
+
+                                    <div>
+
+                                        <strong>
+
+                                            {{ service.name }}
+
+                                        </strong>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                {{ service.price | number }}
+
+                            </td>
+
+                            <td>
+
+                                <div class="actions">
+
+                                    <button
+                                        class="action-btn edit-btn"
+                                        (click)="editService(service.id)">
+
+                                        <mat-icon>
+
+                                            edit
+
+                                        </mat-icon>
+
+                                    </button>
+
+                                    <button
+                                        class="action-btn delete-btn"
+                                        (click)="deleteService(service.id)">
+
+                                        <mat-icon>
+
+                                            delete
+
+                                        </mat-icon>
+
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    }
+
+                } @else {
+
+                    <tr>
+
+                        <td colspan="3" class="empty-state">
+
+                            لا توجد خدمات مسجلة حالياً
+
+                        </td>
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

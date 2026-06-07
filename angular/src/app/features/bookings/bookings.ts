@@ -7,18 +7,18 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { Navbar } from 'src/app/layout/navbar/navbar';
 import { Sidebar } from 'src/app/layout/sidebar/sidebar';
-import { CustomersTableComponent } from './components/customers-table/customers-table';
+import { ReservationsTableComponent } from './components/reservations-table/reservations-table';
 
 @Component({
-  selector: 'app-customers',
+  selector: 'app-bookings',
   standalone: true,
-  imports: [Sidebar, Navbar, CustomersTableComponent],
-  templateUrl: './customers.html',
-  styleUrl: './customers.scss',
+  imports: [Sidebar, Navbar, ReservationsTableComponent],
+  templateUrl: './bookings.html',
+  styleUrl: './bookings.scss',
 })
-export class Customers implements AfterViewInit {
-  @ViewChild(CustomersTableComponent)
-  customersTable!: CustomersTableComponent;
+export class Bookings implements AfterViewInit {
+  @ViewChild(ReservationsTableComponent)
+  reservationsTable!: ReservationsTableComponent;
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -31,8 +31,8 @@ export class Customers implements AfterViewInit {
       return;
     }
 
-    this.customersTable.openAddCustomerDialog();
+    this.reservationsTable.openAddReservationDialog();
 
-    this.router.navigate(['/customers'], { replaceUrl: true });
+    this.router.navigate(['/bookings'], { replaceUrl: true });
   }
 }

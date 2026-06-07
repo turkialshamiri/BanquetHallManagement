@@ -101,7 +101,7 @@ tr:hover {
     background: #fafcff;
 }
 
-.hall-info {
+.service-info {
 
     display: flex;
 
@@ -110,7 +110,7 @@ tr:hover {
     gap: 12px;
 }
 
-.hall-avatar {
+.service-avatar {
 
     width: 45px;
 
@@ -124,41 +124,24 @@ tr:hover {
 
     justify-content: center;
 
-    background: #dbeafe;
+    background: #fef3c7;
 }
 
-.hall-info strong {
+.service-info strong {
 
     display: block;
 
     color: #0f172a;
 }
 
-.hall-info span {
+.empty-state {
 
-    font-size: 12px;
+    text-align: center;
 
     color: #64748b;
+
+    padding: 32px !important;
 }
-
-.status {
-
-    background: #dcfce7;
-
-    color: #15803d;
-
-    padding: 6px 12px;
-
-    border-radius: 999px;
-
-    font-size: 12px;
-
-    font-weight: 600;
-}
-
-/* ======================
-   ACTIONS
-====================== */
 
 .actions {
 
@@ -192,8 +175,6 @@ tr:hover {
     font-size: 16px;
 }
 
-/* Edit */
-
 .edit-btn {
 
     background: #dbeafe;
@@ -205,8 +186,6 @@ tr:hover {
 
     transform: translateY(-2px);
 }
-
-/* Delete */
 
 .delete-btn {
 

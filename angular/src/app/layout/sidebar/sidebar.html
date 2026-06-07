@@ -5,8 +5,6 @@
     opened
     class="sidebar">
 
-    <!-- Logo -->
-
     <div class="logo">
 
       <div class="logo-circle">
@@ -19,13 +17,12 @@
 
     </div>
 
-    <!-- Menu -->
-
     <mat-accordion multi>
 
       <mat-expansion-panel
         *ngFor="let item of menuItems"
-        class="menu-panel">
+        class="menu-panel"
+        [expanded]="isSectionActive(item)">
 
         <mat-expansion-panel-header>
 
@@ -40,9 +37,7 @@
             </div>
 
             <span class="menu-title">
-
               {{ item.title }}
-
             </span>
 
           </div>
@@ -55,7 +50,9 @@
             *ngFor="let child of item.children"
             [routerLink]="child.route"
             routerLinkActive="active-link"
-            class="submenu-item">
+            [routerLinkActiveOptions]="{ exact: child.exact ?? true }"
+            class="submenu-item"
+            (click)="$event.stopPropagation()">
 
             <div class="submenu-icon">
 
@@ -66,9 +63,7 @@
             </div>
 
             <span class="submenu-title">
-
               {{ child.title }}
-
             </span>
 
           </a>
