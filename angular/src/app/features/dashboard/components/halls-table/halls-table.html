@@ -12,7 +12,7 @@
 
         </div>
 
-        <button class="add-btn">
+        <button class="add-btn" (click)="openAddHallDialog()">
 
             + إضافة قاعة
 
@@ -52,136 +52,128 @@
 
                 @if(halls.length > 0){
 
-                    @for(hall of halls; track hall.id){
+                @for(hall of halls; track hall.id){
 
-                        <tr>
+                <tr>
 
-                            <td>
+                    <td>
 
-                                <div class="hall-info">
+                        <div class="hall-info">
 
-                                    <div class="hall-avatar">
+                            <div class="hall-avatar">
 
-                                        🏛️
+                                🏛️
 
-                                    </div>
+                            </div>
 
-                                    <div>
+                            <div>
 
-                                        <strong>
+                                <strong>
 
-                                            {{ hall.name }}
+                                    {{ hall.name }}
 
-                                        </strong>
+                                </strong>
 
-                                        <span>
+                                <span>
 
-                                            {{ hall.description }}
+                                    {{ hall.description }}
 
-                                        </span>
+                                </span>
 
-                                    </div>
+                            </div>
 
-                                </div>
+                        </div>
 
-                            </td>
+                    </td>
 
-                            <td>
+                    <td>
 
-                                {{ hall.location }}
+                        {{ hall.location }}
 
-                            </td>
+                    </td>
 
-                            <td>
+                    <td>
 
-                                {{ hall.capacity }}
+                        {{ hall.capacity }}
 
-                            </td>
+                    </td>
 
-                            <td>
+                    <td>
 
-                                {{ hall.pricePerHour | number }}
+                        {{ hall.pricePerHour | number }}
 
-                            </td>
+                    </td>
 
-                            <td>
+                    <td>
 
-                                <span
-                                    class="status"
-                                    [ngClass]="{
+                        <span class="status" [ngClass]="{
                                         'available': hall.status === 1,
                                         'booked': hall.status === 2,
                                         'occupied': hall.status === 3,
                                         'maintenance': hall.status === 4
                                     }">
 
-                                    {{ getStatusText(hall.status) }}
+                            {{ getStatusText(hall.status) }}
 
-                                </span>
+                        </span>
 
-                            </td>
+                    </td>
 
-                            <td>
+                    <td>
 
-                                {{ getTypeText(hall.type) }}
+                        {{ getTypeText(hall.type) }}
 
-                            </td>
+                    </td>
 
-                            <td>
+                    <td>
 
-                                {{ hall.creationTime | date:'yyyy/MM/dd' }}
+                        {{ hall.creationTime | date:'yyyy/MM/dd' }}
 
-                            </td>
+                    </td>
 
-                            <td>
+                    <td>
 
-                                <div class="actions">
+                        <div class="actions">
 
-                                    <button
-                                        class="action-btn edit-btn"
-                                        (click)="editHall(hall.id)">
+                            <button class="action-btn edit-btn" (click)="editHall(hall.id)">
 
-                                        <mat-icon>
+                                <mat-icon>
 
-                                            edit
+                                    edit
 
-                                        </mat-icon>
+                                </mat-icon>
 
-                                    </button>
+                            </button>
 
-                                    <button
-                                        class="action-btn delete-btn"
-                                        (click)="deleteHall(hall.id)">
+                            <button class="action-btn delete-btn" (click)="deleteHall(hall.id)">
 
-                                        <mat-icon>
+                                <mat-icon>
 
-                                            delete
+                                    delete
 
-                                        </mat-icon>
+                                </mat-icon>
 
-                                    </button>
+                            </button>
 
-                                </div>
+                        </div>
 
-                            </td>
+                    </td>
 
-                        </tr>
+                </tr>
 
-                    }
+                }
 
                 } @else {
 
-                    <tr>
+                <tr>
 
-                        <td
-                            colspan="8"
-                            class="empty-state">
+                    <td colspan="8" class="empty-state">
 
-                            لا توجد قاعات مسجلة حالياً
+                        لا توجد قاعات مسجلة حالياً
 
-                        </td>
+                    </td>
 
-                    </tr>
+                </tr>
 
                 }
 

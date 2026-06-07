@@ -1,0 +1,107 @@
+<div class="dialog-container">
+
+    <h2>
+
+        {{ isEditMode
+        ? 'تعديل القاعة'
+        : 'إضافة قاعة جديدة' }}
+
+    </h2>
+
+    <div class="form-group">
+
+        <label>اسم القاعة</label>
+
+        <input type="text" [(ngModel)]="hall.name">
+
+    </div>
+
+    <div class="form-group">
+
+        <label>الوصف</label>
+
+        <textarea [(ngModel)]="hall.description">
+        </textarea>
+
+    </div>
+
+    <div class="grid">
+
+        <div class="form-group">
+
+            <label>السعة</label>
+
+            <input type="number" [(ngModel)]="hall.capacity">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>السعر / ساعة</label>
+
+            <input type="number" [(ngModel)]="hall.pricePerHour">
+
+        </div>
+
+    </div>
+
+    <div class="form-group">
+
+        <label>الموقع</label>
+
+        <input type="text" [(ngModel)]="hall.location">
+
+    </div>
+
+    <div class="grid">
+
+        <div class="form-group">
+
+            <label>الحالة</label>
+
+            <select [(ngModel)]="hall.status">
+
+                <option [value]="1">متاحة</option>
+                <option [value]="2">محجوزة</option>
+                <option [value]="3">مشغولة</option>
+                <option [value]="4">تحت الصيانة</option>
+
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>النوع</label>
+
+            <select [(ngModel)]="hall.type">
+
+                <option [value]="1">أفراح</option>
+                <option [value]="2">مؤتمرات</option>
+                <option [value]="3">اجتماعات</option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+    <div class="actions">
+
+        <button class="cancel-btn" (click)="close()">
+
+            إلغاء
+
+        </button>
+
+        <button class="save-btn" (click)="save()">
+
+            {{ isEditMode
+            ? 'حفظ التعديلات'
+            : 'إضافة القاعة' }}
+
+        </button>
+
+    </div>
+
+</div>
