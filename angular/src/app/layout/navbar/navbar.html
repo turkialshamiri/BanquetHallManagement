@@ -1,8 +1,19 @@
 <mat-toolbar class="navbar">
 
-    <!-- معلومات الصفحة -->
+    <div class="navbar-start">
 
-    <div class="navbar-right">
+        @if (layoutService.isMobile()) {
+            <button
+                mat-icon-button
+                class="nav-btn menu-toggle"
+                type="button"
+                aria-label="فتح القائمة"
+                (click)="layoutService.toggleSidebar()">
+
+                <mat-icon>menu</mat-icon>
+
+            </button>
+        }
 
         <div class="page-section">
 

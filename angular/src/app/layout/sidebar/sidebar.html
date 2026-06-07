@@ -1,8 +1,12 @@
-<mat-sidenav-container class="sidebar-container">
+<mat-sidenav-container
+  class="sidebar-container"
+  [class.is-mobile]="layoutService.isMobile()"
+  [class.is-open]="layoutService.sidebarOpen()">
 
   <mat-sidenav
-    mode="side"
-    opened
+    [mode]="sidenavMode"
+    [opened]="sidenavOpened"
+    (closedStart)="layoutService.closeSidebar()"
     class="sidebar">
 
     <div class="logo">
@@ -52,7 +56,7 @@
             routerLinkActive="active-link"
             [routerLinkActiveOptions]="{ exact: child.exact ?? true }"
             class="submenu-item"
-            (click)="$event.stopPropagation()">
+            (click)="onNavClick(); $event.stopPropagation()">
 
             <div class="submenu-icon">
 

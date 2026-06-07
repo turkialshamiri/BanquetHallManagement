@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -7,6 +7,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
+
+import { LayoutService } from '../services/layout.service';
+
 @Component({
   selector: 'app-navbar',
   standalone: true,
@@ -19,11 +22,11 @@ import { MatDividerModule } from '@angular/material/divider';
     MatButtonModule,
     MatMenuModule,
     MatBadgeModule,
-    MatDividerModule
-  ]
+    MatDividerModule,
+  ],
 })
 export class Navbar {
+  layoutService = inject(LayoutService);
 
   userName = 'مدير النظام';
-
 }

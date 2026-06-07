@@ -136,3 +136,11 @@ select:focus {
 
     background: var(--primary-700);
 }
+
+@media (max-width: 768px) {
+
+    .grid {
+
+        grid-template-columns: 1fr;
+    }
+}

@@ -92,9 +92,64 @@
 
     margin: 0;
 
-    font-size: 32px;
+    font-size: clamp(1.5rem, 4vw, 32px);
 
     font-weight: 700;
 
     color: var(--text-primary);
+}
+
+@media (max-width: 1200px) {
+
+    .stats-grid {
+
+        grid-template-columns: repeat(2, 1fr);
+
+        gap: 16px;
+
+        margin: 20px;
+    }
+}
+
+@media (max-width: 767px) {
+
+    .stats-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 12px;
+
+        margin: 12px;
+    }
+
+    .stat-card {
+
+        padding: 16px;
+
+        gap: 14px;
+    }
+
+    .card-icon {
+
+        width: 52px;
+
+        height: 52px;
+
+        font-size: 24px;
+
+        border-radius: 14px;
+    }
+
+    .card-title {
+
+        font-size: 13px;
+    }
+}
+
+@media (min-width: 1440px) {
+
+    .stats-grid {
+
+        margin: 25px 25px 0;
+    }
 }

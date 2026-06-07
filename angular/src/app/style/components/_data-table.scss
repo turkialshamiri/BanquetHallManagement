@@ -1,0 +1,88 @@
+/* =========================================
+   SHARED DATA TABLE RESPONSIVE STYLES
+========================================= */
+
+.table-card {
+  max-width: 100%;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrapper table {
+  min-width: 560px;
+}
+
+@media (max-width: 1024px) {
+  .table-header {
+    padding: 20px;
+  }
+
+  .table-header h2 {
+    font-size: 18px;
+  }
+
+  th,
+  td {
+    padding: 14px 12px;
+  }
+}
+
+@media (max-width: 767px) {
+  .table-card {
+    margin-top: 16px;
+    border-radius: 16px;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .table-header > div {
+    min-width: 0;
+  }
+
+  .add-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  th,
+  td {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .actions {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 425px) {
+  .table-wrapper table {
+    min-width: 480px;
+  }
+
+  th,
+  td {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .action-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .hall-avatar,
+  .customer-avatar,
+  .reservation-avatar {
+    width: 38px;
+    height: 38px;
+  }
+}

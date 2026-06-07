@@ -4,6 +4,8 @@
 
 .sidebar-container {
   height: 100vh;
+  height: 100dvh;
+  flex-shrink: 0;
 }
 
 /* ===========================
@@ -294,4 +296,59 @@
   background: var(--sidebar-border);
 
   border-radius: 10px;
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media (max-width: 767px) {
+  .sidebar-container {
+    width: 0;
+    min-width: 0;
+    overflow: visible;
+  }
+
+  .sidebar-container.is-open {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    z-index: 1100;
+  }
+
+  .sidebar {
+    width: min(85vw, var(--sidebar-width)) !important;
+  }
+
+  .logo {
+    padding: 20px 16px;
+  }
+
+  .logo-circle {
+    width: 64px;
+    height: 64px;
+    font-size: 30px;
+  }
+
+  .logo h2 {
+    font-size: 18px;
+  }
+
+  .logo span {
+    font-size: 12px;
+  }
+
+  .menu-title {
+    font-size: 14px;
+  }
+
+  .submenu-item {
+    padding: 10px 12px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .sidebar {
+    width: 220px !important;
+  }
 }

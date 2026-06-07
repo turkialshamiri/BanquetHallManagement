@@ -7,6 +7,9 @@
 
 @use './base/reset';
 @use './base/global';
+@use './layout/app-layout';
+@use './components/data-table';
+@use './components/dialogs';
 
 html {
   height: 100%;

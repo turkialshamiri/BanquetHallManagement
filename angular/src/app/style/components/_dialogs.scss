@@ -1,0 +1,42 @@
+/* =========================================
+   SHARED DIALOG RESPONSIVE STYLES
+========================================= */
+
+.dialog-container {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .dialog-container {
+    width: 100% !important;
+    padding: 16px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .dialog-container h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .dialog-container .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dialog-container .actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .dialog-container .actions button {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+@media (max-width: 425px) {
+  .dialog-container {
+    padding: 14px 12px;
+  }
+}

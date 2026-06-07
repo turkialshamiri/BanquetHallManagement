@@ -1,4 +1,11 @@
-:root{
+:root {
+  --sidebar-width: 250px;
 
-    --sidebar-width: 250px;
+  /* Breakpoints (reference — use in media queries) */
+  --bp-mobile-max: 767px;
+  --bp-tablet-min: 768px;
+  --bp-tablet-max: 1024px;
+  --bp-desktop-min: 1025px;
+  --bp-wide-min: 1440px;
+  --bp-ultra-min: 1920px;
 }

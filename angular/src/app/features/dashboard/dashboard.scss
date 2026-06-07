@@ -1,65 +1,12 @@
-/* =========================================
-   MAIN LAYOUT
-========================================= */
+/* Dashboard uses global app-layout; keep page-specific spacing only */
 
-.app-layout {
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-    background: var(--background);
+.main-layout > app-statistics-cards,
+.main-layout > app-halls-table {
+  min-width: 0;
 }
 
-/* =========================================
-   CONTENT AREA
-========================================= */
-
-.main-layout {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-     overflow-y: auto;
-}
-// .main-layout {
-//     flex: 1;
-//     height: 100vh;
-//     overflow-y: auto;
-// }
-
-.page-container {
-    flex: 1;
-    padding: 24px;
-    overflow-y: auto;
-    background: var(--background);
-}
-
-/* =========================================
-   CUSTOM SCROLLBAR
-========================================= */
-
-.page-container::-webkit-scrollbar {
-    width: 8px;
-}
-
-.page-container::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 20px;
-}
-
-.page-container::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* =========================================
-   RESPONSIVE
-========================================= */
-
-@media (max-width: 992px) {
-    .app-layout {
-        flex-direction: column;
-    }
-
-    .page-container {
-        padding: 16px;
-    }
+@media (max-width: 767px) {
+  .main-layout > app-halls-table {
+    padding-inline: 12px;
+  }
 }
