@@ -4,6 +4,10 @@ import {
   MAT_DIALOG_DATA,
   MatDialogRef
 } from '@angular/material/dialog';
+import {
+  ConfirmDialogData,
+  resolveConfirmDialogData,
+} from './confirm-dialog.model';
 
 @Component({
   selector: 'app-confirm-dialog',
@@ -15,7 +19,9 @@ import {
 export class ConfirmDialog {
 
   readonly dialogRef = inject(MatDialogRef<ConfirmDialog>);
-  readonly data = inject(MAT_DIALOG_DATA);
+  readonly data = resolveConfirmDialogData(
+    inject<ConfirmDialogData>(MAT_DIALOG_DATA)
+  );
 
   confirm(): void {
     this.dialogRef.close(true);

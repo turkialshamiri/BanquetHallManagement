@@ -22,9 +22,6 @@ import {
 import { HallService } from 'src/app/core/services/hall.service';
 import { ReportService } from 'src/app/core/services/report.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
-import { Navbar } from 'src/app/layout/navbar/navbar';
-import { Sidebar } from 'src/app/layout/sidebar/sidebar';
-
 @Component({
   selector: 'app-reports',
   standalone: true,
@@ -32,8 +29,6 @@ import { Sidebar } from 'src/app/layout/sidebar/sidebar';
     CommonModule,
     FormsModule,
     DecimalPipe,
-    Sidebar,
-    Navbar,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,

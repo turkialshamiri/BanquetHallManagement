@@ -5,14 +5,12 @@ import {
   ViewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Navbar } from 'src/app/layout/navbar/navbar';
-import { Sidebar } from 'src/app/layout/sidebar/sidebar';
 import { ServicesTableComponent } from './components/services-table/services-table';
 
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [Sidebar, Navbar, ServicesTableComponent],
+  imports: [ServicesTableComponent],
   templateUrl: './services.html',
   styleUrl: './services.scss',
 })

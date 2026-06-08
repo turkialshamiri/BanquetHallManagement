@@ -17,6 +17,7 @@ import {
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 import { AddHallDialog } from 'src/app/shared/components/add-hall-dialog/add-hall-dialog';
 import { DialogService } from 'src/app/shared/services/dialog.service';
+import { PolicyService } from 'src/app/core/services/policy.service';
 
 @Component({
   selector: 'app-halls-table',
@@ -31,6 +32,7 @@ export class HallsTableComponent implements OnInit {
   private dialogService = inject(DialogService);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+  private policy = inject(PolicyService);
 
   halls: Hall[] = [];
   pageTitle = 'القاعات';
@@ -41,6 +43,10 @@ export class HallsTableComponent implements OnInit {
 
   getHallStatusLabel = getHallStatusLabel;
   getHallStatusClass = getHallStatusClass;
+
+  canCreateHall = this.policy.hasSnapshot('BanquetHallManagement.Halls.Create');
+  canUpdateHall = this.policy.hasSnapshot('BanquetHallManagement.Halls.Update');
+  canDeleteHall = this.policy.hasSnapshot('BanquetHallManagement.Halls.Delete');
 
   ngOnInit(): void {
     this.route.data.subscribe((data) => {

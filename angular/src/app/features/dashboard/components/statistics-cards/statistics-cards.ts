@@ -7,6 +7,7 @@ import {
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { DashboardStats } from 'src/app/core/models/dashboard.model';
 import { DashboardService } from 'src/app/core/services/dashboard.service';
+import { PolicyService } from 'src/app/core/services/policy.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 
 
@@ -19,11 +20,15 @@ import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 })
 export class StatisticsCardsComponent implements OnInit {
   private dashboardService = inject(DashboardService);
+  private policy = inject(PolicyService);
   private cdr = inject(ChangeDetectorRef);
 
   stats: DashboardStats | null = null;
   isLoading = true;
   loadError: string | null = null;
+  canViewRevenue = this.policy.hasSnapshot(
+    'BanquetHallManagement.Dashboard.ViewRevenue'
+  );
 
   ngOnInit(): void {
     this.loadStats();

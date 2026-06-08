@@ -1,52 +1,36 @@
-<div class="app-layout">
+<div class="content-card">
 
-    <app-sidebar></app-sidebar>
+    <h2>{{ pageTitle }}</h2>
 
-    <div class="main-layout">
+    <p>{{ pageDescription }}</p>
 
-        <app-navbar></app-navbar>
+    @if (isTicketPage) {
 
-        <div class="page-container">
+        <div class="info-box">
 
-            <div class="content-card">
+            <strong>إرسال شكوى</strong>
 
-                <h2>{{ pageTitle }}</h2>
-
-                <p>{{ pageDescription }}</p>
-
-                @if (isTicketPage) {
-
-                    <div class="info-box">
-
-                        <strong>إرسال شكوى</strong>
-
-                        <p>
-                            يرجى التواصل مع فريق الدعم الفني عبر البريد
-                            الإلكتروني أو الهاتف لتسجيل شكواك ومتابعتها.
-                        </p>
-
-                    </div>
-
-                } @else {
-
-                    <div class="info-box">
-
-                        <strong>بيانات التواصل</strong>
-
-                        <p>البريد الإلكتروني: support@banquethall.local</p>
-
-                        <p>الهاتف: 920000000</p>
-
-                        <p>ساعات العمل: الأحد – الخميس، 9:00 ص – 5:00 م</p>
-
-                    </div>
-
-                }
-
-            </div>
+            <p>
+                يرجى التواصل مع فريق الدعم الفني عبر البريد
+                الإلكتروني أو الهاتف لتسجيل شكواك ومتابعتها.
+            </p>
 
         </div>
 
-    </div>
+    } @else {
+
+        <div class="info-box">
+
+            <strong>بيانات التواصل</strong>
+
+            <p>البريد الإلكتروني: support@banquethall.local</p>
+
+            <p>الهاتف: 920000000</p>
+
+            <p>ساعات العمل: الأحد – الخميس، 9:00 ص – 5:00 م</p>
+
+        </div>
+
+    }
 
 </div>

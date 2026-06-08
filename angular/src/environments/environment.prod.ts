@@ -6,7 +6,8 @@ const oAuthConfig = {
   issuer: 'https://localhost:44324/',
   redirectUri: baseUrl,
   clientId: 'BanquetHallManagement_App',
-  responseType: 'code',
+  // Use password flow to support an in-app login page.
+  responseType: 'password',
   scope: 'offline_access BanquetHallManagement',
   requireHttps: true,
 };

@@ -5,14 +5,12 @@ import {
   ViewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Navbar } from 'src/app/layout/navbar/navbar';
-import { Sidebar } from 'src/app/layout/sidebar/sidebar';
 import { CustomersTableComponent } from './components/customers-table/customers-table';
 
 @Component({
   selector: 'app-customers',
   standalone: true,
-  imports: [Sidebar, Navbar, CustomersTableComponent],
+  imports: [CustomersTableComponent],
   templateUrl: './customers.html',
   styleUrl: './customers.scss',
 })

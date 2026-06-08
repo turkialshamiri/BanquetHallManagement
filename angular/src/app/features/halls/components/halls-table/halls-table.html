@@ -12,11 +12,13 @@
 
         </div>
 
-        <button class="add-btn" (click)="openAddHallDialog()">
+        @if (canCreateHall) {
+            <button class="add-btn" (click)="openAddHallDialog()">
 
-            + إضافة قاعة
+                + إضافة قاعة
 
-        </button>
+            </button>
+        }
 
     </div>
 
@@ -147,21 +149,25 @@
 
                                 <div class="actions">
 
-                                    <button
-                                        class="action-btn edit-btn"
-                                        (click)="editHall(hall.id)">
+                                    @if (canUpdateHall) {
+                                        <button
+                                            class="action-btn edit-btn"
+                                            (click)="editHall(hall.id)">
 
-                                        <mat-icon>edit</mat-icon>
+                                            <mat-icon>edit</mat-icon>
 
-                                    </button>
+                                        </button>
+                                    }
 
-                                    <button
-                                        class="action-btn delete-btn"
-                                        (click)="deleteHall(hall.id)">
+                                    @if (canDeleteHall) {
+                                        <button
+                                            class="action-btn delete-btn"
+                                            (click)="deleteHall(hall.id)">
 
-                                        <mat-icon>delete</mat-icon>
+                                            <mat-icon>delete</mat-icon>
 
-                                    </button>
+                                        </button>
+                                    }
 
                                 </div>
 

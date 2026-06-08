@@ -52,11 +52,10 @@
 
           <a
             *ngFor="let child of item.children"
-            [routerLink]="child.route"
-            routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: child.exact ?? true }"
+            href="#"
             class="submenu-item"
-            (click)="onNavClick(); $event.stopPropagation()">
+            [class.active-link]="isRouteActive(child.route)"
+            (click)="navigateTo(child.route); $event.preventDefault()">
 
             <div class="submenu-icon">
 

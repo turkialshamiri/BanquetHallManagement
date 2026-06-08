@@ -5,14 +5,12 @@ import {
   ViewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Navbar } from 'src/app/layout/navbar/navbar';
-import { Sidebar } from 'src/app/layout/sidebar/sidebar';
 import { ReservationsTableComponent } from './components/reservations-table/reservations-table';
 
 @Component({
   selector: 'app-bookings',
   standalone: true,
-  imports: [Sidebar, Navbar, ReservationsTableComponent],
+  imports: [ReservationsTableComponent],
   templateUrl: './bookings.html',
   styleUrl: './bookings.scss',
 })

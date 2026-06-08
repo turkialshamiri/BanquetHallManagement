@@ -5,10 +5,13 @@ using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Enums;
 using BanquetHallManagement.Reservations;
 using BanquetHallManagement.Services;
+using BanquetHallManagement.Permissions;
+using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Domain.Repositories;
 
 namespace BanquetHallManagement.Dashboard;
 
+[Authorize(BanquetHallManagementPermissions.Dashboard.Default)]
 public class DashboardAppService : BanquetHallManagementAppService, IDashboardAppService
 {
     private readonly IRepository<Hall, System.Guid> _hallRepository;
@@ -51,13 +54,18 @@ public class DashboardAppService : BanquetHallManagementAppService, IDashboardAp
                     CompletedReservations = g.Count(r => r.Status == ReservationStatus.Completed),
                 }));
 
+        var canViewRevenue = await AuthorizationService.IsGrantedAsync(
+            BanquetHallManagementPermissions.Dashboard.ViewRevenue);
+
         return new DashboardStatsDto
         {
             TotalHalls = totalHalls,
             TotalCustomers = totalCustomers,
             TotalServices = totalServices,
             TotalReservations = reservationStats?.TotalReservations ?? 0,
-            TotalRevenue = reservationStats?.TotalRevenue ?? 0,
+            TotalRevenue = canViewRevenue
+                ? reservationStats?.TotalRevenue ?? 0
+                : 0,
             PendingReservations = reservationStats?.PendingReservations ?? 0,
             ConfirmedReservations = reservationStats?.ConfirmedReservations ?? 0,
             CancelledReservations = reservationStats?.CancelledReservations ?? 0,

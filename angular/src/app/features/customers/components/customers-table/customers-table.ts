@@ -11,6 +11,7 @@ import { Customer } from 'src/app/core/models/customer.model';
 import { CustomerService } from 'src/app/core/services/customer.service';
 import { AddCustomerDialog } from 'src/app/shared/components/add-customer-dialog/add-customer-dialog';
 import { DialogService } from 'src/app/shared/services/dialog.service';
+import { PolicyService } from 'src/app/core/services/policy.service';
 
 @Component({
   selector: 'app-customers-table',
@@ -24,8 +25,12 @@ export class CustomersTableComponent implements OnInit {
   private dialog = inject(MatDialog);
   private dialogService = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
+  private policy = inject(PolicyService);
 
   customers: Customer[] = [];
+  canCreate = this.policy.hasSnapshot('BanquetHallManagement.Customers.Create');
+  canUpdate = this.policy.hasSnapshot('BanquetHallManagement.Customers.Update');
+  canDelete = this.policy.hasSnapshot('BanquetHallManagement.Customers.Delete');
 
   ngOnInit(): void {
     this.loadCustomers();

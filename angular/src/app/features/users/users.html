@@ -1,0 +1,88 @@
+<div class="content-card users-page">
+  <div class="header">
+    <div>
+      <h2>المستخدمون</h2>
+      <span>إدارة الموظفين وصلاحياتهم</span>
+    </div>
+
+    @if (canCreate) {
+      <button class="add-btn" (click)="openCreateDialog()">
+        + إضافة موظف
+      </button>
+    }
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>اسم المستخدم</th>
+          <th>الاسم</th>
+          <th>البريد</th>
+          <th>الهاتف</th>
+          <th>الدور</th>
+          <th>الحالة</th>
+          <th>العمليات</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @if (isLoading) {
+          <tr>
+            <td colspan="7" class="empty-state">جاري تحميل البيانات...</td>
+          </tr>
+        } @else if (loadError) {
+          <tr>
+            <td colspan="7" class="empty-state error-state">{{ loadError }}</td>
+          </tr>
+        } @else if (employees.length === 0) {
+          <tr>
+            <td colspan="7" class="empty-state">لا يوجد موظفون</td>
+          </tr>
+        } @else {
+          @for (e of employees; track e.id) {
+            <tr>
+              <td><strong>{{ e.userName }}</strong></td>
+              <td>{{ (e.name || '—') + ' ' + (e.surname || '') }}</td>
+              <td>{{ e.email || '—' }}</td>
+              <td>{{ e.phoneNumber || '—' }}</td>
+              <td>{{ roleLabel(e) }}</td>
+              <td>
+                <span class="status" [class.active]="e.isActive" [class.inactive]="!e.isActive">
+                  {{ e.isActive ? 'نشط' : 'غير نشط' }}
+                </span>
+              </td>
+              <td>
+                <div class="actions">
+                  @if (canUpdate) {
+                    <button class="action-btn edit" (click)="openEditDialog(e)" title="تعديل">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  }
+
+                  @if (canResetPassword) {
+                    <button class="action-btn key" (click)="resetPassword(e)" title="إعادة تعيين كلمة المرور">
+                      <mat-icon>vpn_key</mat-icon>
+                    </button>
+                  }
+
+                  @if ((e.isActive && canDeactivate) || (!e.isActive && canActivate)) {
+                    <button class="action-btn toggle" (click)="toggleActive(e)" title="تفعيل/تعطيل">
+                      <mat-icon>{{ e.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
+                    </button>
+                  }
+
+                  @if (canDelete) {
+                    <button class="action-btn delete" (click)="deleteEmployee(e)" title="حذف">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,13 +1,15 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { filter } from 'rxjs';
+import { NavigationEnd, Router } from '@angular/router';
+import { ConfigStateService } from '@abp/ng.core';
+import { filter, Subscription } from 'rxjs';
 
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 
 import { LayoutService } from '../services/layout.service';
+import { PolicyService } from 'src/app/core/services/policy.service';
 
 interface SidebarChildItem {
   title: string;
@@ -27,7 +29,6 @@ interface SidebarMenuItem {
   standalone: true,
   imports: [
     CommonModule,
-    RouterModule,
     MatSidenavModule,
     MatExpansionModule,
     MatIconModule,
@@ -35,11 +36,16 @@ interface SidebarMenuItem {
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.scss'],
 })
-export class Sidebar implements OnInit {
+export class Sidebar implements OnInit, OnDestroy {
   private router = inject(Router);
   layoutService = inject(LayoutService);
+  private policy = inject(PolicyService);
+  private configState = inject(ConfigStateService);
+  private authSubscription?: Subscription;
 
-  menuItems: SidebarMenuItem[] = [
+  menuItems: SidebarMenuItem[] = [];
+
+  private readonly allMenuItems: SidebarMenuItem[] = [
     {
       title: 'لوحة التحكم',
       icon: 'dashboard',
@@ -149,6 +155,18 @@ export class Sidebar implements OnInit {
       ],
     },
     {
+      title: 'المستخدمون',
+      icon: 'manage_accounts',
+      children: [
+        {
+          title: 'إدارة الموظفين',
+          icon: 'group_manage',
+          route: '/users',
+          exact: true,
+        },
+      ],
+    },
+    {
       title: 'من نحن',
       icon: 'info',
       children: [
@@ -181,6 +199,12 @@ export class Sidebar implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.refreshMenuItems();
+
+    this.authSubscription = this.configState.getOne$('auth').subscribe(() => {
+      this.refreshMenuItems();
+    });
+
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(() => {
@@ -188,6 +212,61 @@ export class Sidebar implements OnInit {
           this.layoutService.closeSidebar();
         }
       });
+  }
+
+  ngOnDestroy(): void {
+    this.authSubscription?.unsubscribe();
+  }
+
+  private refreshMenuItems(): void {
+    const can = (policy: string) => this.policy.hasSnapshot(policy);
+    const filtered: SidebarMenuItem[] = [];
+
+    for (const section of this.allMenuItems) {
+      const sectionVisible =
+        section.title === 'لوحة التحكم'
+          ? can('BanquetHallManagement.Dashboard')
+          : section.title === 'القاعات'
+          ? can('BanquetHallManagement.Halls')
+          : section.title === 'العملاء'
+          ? can('BanquetHallManagement.Customers')
+          : section.title === 'الخدمات'
+          ? can('BanquetHallManagement.Services')
+          : section.title === 'الحجوزات'
+          ? can('BanquetHallManagement.Reservations')
+          : section.title === 'التقارير'
+          ? can('BanquetHallManagement.Reports')
+          : section.title === 'المستخدمون'
+          ? can('BanquetHallManagement.Users')
+          : section.title === 'من نحن' || section.title === 'الدعم الفني'
+          ? can('BanquetHallManagement.Halls.Create')
+          : false;
+
+      if (!sectionVisible) {
+        continue;
+      }
+
+      const children = section.children.filter((child) => {
+        if (child.route === '/customers/create') {
+          return can('BanquetHallManagement.Customers.Create');
+        }
+        if (child.route === '/services/create') {
+          return can('BanquetHallManagement.Services.Create');
+        }
+        if (child.route === '/bookings/create') {
+          return can('BanquetHallManagement.Reservations.Create');
+        }
+        return true;
+      });
+
+      if (children.length === 0) {
+        continue;
+      }
+
+      filtered.push({ ...section, children });
+    }
+
+    this.menuItems = filtered;
   }
 
   get sidenavMode(): 'over' | 'side' {
@@ -210,7 +289,11 @@ export class Sidebar implements OnInit {
     return currentUrl === route;
   }
 
-  onNavClick(): void {
+  navigateTo(route: string): void {
+    if (this.router.url.split('?')[0] !== route) {
+      void this.router.navigateByUrl(route);
+    }
+
     if (this.layoutService.isMobile()) {
       this.layoutService.closeSidebar();
     }

@@ -12,11 +12,13 @@
 
         </div>
 
-        <button class="add-btn" (click)="openAddCustomerDialog()">
+        @if (canCreate) {
+            <button class="add-btn" (click)="openAddCustomerDialog()">
 
-            + إضافة عميل
+                + إضافة عميل
 
-        </button>
+            </button>
+        }
 
     </div>
 
@@ -88,29 +90,33 @@
 
                                 <div class="actions">
 
-                                    <button
-                                        class="action-btn edit-btn"
-                                        (click)="editCustomer(customer.id)">
+                                    @if (canUpdate) {
+                                        <button
+                                            class="action-btn edit-btn"
+                                            (click)="editCustomer(customer.id)">
 
-                                        <mat-icon>
+                                            <mat-icon>
 
-                                            edit
+                                                edit
 
-                                        </mat-icon>
+                                            </mat-icon>
 
-                                    </button>
+                                        </button>
+                                    }
 
-                                    <button
-                                        class="action-btn delete-btn"
-                                        (click)="deleteCustomer(customer.id)">
+                                    @if (canDelete) {
+                                        <button
+                                            class="action-btn delete-btn"
+                                            (click)="deleteCustomer(customer.id)">
 
-                                        <mat-icon>
+                                            <mat-icon>
 
-                                            delete
+                                                delete
 
-                                        </mat-icon>
+                                            </mat-icon>
 
-                                    </button>
+                                        </button>
+                                    }
 
                                 </div>
 

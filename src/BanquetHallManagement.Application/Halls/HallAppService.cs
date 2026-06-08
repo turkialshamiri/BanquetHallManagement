@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BanquetHallManagement.Permissions;
+using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -12,6 +14,7 @@ using Volo.Abp.Domain.Repositories;
 
 namespace BanquetHallManagement.Halls
 {
+    [Authorize(BanquetHallManagementPermissions.Halls.Default)]
     public class HallAppService : ApplicationService, IHallAppService
     {
         private readonly IRepository<Hall, Guid> _hallRepository;
@@ -58,6 +61,7 @@ namespace BanquetHallManagement.Halls
             };
         }
 
+        [Authorize(BanquetHallManagementPermissions.Halls.Create)]
         public async Task<HallDto> CreateAsync(CreateUpdateHallDto input)
         {
             ValidateInput(input);
@@ -72,6 +76,7 @@ namespace BanquetHallManagement.Halls
             return MapToHallDto(hall, new HashSet<Guid>());
         }
 
+        [Authorize(BanquetHallManagementPermissions.Halls.Update)]
         public async Task<HallDto> UpdateAsync(Guid id, CreateUpdateHallDto input)
         {
             ValidateInput(input);
@@ -95,6 +100,7 @@ namespace BanquetHallManagement.Halls
             return MapToHallDto(hall, bookedHallIds);
         }
 
+        [Authorize(BanquetHallManagementPermissions.Halls.Delete)]
         public async Task DeleteAsync(Guid id)
         {
             await _hallRepository.DeleteAsync(id);

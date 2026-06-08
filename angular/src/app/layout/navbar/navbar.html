@@ -96,7 +96,7 @@
             </div>
 
             <span class="user-name">
-                مدير النظام
+                {{ (currentUser$ | async)?.userName ?? '—' }}
             </span>
 
         </button>
@@ -114,11 +114,11 @@
                 <div class="menu-user-info">
 
                     <div class="menu-user-name">
-                        مدير النظام
+                        {{ (currentUser$ | async)?.userName ?? '—' }}
                     </div>
 
                     <div class="menu-user-role">
-                        Administrator
+                        {{ ((currentUser$ | async)?.roles ?? []).join(' / ') }}
                     </div>
 
                 </div>
@@ -144,7 +144,7 @@
 
             <mat-divider></mat-divider>
 
-            <button mat-menu-item>
+            <button mat-menu-item (click)="logout()">
                 <mat-icon>logout</mat-icon>
                 <span>تسجيل الخروج</span>
             </button>

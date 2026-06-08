@@ -33,6 +33,7 @@ import {
   AddReservationDialogData,
 } from 'src/app/shared/components/add-reservation-dialog/add-reservation-dialog';
 import { DialogService } from 'src/app/shared/services/dialog.service';
+import { PolicyService } from 'src/app/core/services/policy.service';
 
 @Component({
   selector: 'app-reservations-table',
@@ -48,6 +49,7 @@ export class ReservationsTableComponent implements OnInit {
   private dialog = inject(MatDialog);
   private dialogService = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
+  private policy = inject(PolicyService);
 
   reservations: Reservation[] = [];
   customersMap = new Map<string, Customer>();
@@ -61,6 +63,13 @@ export class ReservationsTableComponent implements OnInit {
   canEditReservation = canEditReservation;
   canDeleteReservation = canDeleteReservation;
   formatTime = toTimeInputValue;
+
+  canCreate = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Create');
+  canUpdate = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Update');
+  canDelete = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Delete');
+  canConfirm = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Confirm');
+  canCancel = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Cancel');
+  canComplete = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Complete');
 
   ngOnInit(): void {
     this.loadData();
@@ -144,10 +153,11 @@ export class ReservationsTableComponent implements OnInit {
 
   confirmReservation(id: string): void {
     this.dialogService
-      .confirm(
-        'تأكيد الحجز',
-        'هل أنت متأكد من تأكيد هذا الحجز؟'
-      )
+      .confirm({
+        type: 'confirm',
+        title: 'تأكيد الحجز',
+        message: 'هل أنت متأكد من تأكيد هذا الحجز؟',
+      })
       .subscribe((confirmed) => {
         if (!confirmed) {
           return;
@@ -166,10 +176,11 @@ export class ReservationsTableComponent implements OnInit {
 
   cancelReservation(id: string): void {
     this.dialogService
-      .confirm(
-        'إلغاء الحجز',
-        'هل أنت متأكد من إلغاء هذا الحجز؟'
-      )
+      .confirm({
+        type: 'cancel',
+        title: 'إلغاء الحجز',
+        message: 'هل أنت متأكد من إلغاء هذا الحجز؟',
+      })
       .subscribe((confirmed) => {
         if (!confirmed) {
           return;
@@ -188,10 +199,11 @@ export class ReservationsTableComponent implements OnInit {
 
   completeReservation(id: string): void {
     this.dialogService
-      .confirm(
-        'إكمال الحجز',
-        'هل أنت متأكد من إكمال هذا الحجز؟'
-      )
+      .confirm({
+        type: 'complete',
+        title: 'إكمال الحجز',
+        message: 'هل أنت متأكد من إكمال هذا الحجز؟',
+      })
       .subscribe((confirmed) => {
         if (!confirmed) {
           return;
@@ -264,10 +276,12 @@ export class ReservationsTableComponent implements OnInit {
 
   deleteReservation(id: string): void {
     this.dialogService
-      .confirm(
-        'حذف الحجز',
-        'هل أنت متأكد من حذف هذا الحجز؟ لا يمكن التراجع عن العملية.'
-      )
+      .confirm({
+        type: 'delete',
+        title: 'حذف الحجز',
+        message: 'هل أنت متأكد من حذف هذا الحجز؟',
+        warningMessage: 'تحذير: لا يمكن التراجع عن هذه العملية.',
+      })
       .subscribe((result) => {
         if (!result) {
           return;

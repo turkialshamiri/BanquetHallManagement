@@ -178,48 +178,68 @@ select.invalid {
     cursor: pointer;
 }
 
-.total-price-box {
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
+.reservation-summary-card {
     margin-top: 8px;
-
     margin-bottom: 4px;
-
-    padding: 14px 16px;
-
-    border-radius: 10px;
-
-    background: #eff6ff;
-
+    padding: 18px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
     border: 1px solid #bfdbfe;
 }
 
-.total-label {
-
-    font-size: 14px;
-
-    font-weight: 600;
-
+.reservation-summary-card h3 {
+    margin: 0 0 14px;
+    font-size: 16px;
+    font-weight: 700;
     color: var(--text-primary);
 }
 
-.total-value {
-
-    font-size: 18px;
-
-    color: var(--primary-700);
+.summary-row,
+.summary-service-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    font-size: 14px;
+    color: var(--text-secondary);
 }
 
-.total-hint {
+.summary-row strong,
+.summary-service-item strong {
+    color: var(--text-primary);
+}
 
-    font-size: 13px;
+.summary-services {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #cbd5e1;
+}
 
-    color: var(--text-secondary);
+.summary-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.summary-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 2px solid #93c5fd;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.summary-total strong {
+    font-size: 20px;
+    color: var(--primary-700);
 }
 
 .actions {

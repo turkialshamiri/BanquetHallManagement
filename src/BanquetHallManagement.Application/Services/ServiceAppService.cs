@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BanquetHallManagement.Permissions;
+using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -9,6 +11,7 @@ using Volo.Abp.Domain.Repositories;
 
 namespace BanquetHallManagement.Services
 {
+    [Authorize(BanquetHallManagementPermissions.Services.Default)]
     public class ServiceAppService :
         ApplicationService,
         IServiceAppService
@@ -47,6 +50,7 @@ namespace BanquetHallManagement.Services
             };
         }
 
+        [Authorize(BanquetHallManagementPermissions.Services.Create)]
         public async Task<ServiceDto> CreateAsync(
             CreateUpdateServiceDto input)
         {
@@ -82,6 +86,7 @@ namespace BanquetHallManagement.Services
             return ObjectMapper.Map<Service, ServiceDto>(service);
         }
 
+        [Authorize(BanquetHallManagementPermissions.Services.Update)]
         public async Task<ServiceDto> UpdateAsync(
             Guid id,
             CreateUpdateServiceDto input)
@@ -117,6 +122,7 @@ namespace BanquetHallManagement.Services
             return ObjectMapper.Map<Service, ServiceDto>(service);
         }
 
+        [Authorize(BanquetHallManagementPermissions.Services.Delete)]
         public async Task DeleteAsync(Guid id)
         {
             var exists = await _serviceRepository.AnyAsync(x => x.Id == id);

@@ -7,11 +7,14 @@ using BanquetHallManagement.Customers;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Enums;
 using BanquetHallManagement.Reservations;
+using BanquetHallManagement.Permissions;
+using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
 
 namespace BanquetHallManagement.Reports;
 
+[Authorize(BanquetHallManagementPermissions.Reports.Default)]
 public class ReportsAppService : BanquetHallManagementAppService, IReportsAppService
 {
     private const decimal OperatingHoursPerDay = 12m;

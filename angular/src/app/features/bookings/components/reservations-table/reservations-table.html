@@ -134,7 +134,7 @@
 
                                 <div class="actions">
 
-                                    @if (canConfirmReservation(reservation.status)) {
+                                    @if (canConfirm && canConfirmReservation(reservation.status)) {
                                         <button
                                             class="action-btn confirm-btn"
                                             title="تأكيد"
@@ -145,7 +145,7 @@
                                         </button>
                                     }
 
-                                    @if (canCompleteReservation(reservation.status)) {
+                                    @if (canComplete && canCompleteReservation(reservation.status)) {
                                         <button
                                             class="action-btn complete-btn"
                                             title="إكمال"
@@ -156,7 +156,7 @@
                                         </button>
                                     }
 
-                                    @if (canCancelReservation(reservation.status)) {
+                                    @if (canCancel && canCancelReservation(reservation.status)) {
                                         <button
                                             class="action-btn cancel-btn"
                                             title="إلغاء"
@@ -167,7 +167,7 @@
                                         </button>
                                     }
 
-                                    @if (canEditReservation(reservation.status)) {
+                                    @if (canUpdate && canEditReservation(reservation.status)) {
                                         <button
                                             class="action-btn edit-btn"
                                             title="تعديل"
@@ -178,7 +178,7 @@
                                         </button>
                                     }
 
-                                    @if (canDeleteReservation(reservation.status)) {
+                                    @if (canDelete && canDeleteReservation(reservation.status)) {
                                         <button
                                             class="action-btn delete-btn"
                                             title="حذف"

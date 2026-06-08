@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BanquetHallManagement.Permissions;
+using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 
 namespace BanquetHallManagement.Customers
 {
+    [Authorize(BanquetHallManagementPermissions.Customers.Default)]
     public class CustomerAppService :
         CrudAppService<
             Customer,
@@ -31,6 +34,24 @@ namespace BanquetHallManagement.Customers
             return customer == null
                 ? null
                 : ObjectMapper.Map<Customer, CustomerDto>(customer);
+        }
+
+        [Authorize(BanquetHallManagementPermissions.Customers.Create)]
+        public override Task<CustomerDto> CreateAsync(CreateUpdateCustomerDto input)
+        {
+            return base.CreateAsync(input);
+        }
+
+        [Authorize(BanquetHallManagementPermissions.Customers.Update)]
+        public override Task<CustomerDto> UpdateAsync(Guid id, CreateUpdateCustomerDto input)
+        {
+            return base.UpdateAsync(id, input);
+        }
+
+        [Authorize(BanquetHallManagementPermissions.Customers.Delete)]
+        public override Task DeleteAsync(Guid id)
+        {
+            return base.DeleteAsync(id);
         }
     }
 }

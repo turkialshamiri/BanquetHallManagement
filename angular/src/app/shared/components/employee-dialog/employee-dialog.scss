@@ -1,0 +1,129 @@
+.dialog-container {
+  padding: 22px;
+  width: 640px;
+  max-width: 100%;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.close-btn {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.api-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+input,
+select {
+  height: 44px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0 12px;
+  outline: none;
+  background: white;
+}
+
+.invalid {
+  border-color: rgba(239, 68, 68, 0.55);
+}
+
+.error {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.checkbox {
+  grid-column: span 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.actions button {
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.cancel-btn {
+  background: #f1f5f9;
+  color: var(--text-primary);
+}
+
+.primary-btn {
+  background: var(--primary-600);
+  color: white;
+}
+
+.field-full {
+  grid-column: span 2;
+}
+
+.password-field {
+  width: 100%;
+}
+
+.password-field ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .checkbox,
+  .field-full {
+    grid-column: span 1;
+  }
+}
+
