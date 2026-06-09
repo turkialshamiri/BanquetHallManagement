@@ -1,8 +1,10 @@
-﻿using BanquetHallManagement.Reservations;
+﻿using BanquetHallManagement.Customers;
+using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
+using BanquetHallManagement.Enums;
+using BanquetHallManagement.Reservations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Volo.Abp.EntityFrameworkCore.Modeling;
-using BanquetHallManagement.Enums;
 
 namespace BanquetHallManagement.Configurations.ReservationConfigurations
 {
@@ -53,12 +55,27 @@ namespace BanquetHallManagement.Configurations.ReservationConfigurations
                 .HasDefaultValue(ReservationStatus.Pending)
                 .HasComment("الحالة الحالية للحجز مثل قيد الانتظار أو مؤكد أو ملغي أو مكتمل.");
 
+            builder.HasOne<Hall>()
+                .WithMany()
+                .HasForeignKey(x => x.HallId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+
+            builder.HasOne<Customer>()
+                .WithMany()
+                .HasForeignKey(x => x.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+
             builder.HasMany(x => x.Services)
                 .WithOne()
                 .HasForeignKey(x => x.ReservationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.HasIndex(x => x.HallId);
+            builder.HasIndex(x => x.CustomerId);
             builder.HasIndex(x => x.EventDate);
+            builder.HasIndex(x => new { x.HallId, x.EventDate });
 
             builder.ConfigureByConvention();
         }

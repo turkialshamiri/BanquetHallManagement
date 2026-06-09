@@ -1,6 +1,7 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { provideAbpCore, withOptions } from '@abp/ng.core';
 import { provideAbpOAuth } from '@abp/ng.oauth';
@@ -13,6 +14,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(APP_ROUTES),
     provideAnimations(),
+    importProvidersFrom(MatSnackBarModule),
 
     provideAbpCore(
       withOptions({

@@ -203,6 +203,10 @@ namespace BanquetHallManagement.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ReservationId");
+
+                    b.HasIndex("ServiceId");
+
                     b.HasIndex("ReservationId", "ServiceId");
 
                     b.ToTable("ReservationServices", null, t =>
@@ -296,7 +300,13 @@ namespace BanquetHallManagement.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CustomerId");
+
                     b.HasIndex("EventDate");
+
+                    b.HasIndex("HallId");
+
+                    b.HasIndex("HallId", "EventDate");
 
                     b.ToTable("Reservations", null, t =>
                         {
@@ -2339,6 +2349,27 @@ namespace BanquetHallManagement.Migrations
                         .WithMany("Services")
                         .HasForeignKey("ReservationId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BanquetHallManagement.Services.Service", null)
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BanquetHallManagement.Reservations.Reservation", b =>
+                {
+                    b.HasOne("BanquetHallManagement.Entities.BanquetHallManagement.Entities.Hall", null)
+                        .WithMany()
+                        .HasForeignKey("HallId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BanquetHallManagement.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

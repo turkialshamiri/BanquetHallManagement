@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
+import { DEFAULT_LIST_MAX_RESULT_COUNT } from '../constants/pagination.constants';
 import { Hall, HallFormModel, PagedHallResult } from '../models/hall.model';
 
 @Injectable({
@@ -19,8 +20,15 @@ export class HallService {
     return this.http.put<Hall>(`${this.apiUrl}/${id}`, hall);
   }
 
-  getHalls(): Observable<PagedHallResult> {
-    return this.http.get<PagedHallResult>(this.apiUrl);
+  getHalls(
+    skipCount = 0,
+    maxResultCount = DEFAULT_LIST_MAX_RESULT_COUNT
+  ): Observable<PagedHallResult> {
+    const params = new HttpParams()
+      .set('skipCount', skipCount)
+      .set('maxResultCount', maxResultCount);
+
+    return this.http.get<PagedHallResult>(this.apiUrl, { params });
   }
 
   getHallsByStatus(status: number): Observable<Hall[]> {

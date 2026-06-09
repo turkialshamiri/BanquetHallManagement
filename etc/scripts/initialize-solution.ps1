@@ -2,6 +2,26 @@ $ErrorActionPreference = "Stop"
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $solutionRoot = Join-Path $scriptRoot "../../"
 
+function Get-CertificatePassPhrase {
+    if ($env:AuthServer__CertificatePassPhrase) {
+        return $env:AuthServer__CertificatePassPhrase
+    }
+
+    if ($env:AUTH_SERVER_CERTIFICATE_PASSPHRASE) {
+        return $env:AUTH_SERVER_CERTIFICATE_PASSPHRASE
+    }
+
+    $secretsPath = Join-Path $solutionRoot "src/BanquetHallManagement.HttpApi.Host/appsettings.secrets.json"
+    if (Test-Path $secretsPath) {
+        $secrets = Get-Content $secretsPath -Raw | ConvertFrom-Json
+        if ($secrets.AuthServer.CertificatePassPhrase) {
+            return $secrets.AuthServer.CertificatePassPhrase
+        }
+    }
+
+    throw "Certificate passphrase is not configured. Set AuthServer__CertificatePassPhrase or create appsettings.secrets.json from appsettings.secrets.json.example."
+}
+
 Write-Host "Building the solution..."
 Set-Location $solutionRoot
 dotnet build
@@ -11,6 +31,7 @@ if ($LASTEXITCODE -ne 0) {
     exit -1
 }
 
+$certPassPhrase = Get-CertificatePassPhrase
 $jobs = @()
 
 $jobs += Start-Job -Name "InstallLibs" -ScriptBlock {
@@ -37,7 +58,7 @@ $jobs += Start-Job -Name "DbMigrator" -ScriptBlock {
 $jobs += Start-Job -Name "DevCert" -ScriptBlock {
     $ErrorActionPreference = "Stop"
     Set-Location (Join-Path $using:scriptRoot "../../src/BanquetHallManagement.HttpApi.Host")
-    dotnet dev-certs https -v -ep openiddict.pfx -p ed0653a5-a03d-435c-a129-cb0e2fb15ffa
+    dotnet dev-certs https -v -ep openiddict.pfx -p $using:certPassPhrase
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet dev-certs exited with code $LASTEXITCODE"

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BanquetHallManagement.Permissions;
+using BanquetHallManagement.ReservationServices;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -17,11 +18,14 @@ namespace BanquetHallManagement.Services
         IServiceAppService
     {
         private readonly IRepository<Service, Guid> _serviceRepository;
+        private readonly IRepository<ReservationService, Guid> _reservationServiceRepository;
 
         public ServiceAppService(
-            IRepository<Service, Guid> serviceRepository)
+            IRepository<Service, Guid> serviceRepository,
+            IRepository<ReservationService, Guid> reservationServiceRepository)
         {
             _serviceRepository = serviceRepository;
+            _reservationServiceRepository = reservationServiceRepository;
         }
 
         public async Task<ServiceDto> GetAsync(Guid id)
@@ -125,12 +129,15 @@ namespace BanquetHallManagement.Services
         [Authorize(BanquetHallManagementPermissions.Services.Delete)]
         public async Task DeleteAsync(Guid id)
         {
-            var exists = await _serviceRepository.AnyAsync(x => x.Id == id);
+            await _serviceRepository.GetAsync(id);
 
-            if (!exists)
+            var isUsedInReservations = await _reservationServiceRepository.AnyAsync(
+                rs => rs.ServiceId == id);
+
+            if (isUsedInReservations)
             {
-                throw new UserFriendlyException(
-                    "الخدمة غير موجودة");
+                throw new BusinessException(
+                    BanquetHallManagementDomainErrorCodes.ServiceCannotDeleteUsedByReservations);
             }
 
             await _serviceRepository.DeleteAsync(id);

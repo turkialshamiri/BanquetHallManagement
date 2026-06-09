@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using OpenIddict.Validation.AspNetCore;
 using OpenIddict.Server.AspNetCore;
+using BanquetHallManagement.Configuration;
 using BanquetHallManagement.EntityFrameworkCore;
 using BanquetHallManagement.MultiTenancy;
 using BanquetHallManagement.HealthChecks;
@@ -90,6 +91,10 @@ public class BanquetHallManagementHttpApiHostModule : AbpModule
     {
         var configuration = context.Services.GetConfiguration();
         var hostingEnvironment = context.Services.GetHostingEnvironment();
+
+        BanquetHallManagementSecretsValidator.ValidateForHttpApiHost(
+            configuration,
+            hostingEnvironment.IsDevelopment());
 
         if (!configuration.GetValue<bool>("App:DisablePII"))
         {

@@ -7,8 +7,10 @@ COPY bin/Release/net10.0/publish/ app/
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+ARG AUTH_SERVER_CERTIFICATE_PASSPHRASE
 WORKDIR /src
-RUN dotnet dev-certs https -v -ep openiddict.pfx -p ed0653a5-a03d-435c-a129-cb0e2fb15ffa
+RUN test -n "$AUTH_SERVER_CERTIFICATE_PASSPHRASE" || (echo "AUTH_SERVER_CERTIFICATE_PASSPHRASE build arg is required" && exit 1)
+RUN dotnet dev-certs https -v -ep openiddict.pfx -p "$AUTH_SERVER_CERTIFICATE_PASSPHRASE"
 RUN chmod 644 openiddict.pfx
 
 FROM base AS final

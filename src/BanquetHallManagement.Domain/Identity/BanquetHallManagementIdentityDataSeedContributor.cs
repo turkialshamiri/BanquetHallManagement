@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BanquetHallManagement.Identity;
+using BanquetHallManagement.Configuration;
 using BanquetHallManagement.Permissions;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Volo.Abp;
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
@@ -21,19 +24,25 @@ public class BanquetHallManagementIdentityDataSeedContributor : IDataSeedContrib
     private readonly ILookupNormalizer _lookupNormalizer;
     private readonly IPermissionDataSeeder _permissionDataSeeder;
     private readonly IPermissionManager _permissionManager;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<BanquetHallManagementIdentityDataSeedContributor> _logger;
 
     public BanquetHallManagementIdentityDataSeedContributor(
         IdentityRoleManager roleManager,
         IdentityUserManager userManager,
         ILookupNormalizer lookupNormalizer,
         IPermissionDataSeeder permissionDataSeeder,
-        IPermissionManager permissionManager)
+        IPermissionManager permissionManager,
+        IConfiguration configuration,
+        ILogger<BanquetHallManagementIdentityDataSeedContributor> logger)
     {
         _roleManager = roleManager;
         _userManager = userManager;
         _lookupNormalizer = lookupNormalizer;
         _permissionDataSeeder = permissionDataSeeder;
         _permissionManager = permissionManager;
+        _configuration = configuration;
+        _logger = logger;
     }
 
     [UnitOfWork]
@@ -43,7 +52,7 @@ public class BanquetHallManagementIdentityDataSeedContributor : IDataSeedContrib
         await EnsureRoleExistsAsync(BanquetHallManagementRoleNames.Employee);
 
         await SeedRolePermissionsAsync(context);
-        await SeedAdminUserAsync(context);
+        await SeedApplicationAdminUserAsync(context);
     }
 
     private async Task EnsureRoleExistsAsync(string roleName)
@@ -81,6 +90,8 @@ public class BanquetHallManagementIdentityDataSeedContributor : IDataSeedContrib
             BanquetHallManagementPermissions.Customers.Create,
             BanquetHallManagementPermissions.Customers.Update,
             BanquetHallManagementPermissions.Customers.Delete,
+
+            BanquetHallManagementPermissions.Services.Default,
 
             BanquetHallManagementPermissions.Reservations.Default,
             BanquetHallManagementPermissions.Reservations.Create,
@@ -150,14 +161,33 @@ public class BanquetHallManagementIdentityDataSeedContributor : IDataSeedContrib
         yield return BanquetHallManagementPermissions.Users.Deactivate;
     }
 
-    private async Task SeedAdminUserAsync(DataSeedContext context)
+    private async Task SeedApplicationAdminUserAsync(DataSeedContext context)
     {
-        const string userName = "turkialshamiri";
-        const string email = "turki@gmail.com";
-        const string password = "turki4321";
-        const string name = "Turki";
-        const string surName = "Alshamiri";
-        const string phoneNumber = "+967700000000";
+        if (!_configuration.GetValue(
+                BanquetHallManagementConfigurationKeys.Seed.ApplicationAdminEnabled,
+                true))
+        {
+            _logger.LogInformation(
+                "Application admin seed is disabled via configuration.");
+            return;
+        }
+
+        var userName = _configuration[BanquetHallManagementConfigurationKeys.Seed.ApplicationAdminUserName];
+        var email = _configuration[BanquetHallManagementConfigurationKeys.Seed.ApplicationAdminEmail];
+        var password = _configuration[BanquetHallManagementConfigurationKeys.Seed.ApplicationAdminPassword];
+        var name = _configuration[BanquetHallManagementConfigurationKeys.Seed.ApplicationAdminName] ?? string.Empty;
+        var surName = _configuration[BanquetHallManagementConfigurationKeys.Seed.ApplicationAdminSurname] ?? string.Empty;
+        var phoneNumber = _configuration[BanquetHallManagementConfigurationKeys.Seed.ApplicationAdminPhoneNumber];
+
+        if (string.IsNullOrWhiteSpace(userName) ||
+            string.IsNullOrWhiteSpace(email) ||
+            string.IsNullOrWhiteSpace(password))
+        {
+            _logger.LogWarning(
+                "Application admin seed credentials are not fully configured. " +
+                "Set Seed:ApplicationAdmin:UserName, Email, and Password in appsettings.secrets.json or user secrets.");
+            return;
+        }
 
         var user = await _userManager.FindByNameAsync(userName);
         if (user == null)
@@ -177,7 +207,10 @@ public class BanquetHallManagementIdentityDataSeedContributor : IDataSeedContrib
 
             (await _userManager.CreateAsync(user, password)).CheckErrors();
 
-            (await _userManager.SetPhoneNumberAsync(user, phoneNumber)).CheckErrors();
+            if (!string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                (await _userManager.SetPhoneNumberAsync(user, phoneNumber)).CheckErrors();
+            }
         }
         else
         {
@@ -207,7 +240,7 @@ public class BanquetHallManagementIdentityDataSeedContributor : IDataSeedContrib
                 changed = true;
             }
 
-            if (user.PhoneNumber != phoneNumber)
+            if (!string.IsNullOrWhiteSpace(phoneNumber) && user.PhoneNumber != phoneNumber)
             {
                 (await _userManager.SetPhoneNumberAsync(user, phoneNumber)).CheckErrors();
                 changed = true;
@@ -230,7 +263,6 @@ public class BanquetHallManagementIdentityDataSeedContributor : IDataSeedContrib
             (await _userManager.AddToRoleAsync(user, BanquetHallManagementRoleNames.Admin)).CheckErrors();
         }
 
-        // Ensure password matches requested seed (safe: reset only if password is different).
         if (!await _userManager.CheckPasswordAsync(user, password))
         {
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -238,4 +270,3 @@ public class BanquetHallManagementIdentityDataSeedContributor : IDataSeedContrib
         }
     }
 }
-

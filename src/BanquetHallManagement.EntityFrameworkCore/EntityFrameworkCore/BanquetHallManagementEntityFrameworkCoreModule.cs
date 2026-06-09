@@ -1,5 +1,7 @@
+using BanquetHallManagement.EntityFrameworkCore.Repositories;
 using BanquetHallManagement.EntityFrameworkCore.Reports;
 using BanquetHallManagement.Reports;
+using BanquetHallManagement.Reservations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -48,6 +50,7 @@ public class BanquetHallManagementEntityFrameworkCoreModule : AbpModule
                 /* Remove "includeAllEntities: true" to create
                  * default repositories only for aggregate roots */
             options.AddDefaultRepositories(includeAllEntities: true);
+            options.AddRepository<Reservation, EfCoreReservationRepository>();
         });
 
         context.Services.AddTransient<IReportQueryExecutor, EfCoreReportQueryExecutor>();
@@ -65,11 +68,10 @@ public class BanquetHallManagementEntityFrameworkCoreModule : AbpModule
             options.UseSqlServer();
 
         });
-        
-        context.Services.AddAlwaysDisableUnitOfWorkTransaction();
+
         Configure<AbpUnitOfWorkDefaultOptions>(options =>
         {
-            options.TransactionBehavior = UnitOfWorkTransactionBehavior.Disabled;
+            options.TransactionBehavior = UnitOfWorkTransactionBehavior.Auto;
         });
     }
 }

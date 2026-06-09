@@ -12,11 +12,13 @@
 
         </div>
 
-        <button class="add-btn" (click)="openAddServiceDialog()">
+        @if (canCreate) {
+            <button class="add-btn" (click)="openAddServiceDialog()">
 
-            + إضافة خدمة
+                + إضافة خدمة
 
-        </button>
+            </button>
+        }
 
     </div>
 
@@ -32,7 +34,9 @@
 
                     <th>السعر</th>
 
-                    <th>العمليات</th>
+                    @if (showActionsColumn) {
+                        <th>العمليات</th>
+                    }
 
                 </tr>
 
@@ -76,37 +80,43 @@
 
                             </td>
 
-                            <td>
+                            @if (showActionsColumn) {
+                                <td>
 
-                                <div class="actions">
+                                    <div class="actions">
 
-                                    <button
-                                        class="action-btn edit-btn"
-                                        (click)="editService(service.id)">
+                                        @if (canUpdate) {
+                                            <button
+                                                class="action-btn edit-btn"
+                                                (click)="editService(service.id)">
 
-                                        <mat-icon>
+                                                <mat-icon>
 
-                                            edit
+                                                    edit
 
-                                        </mat-icon>
+                                                </mat-icon>
 
-                                    </button>
+                                            </button>
+                                        }
 
-                                    <button
-                                        class="action-btn delete-btn"
-                                        (click)="deleteService(service.id)">
+                                        @if (canDelete) {
+                                            <button
+                                                class="action-btn delete-btn"
+                                                (click)="deleteService(service.id)">
 
-                                        <mat-icon>
+                                                <mat-icon>
 
-                                            delete
+                                                    delete
 
-                                        </mat-icon>
+                                                </mat-icon>
 
-                                    </button>
+                                            </button>
+                                        }
 
-                                </div>
+                                    </div>
 
-                            </td>
+                                </td>
+                            }
 
                         </tr>
 
@@ -116,7 +126,7 @@
 
                     <tr>
 
-                        <td colspan="3" class="empty-state">
+                        <td [attr.colspan]="showActionsColumn ? 3 : 2" class="empty-state">
 
                             لا توجد خدمات مسجلة حالياً
 

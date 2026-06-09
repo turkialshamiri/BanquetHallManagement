@@ -12,6 +12,9 @@
     "BanquetHallManagement:Reservation:CannotDelete": "The reservation can only be deleted when it is pending.",
     "BanquetHallManagement:Hall:UnderMaintenance": "The hall cannot be booked because it is under maintenance.",
     "BanquetHallManagement:Hall:StatusCannotBeBooked": "Hall status cannot be set to booked manually. It is derived from reservations.",
-    "BanquetHallManagement:Hall:StatusInvalid": "Invalid hall status. Only available or maintenance are allowed."
+    "BanquetHallManagement:Hall:StatusInvalid": "Invalid hall status. Only available or maintenance are allowed.",
+    "BanquetHallManagement:Hall:CannotDeleteHasReservations": "This hall cannot be deleted because it is linked to existing reservations. Please remove or reassign the related reservations before deleting this hall.",
+    "BanquetHallManagement:Customer:CannotDeleteHasReservations": "This customer cannot be deleted because they are linked to existing reservations. Please remove or reassign the related reservations before deleting this customer.",
+    "BanquetHallManagement:Service:CannotDeleteUsedByReservations": "This service cannot be deleted because it is used in existing reservations. Please remove it from related reservations before deleting this service."
   }
 }

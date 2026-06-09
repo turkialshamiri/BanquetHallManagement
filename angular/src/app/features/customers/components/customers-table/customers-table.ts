@@ -5,13 +5,17 @@ import {
   OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { leaveCreateRoute } from 'src/app/core/utils/create-route.util';
 import { Customer } from 'src/app/core/models/customer.model';
 import { CustomerService } from 'src/app/core/services/customer.service';
 import { AddCustomerDialog } from 'src/app/shared/components/add-customer-dialog/add-customer-dialog';
 import { DialogService } from 'src/app/shared/services/dialog.service';
+import { NotificationService } from 'src/app/shared/services/notification.service';
 import { PolicyService } from 'src/app/core/services/policy.service';
+import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 
 @Component({
   selector: 'app-customers-table',
@@ -22,10 +26,12 @@ import { PolicyService } from 'src/app/core/services/policy.service';
 })
 export class CustomersTableComponent implements OnInit {
   private customerService = inject(CustomerService);
+  private router = inject(Router);
   private dialog = inject(MatDialog);
   private dialogService = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
   private policy = inject(PolicyService);
+  private notification = inject(NotificationService);
 
   customers: Customer[] = [];
   canCreate = this.policy.hasSnapshot('BanquetHallManagement.Customers.Create');
@@ -43,7 +49,9 @@ export class CustomersTableComponent implements OnInit {
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error(error);
+        this.notification.showError(
+          getAbpErrorMessage(error, 'تعذّر تحميل العملاء')
+        );
       },
     });
   }
@@ -55,15 +63,19 @@ export class CustomersTableComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (!result) {
+        leaveCreateRoute(this.router, '/customers/create', '/customers');
         return;
       }
 
       this.customerService.createCustomer(result).subscribe({
         next: () => {
           this.loadCustomers();
+          leaveCreateRoute(this.router, '/customers/create', '/customers');
         },
         error: (error) => {
-          console.error(error);
+          this.notification.showError(
+            getAbpErrorMessage(error, 'تعذّر إضافة العميل')
+          );
         },
       });
     });
@@ -92,7 +104,9 @@ export class CustomersTableComponent implements OnInit {
           this.loadCustomers();
         },
         error: (error) => {
-          console.error(error);
+          this.notification.showError(
+            getAbpErrorMessage(error, 'تعذّر تحديث العميل')
+          );
         },
       });
     });
@@ -114,7 +128,9 @@ export class CustomersTableComponent implements OnInit {
             this.loadCustomers();
           },
           error: (error) => {
-            console.error(error);
+            this.notification.showError(
+              getAbpErrorMessage(error, 'تعذّر حذف العميل')
+            );
           },
         });
       });

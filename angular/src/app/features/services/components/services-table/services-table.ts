@@ -5,7 +5,9 @@ import {
   OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { leaveCreateRoute } from 'src/app/core/utils/create-route.util';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import {
   CreateUpdateService,
@@ -18,6 +20,8 @@ import {
   AddServiceDialogData,
 } from 'src/app/shared/components/add-service-dialog/add-service-dialog';
 import { DialogService } from 'src/app/shared/services/dialog.service';
+import { NotificationService } from 'src/app/shared/services/notification.service';
+import { PolicyService } from 'src/app/core/services/policy.service';
 
 @Component({
   selector: 'app-services-table',
@@ -28,11 +32,30 @@ import { DialogService } from 'src/app/shared/services/dialog.service';
 })
 export class ServicesTableComponent implements OnInit {
   private serviceService = inject(ServiceService);
+  private router = inject(Router);
   private dialog = inject(MatDialog);
   private dialogService = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
+  private policy = inject(PolicyService);
+  private notification = inject(NotificationService);
 
   services: ServiceItem[] = [];
+
+  get canCreate(): boolean {
+    return this.policy.hasSnapshot('BanquetHallManagement.Services.Create');
+  }
+
+  get canUpdate(): boolean {
+    return this.policy.hasSnapshot('BanquetHallManagement.Services.Update');
+  }
+
+  get canDelete(): boolean {
+    return this.policy.hasSnapshot('BanquetHallManagement.Services.Delete');
+  }
+
+  get showActionsColumn(): boolean {
+    return this.canUpdate || this.canDelete;
+  }
 
   ngOnInit(): void {
     this.loadServices();
@@ -45,7 +68,9 @@ export class ServicesTableComponent implements OnInit {
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error(error);
+        this.notification.showError(
+          getAbpErrorMessage(error, 'تعذّر تحميل الخدمات')
+        );
       },
     });
   }
@@ -61,12 +86,14 @@ export class ServicesTableComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: CreateUpdateService | undefined) => {
       if (!result) {
+        leaveCreateRoute(this.router, '/services/create', '/services');
         return;
       }
 
       this.serviceService.createService(result).subscribe({
         next: () => {
           this.loadServices();
+          leaveCreateRoute(this.router, '/services/create', '/services');
         },
         error: (error) => {
           this.openAddServiceDialog({
@@ -143,7 +170,9 @@ export class ServicesTableComponent implements OnInit {
             this.loadServices();
           },
           error: (error) => {
-            console.error(getAbpErrorMessage(error));
+            this.notification.showError(
+              getAbpErrorMessage(error, 'تعذّر حذف الخدمة')
+            );
           },
         });
       });

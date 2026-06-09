@@ -2,7 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BanquetHallManagement.Permissions;
+using BanquetHallManagement.Reservations;
 using Microsoft.AspNetCore.Authorization;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
@@ -19,9 +21,14 @@ namespace BanquetHallManagement.Customers
             CreateUpdateCustomerDto>,
         ICustomerAppService
     {
-        public CustomerAppService(IRepository<Customer, Guid> repository)
+        private readonly IRepository<Reservation, Guid> _reservationRepository;
+
+        public CustomerAppService(
+            IRepository<Customer, Guid> repository,
+            IRepository<Reservation, Guid> reservationRepository)
             : base(repository)
         {
+            _reservationRepository = reservationRepository;
         }
 
         //  البحث برقم الهاتف
@@ -49,9 +56,18 @@ namespace BanquetHallManagement.Customers
         }
 
         [Authorize(BanquetHallManagementPermissions.Customers.Delete)]
-        public override Task DeleteAsync(Guid id)
+        public override async Task DeleteAsync(Guid id)
         {
-            return base.DeleteAsync(id);
+            await Repository.GetAsync(id);
+
+            var hasReservations = await _reservationRepository.AnyAsync(r => r.CustomerId == id);
+            if (hasReservations)
+            {
+                throw new BusinessException(
+                    BanquetHallManagementDomainErrorCodes.CustomerCannotDeleteHasReservations);
+            }
+
+            await base.DeleteAsync(id);
         }
     }
 }

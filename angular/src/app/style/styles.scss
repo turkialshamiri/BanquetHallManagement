@@ -49,3 +49,21 @@ body {
   background: #f8fafc;
   color: #1e293b;
 }
+
+.app-snackbar-error {
+  --mat-snack-bar-button-color: #fff;
+
+  .mdc-snackbar__surface {
+    background-color: #b91c1c !important;
+    color: #fff !important;
+  }
+}
+
+.app-snackbar-success {
+  --mat-snack-bar-button-color: #fff;
+
+  .mdc-snackbar__surface {
+    background-color: #15803d !important;
+    color: #fff !important;
+  }
+}

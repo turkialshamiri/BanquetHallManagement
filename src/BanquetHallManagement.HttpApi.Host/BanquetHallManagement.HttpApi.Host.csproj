@@ -8,6 +8,7 @@
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <RootNamespace>BanquetHallManagement</RootNamespace>
     <PreserveCompilationReferences>true</PreserveCompilationReferences>
+    <UserSecretsId>BanquetHallManagement-HttpApi-Host</UserSecretsId>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'BanquetHallManagement.HttpApi.Host' " />
@@ -54,6 +55,13 @@
     <Content Remove="Logs\**" />
     <EmbeddedResource Remove="Logs\**" />
     <None Remove="Logs\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.secrets.json">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

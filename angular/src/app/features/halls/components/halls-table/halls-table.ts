@@ -17,6 +17,7 @@ import {
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 import { AddHallDialog } from 'src/app/shared/components/add-hall-dialog/add-hall-dialog';
 import { DialogService } from 'src/app/shared/services/dialog.service';
+import { NotificationService } from 'src/app/shared/services/notification.service';
 import { PolicyService } from 'src/app/core/services/policy.service';
 
 @Component({
@@ -33,6 +34,7 @@ export class HallsTableComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
   private policy = inject(PolicyService);
+  private notification = inject(NotificationService);
 
   halls: Hall[] = [];
   pageTitle = 'القاعات';
@@ -92,7 +94,9 @@ export class HallsTableComponent implements OnInit {
           this.loadHalls();
         },
         error: (error) => {
-          console.error(getAbpErrorMessage(error));
+          this.notification.showError(
+            getAbpErrorMessage(error, 'تعذّر إضافة القاعة')
+          );
         },
       });
     });
@@ -134,7 +138,9 @@ export class HallsTableComponent implements OnInit {
           this.loadHalls();
         },
         error: (error) => {
-          console.error(getAbpErrorMessage(error));
+          this.notification.showError(
+            getAbpErrorMessage(error, 'تعذّر تحديث القاعة')
+          );
         },
       });
     });
@@ -156,7 +162,9 @@ export class HallsTableComponent implements OnInit {
             this.loadHalls();
           },
           error: (error) => {
-            console.error(getAbpErrorMessage(error));
+            this.notification.showError(
+              getAbpErrorMessage(error, 'تعذّر حذف القاعة')
+            );
           },
         });
       });

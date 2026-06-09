@@ -45,6 +45,9 @@
     "BanquetHallManagement:Reservation:CannotDelete": "لا يمكن حذف الحجز إلا إذا كان في حالة قيد الانتظار.",
     "BanquetHallManagement:Hall:UnderMaintenance": "لا يمكن حجز القاعة لأنها تحت الصيانة.",
     "BanquetHallManagement:Hall:StatusCannotBeBooked": "لا يمكن تعيين حالة القاعة إلى محجوزة يدوياً. يتم تحديد ذلك تلقائياً من الحجوزات.",
-    "BanquetHallManagement:Hall:StatusInvalid": "حالة القاعة غير صالحة. يُسمح فقط بالمتاحة أو تحت الصيانة."
+    "BanquetHallManagement:Hall:StatusInvalid": "حالة القاعة غير صالحة. يُسمح فقط بالمتاحة أو تحت الصيانة.",
+    "BanquetHallManagement:Hall:CannotDeleteHasReservations": "لا يمكن حذف هذه القاعة لأنها مرتبطة بحجوزات موجودة. يرجى إزالة الحجوزات المرتبطة أو إعادة تعيينها قبل الحذف.",
+    "BanquetHallManagement:Customer:CannotDeleteHasReservations": "لا يمكن حذف هذا العميل لأنه مرتبط بحجوزات موجودة. يرجى إزالة الحجوزات المرتبطة أو إعادة تعيينها قبل الحذف.",
+    "BanquetHallManagement:Service:CannotDeleteUsedByReservations": "لا يمكن حذف هذه الخدمة لأنها مستخدمة في حجوزات موجودة. يرجى إزالة الخدمة من الحجوزات المرتبطة قبل الحذف."
   }
 }

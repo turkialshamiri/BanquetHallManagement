@@ -281,3 +281,7 @@ src/BanquetHallManagement.Blazor.Server.Tiered/Logs/*
 # IdentityServer temp files
 tempkey.rsa
 tempkey.jwk
+
+# Local secrets (use appsettings.secrets.json.example as template)
+**/appsettings.secrets.json
+!**/appsettings.secrets.json.example

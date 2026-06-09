@@ -103,6 +103,15 @@ namespace BanquetHallManagement.Halls
         [Authorize(BanquetHallManagementPermissions.Halls.Delete)]
         public async Task DeleteAsync(Guid id)
         {
+            await _hallRepository.GetAsync(id);
+
+            var hasReservations = await _reservationRepository.AnyAsync(r => r.HallId == id);
+            if (hasReservations)
+            {
+                throw new BusinessException(
+                    BanquetHallManagementDomainErrorCodes.HallCannotDeleteHasReservations);
+            }
+
             await _hallRepository.DeleteAsync(id);
         }
 

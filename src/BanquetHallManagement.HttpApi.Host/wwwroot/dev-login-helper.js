@@ -1,8 +1,5 @@
-/* Dev Login Helper */
+/* Dev Login Helper — development only; no credentials are embedded. */
 (() => {
-  const defaultAdminUsername = "admin";
-  const defaultAdminPassword = "1q2w3E*";
-
   const run = () => {
     if (!/\/Account\/Login\/?$/i.test(window.location.pathname)) {
       return;
@@ -46,25 +43,14 @@
       input.dataset.defaultHintAdded = "true";
     };
 
-    const autoFillDefaults = () => {
-      if (userInput && !userInput.value) {
-        userInput.value = defaultAdminUsername;
-      }
-      if (passwordInput && !passwordInput.value) {
-        passwordInput.value = defaultAdminPassword;
-      }
-    };
-
-    addHint(userInput, `Default username: ${defaultAdminUsername}`);
-    addHint(passwordInput, `Default password: ${defaultAdminPassword}`);
-
-    setTimeout(autoFillDefaults, 150);
-    if (userInput) {
-      userInput.addEventListener("focus", autoFillDefaults, { once: true });
-    }
-    if (passwordInput) {
-      passwordInput.addEventListener("focus", autoFillDefaults, { once: true });
-    }
+    addHint(
+      userInput,
+      "Use Seed:AbpAdmin credentials from appsettings.secrets.json or user secrets."
+    );
+    addHint(
+      passwordInput,
+      "Password is not stored in source control. Check your local secrets file."
+    );
   };
 
   if (document.readyState === "loading") {

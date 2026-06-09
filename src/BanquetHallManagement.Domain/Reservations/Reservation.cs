@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BanquetHallManagement.Enums;
 using BanquetHallManagement.ReservationServices;
+using BanquetHallManagement.Reservations.Events;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
 
@@ -9,6 +11,15 @@ namespace BanquetHallManagement.Reservations;
 
 public class Reservation : FullAuditedAggregateRoot<Guid>
 {
+    internal Reservation()
+    {
+    }
+
+    public Reservation(Guid id)
+        : base(id)
+    {
+    }
+
     public Guid HallId { get; set; }
     public Guid CustomerId { get; set; }
 
@@ -23,6 +34,49 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
 
     public ICollection<ReservationService> Services { get; set; } = new List<ReservationService>();
 
+    public void FinalizeCreation(decimal totalPrice)
+    {
+        TotalPrice = totalPrice;
+        AddLocalEvent(new ReservationCreatedDomainEvent(
+            ReservationEventSnapshot.FromReservation(this)));
+    }
+
+    public static decimal CalculateTotalPrice(
+        decimal hallPricePerHour,
+        TimeSpan startTime,
+        TimeSpan endTime,
+        IEnumerable<decimal> servicePrices)
+    {
+        var reservationHours = (endTime - startTime).TotalHours;
+        return (decimal)reservationHours * hallPricePerHour + servicePrices.Sum();
+    }
+
+    public void ApplyUpdate(
+        Guid hallId,
+        Guid customerId,
+        DateTime eventDate,
+        TimeSpan startTime,
+        TimeSpan endTime,
+        int guestsCount,
+        decimal totalPrice)
+    {
+        HallId = hallId;
+        CustomerId = customerId;
+        EventDate = eventDate;
+        StartTime = startTime;
+        EndTime = endTime;
+        GuestsCount = guestsCount;
+        TotalPrice = totalPrice;
+        AddLocalEvent(new ReservationUpdatedDomainEvent(
+            ReservationEventSnapshot.FromReservation(this)));
+    }
+
+    public void MarkForDeletion()
+    {
+        AddLocalEvent(new ReservationDeletedDomainEvent(
+            ReservationEventSnapshot.FromReservation(this)));
+    }
+
     public void Confirm()
     {
         if (Status != ReservationStatus.Pending)
@@ -32,6 +86,8 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
         }
 
         Status = ReservationStatus.Confirmed;
+        AddLocalEvent(new ReservationConfirmedDomainEvent(
+            ReservationEventSnapshot.FromReservation(this)));
     }
 
     public void Cancel()
@@ -44,6 +100,8 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
         }
 
         Status = ReservationStatus.Cancelled;
+        AddLocalEvent(new ReservationCancelledDomainEvent(
+            ReservationEventSnapshot.FromReservation(this)));
     }
 
     public void Complete()
@@ -55,6 +113,8 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
         }
 
         Status = ReservationStatus.Completed;
+        AddLocalEvent(new ReservationCompletedDomainEvent(
+            ReservationEventSnapshot.FromReservation(this)));
     }
 
     public bool CanBeUpdated()

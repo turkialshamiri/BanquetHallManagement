@@ -25,4 +25,13 @@ public static class BanquetHallManagementDomainErrorCodes
 
     public const string HallStatusInvalid =
         "BanquetHallManagement:Hall:StatusInvalid";
+
+    public const string HallCannotDeleteHasReservations =
+        "BanquetHallManagement:Hall:CannotDeleteHasReservations";
+
+    public const string CustomerCannotDeleteHasReservations =
+        "BanquetHallManagement:Customer:CannotDeleteHasReservations";
+
+    public const string ServiceCannotDeleteUsedByReservations =
+        "BanquetHallManagement:Service:CannotDeleteUsedByReservations";
 }

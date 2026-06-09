@@ -1,268 +1,445 @@
-<div class="dialog-container">
-
-    <h2>
-
-        {{ isEditMode
-        ? 'تعديل الحجز'
-        : 'إضافة حجز جديد' }}
-
-    </h2>
-
-    @if (apiError) {
-        <div class="api-error">
-            {{ apiError }}
-        </div>
-    }
-
-    @if (isLoading) {
-        <div class="loading-state">
-            جاري تحميل البيانات...
-        </div>
-    } @else {
-
-        <div class="grid">
-
-            <div class="form-group">
-
-                <label>العميل <span class="required">*</span></label>
-
-                <select
-                    [(ngModel)]="form.customerId"
-                    (ngModelChange)="onFormFieldChange('customerId')"
-                    [class.invalid]="errors.customerId">
-
-                    <option value="">— اختر العميل —</option>
-
-                    @for (customer of customers; track customer.id) {
-                        <option [value]="customer.id">
-                            {{ customer.name }} ({{ customer.phone }})
-                        </option>
-                    }
-
-                </select>
-
-                @if (errors.customerId) {
-                    <span class="error-message">{{ errors.customerId }}</span>
-                }
-
-            </div>
-
-            <div class="form-group">
-
-                <label>القاعة <span class="required">*</span></label>
-
-                <select
-                    [(ngModel)]="form.hallId"
-                    (ngModelChange)="onFormFieldChange('hallId')"
-                    [class.invalid]="errors.hallId">
-
-                    <option value="">— اختر القاعة —</option>
-
-                    @for (hall of halls; track hall.id) {
-                        <option [value]="hall.id">
-                            {{ hall.name }} ({{ hall.capacity }} ضيف)
-                        </option>
-                    }
-
-                </select>
-
-                @if (errors.hallId) {
-                    <span class="error-message">{{ errors.hallId }}</span>
-                }
-
-            </div>
-
-        </div>
-
-        <div class="grid">
-
-            <div class="form-group">
-
-                <label>تاريخ المناسبة <span class="required">*</span></label>
-
-                <input
-                    type="date"
-                    [(ngModel)]="form.eventDate"
-                    (ngModelChange)="onFormFieldChange('eventDate')"
-                    [class.invalid]="errors.eventDate">
-
-                @if (errors.eventDate) {
-                    <span class="error-message">{{ errors.eventDate }}</span>
-                }
-
-            </div>
-
-            <div class="form-group">
-
-                <label>عدد الضيوف <span class="required">*</span></label>
-
-                <input
-                    type="number"
-                    min="1"
-                    [(ngModel)]="form.guestsCount"
-                    (ngModelChange)="onFormFieldChange('guestsCount')"
-                    [class.invalid]="errors.guestsCount">
-
-                @if (errors.guestsCount) {
-                    <span class="error-message">{{ errors.guestsCount }}</span>
-                }
-
-            </div>
-
-        </div>
-
-        <div class="grid">
-
-            <div class="form-group">
-
-                <label>وقت البداية <span class="required">*</span></label>
-
-                <input
-                    type="time"
-                    [(ngModel)]="form.startTime"
-                    (ngModelChange)="onFormFieldChange('startTime')"
-                    [class.invalid]="errors.startTime">
-
-                @if (errors.startTime) {
-                    <span class="error-message">{{ errors.startTime }}</span>
-                }
-
-            </div>
-
-            <div class="form-group">
-
-                <label>وقت النهاية <span class="required">*</span></label>
-
-                <input
-                    type="time"
-                    [(ngModel)]="form.endTime"
-                    (ngModelChange)="onFormFieldChange('endTime')"
-                    [class.invalid]="errors.endTime">
-
-                @if (errors.endTime) {
-                    <span class="error-message">{{ errors.endTime }}</span>
-                }
-
-            </div>
-
-        </div>
-
-        @if (canSelectServices) {
-        <div class="form-group">
-
-            <label>الخدمات الإضافية</label>
-
-            @if (services.length > 0) {
-
-                <div class="services-list">
-
-                    @for (service of services; track service.id) {
-
-                        <label class="service-option">
-
-                            <input
-                                type="checkbox"
-                                [checked]="isServiceSelected(service.id)"
-                                (change)="toggleService(service.id)">
-
-                            <span>
-                                {{ service.name }}
-                                ({{ service.price | number }})
-                            </span>
-
-                        </label>
-
-                    }
-
-                </div>
-
-            } @else {
-
-                <span class="hint-text">
-                    لا توجد خدمات متاحة حالياً
-                </span>
-
-            }
-
-        </div>
-        }
-
-        <div class="reservation-summary-card">
-            <h3>ملخص الحجز</h3>
-
-            <div class="summary-row">
-                <span>القاعة:</span>
-                <strong>{{ priceBreakdown.hallName }}</strong>
-            </div>
-
-            <div class="summary-row">
-                <span>سعر الساعة:</span>
-                <strong>{{ priceBreakdown.pricePerHour | number:'1.0-0' }} ريال</strong>
-            </div>
-
-            <div class="summary-row">
-                <span>عدد الساعات:</span>
-                <strong>{{ priceBreakdown.hours | number:'1.0-2' }}</strong>
-            </div>
-
-            <div class="summary-row">
-                <span>تكلفة القاعة:</span>
-                <strong>{{ priceBreakdown.hallCost | number:'1.0-0' }} ريال</strong>
-            </div>
-
-            @if (canSelectServices) {
-                <div class="summary-services">
-                    <span class="summary-label">الخدمات:</span>
-
-                    @if (priceBreakdown.selectedServices.length > 0) {
-                        @for (service of priceBreakdown.selectedServices; track service.name) {
-                            <div class="summary-service-item">
-                                <span>{{ service.name }}</span>
-                                <strong>{{ service.price | number:'1.0-0' }} ريال</strong>
-                            </div>
-                        }
-
-                        <div class="summary-row">
-                            <span>إجمالي الخدمات:</span>
-                            <strong>{{ priceBreakdown.servicesCost | number:'1.0-0' }} ريال</strong>
-                        </div>
-                    } @else {
-                        <span class="hint-text">لم يتم اختيار خدمات إضافية</span>
-                    }
-                </div>
-            }
-
-            <div class="summary-total">
-                <span>الإجمالي النهائي:</span>
-                @if (isEditMode && totalPrice != null) {
-                    <strong>{{ totalPrice | number:'1.0-0' }} ريال</strong>
-                } @else if (priceBreakdown.isValid && form.hallId) {
-                    <strong>{{ priceBreakdown.totalCost | number:'1.0-0' }} ريال</strong>
-                } @else {
-                    <span class="hint-text">حدد القاعة والأوقات لحساب الإجمالي</span>
-                }
-            </div>
-        </div>
-
-        <div class="actions">
-
-            <button class="cancel-btn" type="button" (click)="close()">
-
-                إلغاء
-
-            </button>
-
-            <button class="save-btn" type="button" (click)="save()">
-
-                {{ isEditMode
-                ? 'حفظ التعديلات'
-                : 'إضافة الحجز' }}
-
-            </button>
-
-        </div>
-
-    }
-
-</div>
-
+<div class="dialog-shell">
+
+
+
+  <div mat-dialog-title class="dialog-header">
+
+    <h2>
+
+      {{ isEditMode ? 'تعديل الحجز' : 'إضافة حجز جديد' }}
+
+    </h2>
+
+  </div>
+
+
+
+  @if (apiError) {
+
+    <div class="api-error" role="alert">
+
+      {{ apiError }}
+
+    </div>
+
+  }
+
+
+
+  <mat-dialog-content class="dialog-content">
+
+
+
+    @if (isLoading) {
+
+      <div class="loading-state">
+
+        جاري تحميل البيانات...
+
+      </div>
+
+    } @else {
+
+
+
+      <div class="grid">
+
+
+
+        <div class="form-group">
+
+          <label>العميل <span class="required">*</span></label>
+
+          <select
+
+            [(ngModel)]="form.customerId"
+
+            (ngModelChange)="onFormFieldChange('customerId')"
+
+            [class.invalid]="errors.customerId">
+
+            <option value="">— اختر العميل —</option>
+
+            @for (customer of customers; track customer.id) {
+
+              <option [value]="customer.id">
+
+                {{ customer.name }} ({{ customer.phone }})
+
+              </option>
+
+            }
+
+          </select>
+
+          @if (errors.customerId) {
+
+            <span class="error-message">{{ errors.customerId }}</span>
+
+          }
+
+        </div>
+
+
+
+        <div class="form-group">
+
+          <label>القاعة <span class="required">*</span></label>
+
+          <select
+
+            [(ngModel)]="form.hallId"
+
+            (ngModelChange)="onFormFieldChange('hallId')"
+
+            [class.invalid]="errors.hallId">
+
+            <option value="">— اختر القاعة —</option>
+
+            @for (hall of halls; track hall.id) {
+
+              <option [value]="hall.id">
+
+                {{ hall.name }} ({{ hall.capacity }} ضيف)
+
+              </option>
+
+            }
+
+          </select>
+
+          @if (errors.hallId) {
+
+            <span class="error-message">{{ errors.hallId }}</span>
+
+          }
+
+        </div>
+
+
+
+      </div>
+
+
+
+      <div class="grid">
+
+
+
+        <div class="form-group">
+
+          <label>تاريخ المناسبة <span class="required">*</span></label>
+
+          <input
+
+            type="date"
+
+            [(ngModel)]="form.eventDate"
+
+            (ngModelChange)="onFormFieldChange('eventDate')"
+
+            [class.invalid]="errors.eventDate">
+
+          @if (errors.eventDate) {
+
+            <span class="error-message">{{ errors.eventDate }}</span>
+
+          }
+
+        </div>
+
+
+
+        <div class="form-group">
+
+          <label>عدد الضيوف <span class="required">*</span></label>
+
+          <input
+
+            type="number"
+
+            min="1"
+
+            [(ngModel)]="form.guestsCount"
+
+            (ngModelChange)="onFormFieldChange('guestsCount')"
+
+            [class.invalid]="errors.guestsCount">
+
+          @if (errors.guestsCount) {
+
+            <span class="error-message">{{ errors.guestsCount }}</span>
+
+          }
+
+        </div>
+
+
+
+      </div>
+
+
+
+      <div class="grid">
+
+
+
+        <div class="form-group">
+
+          <label>وقت البداية <span class="required">*</span></label>
+
+          <input
+
+            type="time"
+
+            [(ngModel)]="form.startTime"
+
+            (ngModelChange)="onFormFieldChange('startTime')"
+
+            [class.invalid]="errors.startTime">
+
+          @if (errors.startTime) {
+
+            <span class="error-message">{{ errors.startTime }}</span>
+
+          }
+
+        </div>
+
+
+
+        <div class="form-group">
+
+          <label>وقت النهاية <span class="required">*</span></label>
+
+          <input
+
+            type="time"
+
+            [(ngModel)]="form.endTime"
+
+            (ngModelChange)="onFormFieldChange('endTime')"
+
+            [class.invalid]="errors.endTime">
+
+          @if (errors.endTime) {
+
+            <span class="error-message">{{ errors.endTime }}</span>
+
+          }
+
+        </div>
+
+
+
+      </div>
+
+
+
+      @if (canSelectServices) {
+
+        <div class="form-group">
+
+          <label>الخدمات الإضافية</label>
+
+
+
+          @if (services.length > 0) {
+
+            <div class="services-list">
+
+              @for (service of services; track service.id) {
+
+                <label class="service-option">
+
+                  <input
+
+                    type="checkbox"
+
+                    [checked]="isServiceSelected(service.id)"
+
+                    (change)="toggleService(service.id)">
+
+                  <span>
+
+                    {{ service.name }}
+
+                    ({{ service.price | number }})
+
+                  </span>
+
+                </label>
+
+              }
+
+            </div>
+
+          } @else {
+
+            <span class="hint-text">لا توجد خدمات متاحة حالياً</span>
+
+          }
+
+        </div>
+
+      }
+
+
+
+      <div class="reservation-summary-card">
+
+        <h3>ملخص الحجز</h3>
+
+
+
+        <div class="summary-row">
+
+          <span>القاعة:</span>
+
+          <strong>{{ priceBreakdown.hallName }}</strong>
+
+        </div>
+
+
+
+        <div class="summary-row">
+
+          <span>سعر الساعة:</span>
+
+          <strong>{{ priceBreakdown.pricePerHour | number:'1.0-0' }} ريال</strong>
+
+        </div>
+
+
+
+        <div class="summary-row">
+
+          <span>عدد الساعات:</span>
+
+          <strong>{{ priceBreakdown.hours | number:'1.0-2' }}</strong>
+
+        </div>
+
+
+
+        <div class="summary-row">
+
+          <span>تكلفة القاعة:</span>
+
+          <strong>{{ priceBreakdown.hallCost | number:'1.0-0' }} ريال</strong>
+
+        </div>
+
+
+
+        @if (canSelectServices) {
+
+          <div class="summary-services">
+
+            <span class="summary-label">الخدمات:</span>
+
+
+
+            @if (priceBreakdown.selectedServices.length > 0) {
+
+              @for (service of priceBreakdown.selectedServices; track service.name) {
+
+                <div class="summary-service-item">
+
+                  <span>{{ service.name }}</span>
+
+                  <strong>{{ service.price | number:'1.0-0' }} ريال</strong>
+
+                </div>
+
+              }
+
+
+
+              <div class="summary-row">
+
+                <span>إجمالي الخدمات:</span>
+
+                <strong>{{ priceBreakdown.servicesCost | number:'1.0-0' }} ريال</strong>
+
+              </div>
+
+            } @else {
+
+              <span class="hint-text">لم يتم اختيار خدمات إضافية</span>
+
+            }
+
+          </div>
+
+        }
+
+
+
+        <div class="summary-total">
+
+          <span>الإجمالي النهائي:</span>
+
+          @if (isEditMode && totalPrice != null) {
+
+            <strong>{{ totalPrice | number:'1.0-0' }} ريال</strong>
+
+          } @else if (priceBreakdown.isValid && form.hallId) {
+
+            <strong>{{ priceBreakdown.totalCost | number:'1.0-0' }} ريال</strong>
+
+          } @else {
+
+            <span class="hint-text">حدد القاعة والأوقات لحساب الإجمالي</span>
+
+          }
+
+        </div>
+
+      </div>
+
+
+
+    }
+
+
+
+  </mat-dialog-content>
+
+
+
+  <mat-dialog-actions align="end" class="dialog-actions">
+
+    <button class="cancel-btn" type="button" mat-button (click)="close()">
+
+      إلغاء
+
+    </button>
+
+
+
+    <button
+
+      class="save-btn"
+
+      type="button"
+
+      mat-flat-button
+
+      color="primary"
+
+      [disabled]="isLoading"
+
+      (click)="save()">
+
+      {{ isEditMode ? 'حفظ التعديلات' : 'إضافة الحجز' }}
+
+    </button>
+
+  </mat-dialog-actions>
+
+
+
+</div>
+
+

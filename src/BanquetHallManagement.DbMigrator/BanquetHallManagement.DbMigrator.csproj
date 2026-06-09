@@ -6,6 +6,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <UserSecretsId>BanquetHallManagement-DbMigrator</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,8 +37,8 @@
     </Content>
     <None Remove="appsettings.secrets.json" />
     <Content Include="appsettings.secrets.json">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

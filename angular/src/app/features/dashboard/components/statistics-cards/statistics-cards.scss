@@ -28,6 +28,11 @@
     grid-template-columns: repeat(5, 1fr);
 }
 
+.stats-grid.primary.without-revenue {
+
+    grid-template-columns: repeat(4, 1fr);
+}
+
 .stats-grid.status {
 
     grid-template-columns: repeat(4, 1fr);

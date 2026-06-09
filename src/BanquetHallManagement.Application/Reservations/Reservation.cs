@@ -1,18 +1,21 @@
-﻿using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
+﻿using BanquetHallManagement.Customers;
+using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Enums;
 using BanquetHallManagement.Halls;
+using BanquetHallManagement.Permissions;
 using BanquetHallManagement.ReservationServices;
 using BanquetHallManagement.Services;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using BanquetHallManagement.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Uow;
 
 namespace BanquetHallManagement.Reservations;
 
@@ -21,29 +24,37 @@ public class ReservationAppService :
     ApplicationService,
     IReservationAppService
 {
-    private readonly IRepository<Reservation, Guid> _reservationRepository;
+    private const int SchedulingMaxAttempts = 3;
+
+    private readonly IReservationRepository _reservationRepository;
     private readonly IRepository<Hall, Guid> _hallRepository;
     private readonly IRepository<Service, Guid> _serviceRepository;
     private readonly IRepository<ReservationService, Guid> _reservationServiceRepository;
+    private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly HallAvailabilityManager _hallAvailabilityManager;
+    private readonly ReservationSchedulingManager _reservationSchedulingManager;
 
     public ReservationAppService(
-        IRepository<Reservation, Guid> reservationRepository,
+        IReservationRepository reservationRepository,
         IRepository<Hall, Guid> hallRepository,
         IRepository<Service, Guid> serviceRepository,
         IRepository<ReservationService, Guid> reservationServiceRepository,
-        HallAvailabilityManager hallAvailabilityManager)
+        IRepository<Customer, Guid> customerRepository,
+        HallAvailabilityManager hallAvailabilityManager,
+        ReservationSchedulingManager reservationSchedulingManager)
     {
         _reservationRepository = reservationRepository;
         _hallRepository = hallRepository;
         _serviceRepository = serviceRepository;
         _reservationServiceRepository = reservationServiceRepository;
+        _customerRepository = customerRepository;
         _hallAvailabilityManager = hallAvailabilityManager;
+        _reservationSchedulingManager = reservationSchedulingManager;
     }
 
     public async Task<ReservationDto> GetAsync(Guid id)
     {
-        var reservation = await _reservationRepository.GetAsync(id);
+        var reservation = await _reservationRepository.GetAsync(id, includeDetails: true);
 
         return MapToDto(reservation);
     }
@@ -51,25 +62,82 @@ public class ReservationAppService :
     public async Task<PagedResultDto<ReservationDto>> GetListAsync(
         PagedAndSortedResultRequestDto input)
     {
-        var query = await _reservationRepository.GetQueryableAsync();
+        var query = await _reservationRepository.WithDetailsAsync();
 
-        var totalCount = query.Count();
+        var totalCount = await AsyncExecuter.CountAsync(query);
 
-        var reservations = query
-            .Skip(input.SkipCount)
-            .Take(input.MaxResultCount)
-            .ToList();
+        var reservations = await AsyncExecuter.ToListAsync(
+            query
+                .OrderByDescending(r => r.CreationTime)
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount));
 
         return new PagedResultDto<ReservationDto>
         {
             TotalCount = totalCount,
-            Items = reservations.Select(MapToDto).ToList()
+            Items = reservations.Select(r => MapToDto(r)).ToList()
         };
     }
 
     [Authorize(BanquetHallManagementPermissions.Reservations.Create)]
-    public async Task<ReservationDto> CreateAsync(
-        CreateUpdateReservationDto input)
+    public Task<ReservationDto> CreateAsync(CreateUpdateReservationDto input)
+    {
+        return ExecuteSchedulingOperationAsync(() => CreateAsyncCore(input));
+    }
+
+    [Authorize(BanquetHallManagementPermissions.Reservations.Update)]
+    public Task<ReservationDto> UpdateAsync(Guid id, CreateUpdateReservationDto input)
+    {
+        return ExecuteSchedulingOperationAsync(() => UpdateAsyncCore(id, input));
+    }
+
+    [Authorize(BanquetHallManagementPermissions.Reservations.Delete)]
+    public async Task DeleteAsync(Guid id)
+    {
+        var reservation = await _reservationRepository.GetAsync(id);
+
+        if (!reservation.CanBeDeleted())
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.ReservationCannotDelete);
+        }
+
+        reservation.MarkForDeletion();
+
+        await _reservationRepository.DeleteAsync(reservation);
+    }
+
+    [Authorize(BanquetHallManagementPermissions.Reservations.Confirm)]
+    public Task<ReservationDto> ConfirmAsync(Guid id)
+    {
+        return ExecuteSchedulingOperationAsync(() => ConfirmAsyncCore(id));
+    }
+
+    [Authorize(BanquetHallManagementPermissions.Reservations.Cancel)]
+    public async Task<ReservationDto> CancelAsync(Guid id)
+    {
+        var reservation = await _reservationRepository.GetAsync(id, includeDetails: true);
+
+        reservation.Cancel();
+
+        await _reservationRepository.UpdateAsync(reservation);
+
+        return MapToDto(reservation);
+    }
+
+    [Authorize(BanquetHallManagementPermissions.Reservations.Complete)]
+    public async Task<ReservationDto> CompleteAsync(Guid id)
+    {
+        var reservation = await _reservationRepository.GetAsync(id, includeDetails: true);
+
+        reservation.Complete();
+
+        await _reservationRepository.UpdateAsync(reservation);
+
+        return MapToDto(reservation);
+    }
+
+    private async Task<ReservationDto> CreateAsyncCore(CreateUpdateReservationDto input)
     {
         ValidateReservationTimes(input);
 
@@ -80,6 +148,7 @@ public class ReservationAppService :
         }
 
         var hall = await _hallRepository.GetAsync(input.HallId);
+        await _customerRepository.GetAsync(input.CustomerId);
 
         _hallAvailabilityManager.EnsureCanAcceptBookings(hall);
 
@@ -89,19 +158,13 @@ public class ReservationAppService :
                 "عدد الضيوف يتجاوز سعة القاعة");
         }
 
-        await EnsureNoSchedulingConflictAsync(
+        await _reservationSchedulingManager.EnsureNoSchedulingConflictAsync(
             input.HallId,
             input.EventDate,
             input.StartTime,
             input.EndTime);
 
-        var reservationHours =
-            (input.EndTime - input.StartTime).TotalHours;
-
-        decimal totalPrice =
-            (decimal)reservationHours * hall.PricePerHour;
-
-        var reservation = new Reservation
+        var reservation = new Reservation(GuidGenerator.Create())
         {
             HallId = input.HallId,
             CustomerId = input.CustomerId,
@@ -113,37 +176,25 @@ public class ReservationAppService :
             TotalPrice = 0
         };
 
-        await _reservationRepository.InsertAsync(
-            reservation,
-            autoSave: true);
+        await _reservationRepository.InsertAsync(reservation, autoSave: false);
 
-        if (input.ServiceIds != null && input.ServiceIds.Any())
-        {
-            var services = await _serviceRepository.GetListAsync(
-                s => input.ServiceIds.Contains(s.Id));
+        var services = await LoadRequestedServicesAsync(input.ServiceIds);
+        var totalPrice = Reservation.CalculateTotalPrice(
+            hall.PricePerHour,
+            input.StartTime,
+            input.EndTime,
+            services.Select(s => s.Price));
 
-            totalPrice += services.Sum(s => s.Price);
+        await InsertReservationServicesAsync(reservation.Id, services);
 
-            foreach (var service in services)
-            {
-                await _reservationServiceRepository.InsertAsync(
-                    new ReservationService
-                    {
-                        ReservationId = reservation.Id,
-                        ServiceId = service.Id
-                    });
-            }
-        }
+        reservation.FinalizeCreation(totalPrice);
 
-        reservation.TotalPrice = totalPrice;
+        await CurrentUnitOfWork.SaveChangesAsync();
 
-        await _reservationRepository.UpdateAsync(reservation);
-
-        return MapToDto(reservation);
+        return MapToDto(reservation, services.Select(s => s.Id).ToList());
     }
 
-    [Authorize(BanquetHallManagementPermissions.Reservations.Update)]
-    public async Task<ReservationDto> UpdateAsync(
+    private async Task<ReservationDto> UpdateAsyncCore(
         Guid id,
         CreateUpdateReservationDto input)
     {
@@ -163,6 +214,8 @@ public class ReservationAppService :
                 "عدد الضيوف يجب أن يكون أكبر من صفر");
         }
 
+        await _customerRepository.GetAsync(input.CustomerId);
+
         var hall = await _hallRepository.GetAsync(input.HallId);
 
         _hallAvailabilityManager.EnsureCanAcceptBookings(hall);
@@ -173,46 +226,45 @@ public class ReservationAppService :
                 "عدد الضيوف يتجاوز سعة القاعة");
         }
 
-        await EnsureNoSchedulingConflictAsync(
+        await _reservationSchedulingManager.EnsureNoSchedulingConflictAsync(
             input.HallId,
             input.EventDate,
             input.StartTime,
             input.EndTime,
             reservation.Id);
 
-        reservation.EventDate = input.EventDate;
-        reservation.StartTime = input.StartTime;
-        reservation.EndTime = input.EndTime;
-        reservation.GuestsCount = input.GuestsCount;
+        var services = await LoadRequestedServicesAsync(input.ServiceIds);
+        var totalPrice = Reservation.CalculateTotalPrice(
+            hall.PricePerHour,
+            input.StartTime,
+            input.EndTime,
+            services.Select(s => s.Price));
 
-        await _reservationRepository.UpdateAsync(reservation);
+        await SyncReservationServicesAsync(reservation.Id, services);
 
-        return MapToDto(reservation);
+        reservation.ApplyUpdate(
+            input.HallId,
+            input.CustomerId,
+            input.EventDate,
+            input.StartTime,
+            input.EndTime,
+            input.GuestsCount,
+            totalPrice);
+
+        await _reservationRepository.UpdateAsync(reservation, autoSave: false);
+        await CurrentUnitOfWork.SaveChangesAsync();
+
+        return MapToDto(reservation, services.Select(s => s.Id).ToList());
     }
 
-    [Authorize(BanquetHallManagementPermissions.Reservations.Delete)]
-    public async Task DeleteAsync(Guid id)
+    private async Task<ReservationDto> ConfirmAsyncCore(Guid id)
     {
-        var reservation = await _reservationRepository.GetAsync(id);
-
-        if (!reservation.CanBeDeleted())
-        {
-            throw new BusinessException(
-                BanquetHallManagementDomainErrorCodes.ReservationCannotDelete);
-        }
-
-        await _reservationRepository.DeleteAsync(id);
-    }
-
-    [Authorize(BanquetHallManagementPermissions.Reservations.Confirm)]
-    public async Task<ReservationDto> ConfirmAsync(Guid id)
-    {
-        var reservation = await _reservationRepository.GetAsync(id);
+        var reservation = await _reservationRepository.GetAsync(id, includeDetails: true);
         var hall = await _hallRepository.GetAsync(reservation.HallId);
 
         _hallAvailabilityManager.EnsureCanAcceptBookings(hall);
 
-        await EnsureNoSchedulingConflictAsync(
+        await _reservationSchedulingManager.EnsureNoSchedulingConflictAsync(
             reservation.HallId,
             reservation.EventDate,
             reservation.StartTime,
@@ -226,28 +278,92 @@ public class ReservationAppService :
         return MapToDto(reservation);
     }
 
-    [Authorize(BanquetHallManagementPermissions.Reservations.Cancel)]
-    public async Task<ReservationDto> CancelAsync(Guid id)
+    private async Task<List<Service>> LoadRequestedServicesAsync(List<Guid> serviceIds)
     {
-        var reservation = await _reservationRepository.GetAsync(id);
+        if (serviceIds == null || serviceIds.Count == 0)
+        {
+            return [];
+        }
 
-        reservation.Cancel();
-
-        await _reservationRepository.UpdateAsync(reservation);
-
-        return MapToDto(reservation);
+        return await _serviceRepository.GetListAsync(s => serviceIds.Contains(s.Id));
     }
 
-    [Authorize(BanquetHallManagementPermissions.Reservations.Complete)]
-    public async Task<ReservationDto> CompleteAsync(Guid id)
+    private async Task InsertReservationServicesAsync(
+        Guid reservationId,
+        IReadOnlyList<Service> services)
     {
-        var reservation = await _reservationRepository.GetAsync(id);
+        foreach (var service in services)
+        {
+            await _reservationServiceRepository.InsertAsync(
+                new ReservationService(GuidGenerator.Create())
+                {
+                    ReservationId = reservationId,
+                    ServiceId = service.Id
+                },
+                autoSave: false);
+        }
+    }
 
-        reservation.Complete();
+    private async Task SyncReservationServicesAsync(
+        Guid reservationId,
+        IReadOnlyList<Service> requestedServices)
+    {
+        var existingLinks = await _reservationServiceRepository.GetListAsync(
+            rs => rs.ReservationId == reservationId);
 
-        await _reservationRepository.UpdateAsync(reservation);
+        var requestedServiceIds = requestedServices
+            .Select(s => s.Id)
+            .ToHashSet();
 
-        return MapToDto(reservation);
+        foreach (var link in existingLinks.Where(l => !requestedServiceIds.Contains(l.ServiceId)))
+        {
+            await _reservationServiceRepository.DeleteAsync(link, autoSave: false);
+        }
+
+        var existingServiceIds = existingLinks
+            .Select(l => l.ServiceId)
+            .ToHashSet();
+
+        foreach (var service in requestedServices.Where(s => !existingServiceIds.Contains(s.Id)))
+        {
+            await _reservationServiceRepository.InsertAsync(
+                new ReservationService(GuidGenerator.Create())
+                {
+                    ReservationId = reservationId,
+                    ServiceId = service.Id
+                },
+                autoSave: false);
+        }
+    }
+
+    private async Task<T> ExecuteSchedulingOperationAsync<T>(Func<Task<T>> operation)
+    {
+        for (var attempt = 1; attempt <= SchedulingMaxAttempts; attempt++)
+        {
+            using var unitOfWork = UnitOfWorkManager.Begin(
+                new AbpUnitOfWorkOptions
+                {
+                    IsTransactional = true,
+                    IsolationLevel = IsolationLevel.Serializable
+                },
+                requiresNew: true);
+
+            try
+            {
+                var result = await operation();
+                await unitOfWork.CompleteAsync();
+                return result;
+            }
+            catch (Exception exception)
+                when (ReservationConcurrencyHelper.IsTransientSchedulingFailure(exception) &&
+                      attempt < SchedulingMaxAttempts)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(50 * attempt));
+            }
+        }
+
+        throw new UserFriendlyException(
+            "تعذر إتمام العملية بسبب تعارض حجز متزامن. يرجى المحاولة مرة أخرى.");
     }
 
     private static void ValidateReservationTimes(CreateUpdateReservationDto input)
@@ -259,46 +375,16 @@ public class ReservationAppService :
         }
     }
 
-    private async Task EnsureNoSchedulingConflictAsync(
-        Guid hallId,
-        DateTime eventDate,
-        TimeSpan startTime,
-        TimeSpan endTime,
-        Guid? excludeReservationId = null)
-    {
-        var now = Clock.Now;
-        var query = await _reservationRepository.GetQueryableAsync();
-
-        var candidate = new Reservation
-        {
-            HallId = hallId,
-            EventDate = eventDate,
-            StartTime = startTime,
-            EndTime = endTime,
-            Status = ReservationStatus.Pending
-        };
-
-        var existingReservations = await AsyncExecuter.ToListAsync(
-            query.Where(r =>
-                r.HallId == hallId &&
-                r.EventDate.Date == eventDate.Date &&
-                (!excludeReservationId.HasValue || r.Id != excludeReservationId.Value)));
-
-        var hasConflict = existingReservations.Any(existing =>
-            candidate.HasSchedulingConflictWith(existing, now));
-
-        if (hasConflict)
-        {
-            throw new UserFriendlyException(
-                "هذه القاعة محجوزة بالفعل في هذا الوقت");
-        }
-    }
-
-    private ReservationDto MapToDto(Reservation reservation)
+    private ReservationDto MapToDto(
+        Reservation reservation,
+        IReadOnlyList<Guid> serviceIds = null)
     {
         var dto = ObjectMapper.Map<Reservation, ReservationDto>(reservation);
         dto.Status = reservation.Status.ToString();
+        dto.ServiceIds = serviceIds?.ToList()
+            ?? reservation.Services?.Select(rs => rs.ServiceId).ToList()
+            ?? [];
+
         return dto;
     }
 }
-

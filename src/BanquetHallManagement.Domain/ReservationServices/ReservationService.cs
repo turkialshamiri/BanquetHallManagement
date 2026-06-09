@@ -7,6 +7,15 @@ namespace BanquetHallManagement.ReservationServices
 {
     public class ReservationService : Entity<Guid>
     {
+        internal ReservationService()
+        {
+        }
+
+        public ReservationService(Guid id)
+            : base(id)
+        {
+        }
+
         public Guid ReservationId { get; set; }
         public Guid ServiceId { get; set; }
     }

@@ -4,7 +4,7 @@ import {
   inject,
   ViewChild,
 } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { ServicesTableComponent } from './components/services-table/services-table';
 
 @Component({
@@ -19,7 +19,6 @@ export class Services implements AfterViewInit {
   servicesTable!: ServicesTableComponent;
 
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
 
   ngAfterViewInit(): void {
     const shouldOpenAddDialog =
@@ -30,7 +29,5 @@ export class Services implements AfterViewInit {
     }
 
     this.servicesTable.openAddServiceDialog();
-
-    this.router.navigate(['/services'], { replaceUrl: true });
   }
 }

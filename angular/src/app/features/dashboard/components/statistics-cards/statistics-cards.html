@@ -21,7 +21,7 @@
 
         <h3 class="section-title">مؤشرات الأداء الرئيسية</h3>
 
-        <div class="stats-grid primary">
+        <div class="stats-grid primary" [class.without-revenue]="!canViewRevenue">
 
             <div class="stat-card halls">
                 <div class="card-icon">

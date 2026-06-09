@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using BanquetHallManagement.Configuration;
 using BanquetHallManagement.Data;
 using Serilog;
 using Volo.Abp;
@@ -23,6 +24,8 @@ public class DbMigratorHostedService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        BanquetHallManagementSecretsValidator.ValidateForDbMigrator(_configuration);
+
         using (var application = await AbpApplicationFactory.CreateAsync<BanquetHallManagementDbMigratorModule>(options =>
         {
            options.Services.ReplaceConfiguration(_configuration);

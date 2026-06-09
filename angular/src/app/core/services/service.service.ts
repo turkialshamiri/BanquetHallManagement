@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { DEFAULT_LIST_MAX_RESULT_COUNT } from '../constants/pagination.constants';
 import {
   CreateUpdateService,
   PagedServiceResult,
@@ -15,8 +16,15 @@ export class ServiceService {
 
   private apiUrl = 'https://localhost:44324/api/app/service';
 
-  getServices(): Observable<PagedServiceResult> {
-    return this.http.get<PagedServiceResult>(this.apiUrl);
+  getServices(
+    skipCount = 0,
+    maxResultCount = DEFAULT_LIST_MAX_RESULT_COUNT
+  ): Observable<PagedServiceResult> {
+    const params = new HttpParams()
+      .set('skipCount', skipCount)
+      .set('maxResultCount', maxResultCount);
+
+    return this.http.get<PagedServiceResult>(this.apiUrl, { params });
   }
 
   createService(data: CreateUpdateService): Observable<ServiceItem> {

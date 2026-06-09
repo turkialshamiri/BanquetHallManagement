@@ -6,6 +6,7 @@ import { Employee, CreateEmployee, UpdateEmployee } from 'src/app/core/models/em
 import { EmployeeService } from 'src/app/core/services/employee.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 import { DialogService } from 'src/app/shared/services/dialog.service';
+import { NotificationService } from 'src/app/shared/services/notification.service';
 import {
   EmployeeDialog,
   EmployeeFormState,
@@ -27,6 +28,7 @@ export class Users implements OnInit {
   private dialogService = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
   private policy = inject(PolicyService);
+  private notification = inject(NotificationService);
 
   employees: Employee[] = [];
   isLoading = false;
@@ -135,7 +137,11 @@ export class Users implements OnInit {
 
         this.employeeService.deleteEmployee(employee.id).subscribe({
           next: () => this.loadEmployees(),
-          error: (err) => console.error(getAbpErrorMessage(err)),
+          error: (err) => {
+            this.notification.showError(
+              getAbpErrorMessage(err, 'تعذّر حذف الموظف')
+            );
+          },
         });
       });
   }
@@ -185,7 +191,11 @@ export class Users implements OnInit {
 
     action$.subscribe({
       next: () => this.loadEmployees(),
-      error: (err) => console.error(getAbpErrorMessage(err)),
+      error: (err) => {
+        this.notification.showError(
+          getAbpErrorMessage(err, 'تعذّر تحديث حالة الموظف')
+        );
+      },
     });
   }
 

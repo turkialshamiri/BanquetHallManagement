@@ -5,8 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using BanquetHallManagement.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Volo.Abp;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Identity;
@@ -24,17 +27,20 @@ public class BanquetHallManagementDbMigrationService : ITransientDependency
     private readonly IEnumerable<IBanquetHallManagementDbSchemaMigrator> _dbSchemaMigrators;
     private readonly ITenantRepository _tenantRepository;
     private readonly ICurrentTenant _currentTenant;
+    private readonly IConfiguration _configuration;
 
     public BanquetHallManagementDbMigrationService(
         IDataSeeder dataSeeder,
         ITenantRepository tenantRepository,
         ICurrentTenant currentTenant,
-        IEnumerable<IBanquetHallManagementDbSchemaMigrator> dbSchemaMigrators)
+        IEnumerable<IBanquetHallManagementDbSchemaMigrator> dbSchemaMigrators,
+        IConfiguration configuration)
     {
         _dataSeeder = dataSeeder;
         _tenantRepository = tenantRepository;
         _currentTenant = currentTenant;
         _dbSchemaMigrators = dbSchemaMigrators;
+        _configuration = configuration;
 
         Logger = NullLogger<BanquetHallManagementDbMigrationService>.Instance;
     }
@@ -105,11 +111,20 @@ public class BanquetHallManagementDbMigrationService : ITransientDependency
     {
         Logger.LogInformation($"Executing {(tenant == null ? "host" : tenant.Name + " tenant")} database seed...");
         
+        var adminEmail = _configuration[BanquetHallManagementConfigurationKeys.Seed.AbpAdminEmail]
+            ?? BanquetHallManagementConsts.AdminEmailDefaultValue;
+        var adminPassword = _configuration[BanquetHallManagementConfigurationKeys.Seed.AbpAdminPassword];
+
+        if (string.IsNullOrWhiteSpace(adminPassword))
+        {
+            throw new AbpException(
+                "Seed:AbpAdmin:Password is not configured. " +
+                "Set it in appsettings.secrets.json, user secrets, or environment variables before running the DbMigrator.");
+        }
+
         await _dataSeeder.SeedAsync(new DataSeedContext(tenant?.Id)
-            .WithProperty(IdentityDataSeedContributor.AdminEmailPropertyName,
-                BanquetHallManagementConsts.AdminEmailDefaultValue)
-            .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName,
-                BanquetHallManagementConsts.AdminPasswordDefaultValue)
+            .WithProperty(IdentityDataSeedContributor.AdminEmailPropertyName, adminEmail)
+            .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName, adminPassword)
         );
     }
 

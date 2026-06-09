@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { DEFAULT_LIST_MAX_RESULT_COUNT } from '../constants/pagination.constants';
 import {
   CreateUpdateCustomer,
   Customer,
@@ -15,8 +16,15 @@ export class CustomerService {
 
   private apiUrl = 'https://localhost:44324/api/app/customer';
 
-  getCustomers(): Observable<PagedCustomerResult> {
-    return this.http.get<PagedCustomerResult>(this.apiUrl);
+  getCustomers(
+    skipCount = 0,
+    maxResultCount = DEFAULT_LIST_MAX_RESULT_COUNT
+  ): Observable<PagedCustomerResult> {
+    const params = new HttpParams()
+      .set('skipCount', skipCount)
+      .set('maxResultCount', maxResultCount);
+
+    return this.http.get<PagedCustomerResult>(this.apiUrl, { params });
   }
 
   createCustomer(data: CreateUpdateCustomer): Observable<Customer> {

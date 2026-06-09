@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using BanquetHallManagement.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
@@ -10,12 +11,12 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        var configuration = BuildConfiguration();
+        BanquetHallManagementSecretsValidator.ValidateForConsoleTestClient(configuration);
+
         using (var application = await AbpApplicationFactory.CreateAsync<BanquetHallManagementConsoleApiClientModule>(options =>
         {
-           var builder = new ConfigurationBuilder();
-           builder.AddJsonFile("appsettings.json", false);
-           builder.AddJsonFile("appsettings.secrets.json", true);
-           options.Services.ReplaceConfiguration(builder.Build());
+           options.Services.ReplaceConfiguration(configuration);
            options.UseAutofac();
         }))
         {
@@ -29,5 +30,16 @@ class Program
 
             await application.ShutdownAsync();
         }
+    }
+
+    private static IConfiguration BuildConfiguration()
+    {
+        return new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile("appsettings.secrets.json", optional: true)
+            .AddUserSecrets<Program>(optional: true)
+            .AddEnvironmentVariables()
+            .Build();
     }
 }

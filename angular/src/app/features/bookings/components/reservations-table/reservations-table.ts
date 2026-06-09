@@ -5,7 +5,9 @@ import {
   OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { leaveCreateRoute } from 'src/app/core/utils/create-route.util';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { forkJoin } from 'rxjs';
 import { Customer } from 'src/app/core/models/customer.model';
@@ -29,10 +31,12 @@ import {
   getReservationStatusLabel,
 } from 'src/app/core/utils/reservation-status.util';
 import {
+  ADD_RESERVATION_DIALOG_CONFIG,
   AddReservationDialog,
   AddReservationDialogData,
 } from 'src/app/shared/components/add-reservation-dialog/add-reservation-dialog';
 import { DialogService } from 'src/app/shared/services/dialog.service';
+import { NotificationService } from 'src/app/shared/services/notification.service';
 import { PolicyService } from 'src/app/core/services/policy.service';
 
 @Component({
@@ -44,12 +48,14 @@ import { PolicyService } from 'src/app/core/services/policy.service';
 })
 export class ReservationsTableComponent implements OnInit {
   private reservationService = inject(ReservationService);
+  private router = inject(Router);
   private customerService = inject(CustomerService);
   private hallService = inject(HallService);
   private dialog = inject(MatDialog);
   private dialogService = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
   private policy = inject(PolicyService);
+  private notification = inject(NotificationService);
 
   reservations: Reservation[] = [];
   customersMap = new Map<string, Customer>();
@@ -92,7 +98,9 @@ export class ReservationsTableComponent implements OnInit {
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error(error);
+        this.notification.showError(
+          getAbpErrorMessage(error, 'تعذّر تحميل الحجوزات')
+        );
       },
     });
   }
@@ -109,8 +117,7 @@ export class ReservationsTableComponent implements OnInit {
     initialData?: AddReservationDialogData
   ): void {
     const dialogRef = this.dialog.open(AddReservationDialog, {
-      width: '760px',
-      disableClose: true,
+      ...ADD_RESERVATION_DIALOG_CONFIG,
       data: initialData,
     });
 
@@ -118,12 +125,14 @@ export class ReservationsTableComponent implements OnInit {
       .afterClosed()
       .subscribe((result: CreateUpdateReservation | undefined) => {
         if (!result) {
+          leaveCreateRoute(this.router, '/bookings/create', '/bookings');
           return;
         }
 
         this.reservationService.createReservation(result).subscribe({
           next: () => {
             this.loadData();
+            leaveCreateRoute(this.router, '/bookings/create', '/bookings');
           },
           error: (error) => {
             this.openAddReservationDialog({
@@ -168,7 +177,7 @@ export class ReservationsTableComponent implements OnInit {
             this.loadData();
           },
           error: (error) => {
-            console.error(getAbpErrorMessage(error));
+            this.notification.showError(getAbpErrorMessage(error));
           },
         });
       });
@@ -191,7 +200,7 @@ export class ReservationsTableComponent implements OnInit {
             this.loadData();
           },
           error: (error) => {
-            console.error(getAbpErrorMessage(error));
+            this.notification.showError(getAbpErrorMessage(error));
           },
         });
       });
@@ -214,7 +223,7 @@ export class ReservationsTableComponent implements OnInit {
             this.loadData();
           },
           error: (error) => {
-            console.error(getAbpErrorMessage(error));
+            this.notification.showError(getAbpErrorMessage(error));
           },
         });
       });
@@ -225,8 +234,7 @@ export class ReservationsTableComponent implements OnInit {
     apiError?: string
   ): void {
     const dialogRef = this.dialog.open(AddReservationDialog, {
-      width: '760px',
-      disableClose: true,
+      ...ADD_RESERVATION_DIALOG_CONFIG,
       data: {
         id: reservation.id,
         customerId: reservation.customerId,
@@ -292,7 +300,7 @@ export class ReservationsTableComponent implements OnInit {
             this.loadData();
           },
           error: (error) => {
-            console.error(getAbpErrorMessage(error));
+            this.notification.showError(getAbpErrorMessage(error));
           },
         });
       });
