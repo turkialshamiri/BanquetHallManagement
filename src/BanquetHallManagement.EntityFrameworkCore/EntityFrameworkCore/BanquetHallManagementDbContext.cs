@@ -8,6 +8,7 @@ using BanquetHallManagement.Customers;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Finance.Accounts;
 using BanquetHallManagement.Finance.JournalEntries;
+using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Sequences;
 using BanquetHallManagement.Reservations;
 using BanquetHallManagement.ReservationServices;
@@ -49,6 +50,7 @@ public class BanquetHallManagementDbContext :
     public DbSet<JournalEntry> JournalEntries { get; set; }
     public DbSet<JournalEntryLine> JournalEntryLines { get; set; }
     public DbSet<FinanceNumberSequence> FinanceNumberSequences { get; set; }
+    public DbSet<Payment> Payments { get; set; }
     #region Entities from the modules
 
     /* Notice: We only implemented IIdentityProDbContext and ISaasDbContext
@@ -119,5 +121,6 @@ public class BanquetHallManagementDbContext :
         builder.ApplyConfiguration(new JournalEntryConfiguration());
         builder.ApplyConfiguration(new JournalEntryLineConfiguration());
         builder.ApplyConfiguration(new FinanceNumberSequenceConfiguration());
+        builder.ApplyConfiguration(new PaymentConfiguration());
     }
 }

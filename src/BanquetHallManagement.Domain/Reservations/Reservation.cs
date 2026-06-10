@@ -95,6 +95,17 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
             ReservationEventSnapshot.FromReservation(this)));
     }
 
+    public void ApplyDeposit(decimal amount)
+    {
+        if (amount <= 0)
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.PaymentAmountInvalid);
+        }
+
+        PaidAmount += amount;
+    }
+
     public void Cancel()
     {
         CancelWithReason(Enums.CancellationType.Manual);
@@ -199,6 +210,6 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
             return false;
         }
 
-        return BlocksScheduling(asOf) || other.BlocksScheduling(asOf);
+        return other.BlocksScheduling(asOf);
     }
 }

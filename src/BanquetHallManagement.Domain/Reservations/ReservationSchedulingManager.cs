@@ -55,7 +55,8 @@ public class ReservationSchedulingManager : DomainService
             cancellationToken);
 
         var hasConflict = existingReservations.Any(existing =>
-            candidate.HasSchedulingConflictWith(existing, now));
+            existing.BlocksScheduling(now) &&
+            candidate.OverlapsSchedulingWith(existing));
 
         if (hasConflict)
         {

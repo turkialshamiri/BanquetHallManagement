@@ -100,6 +100,10 @@ public class BanquetHallManagementIdentityDataSeedContributor : IDataSeedContrib
             BanquetHallManagementPermissions.Reservations.Confirm,
             BanquetHallManagementPermissions.Reservations.Cancel,
             BanquetHallManagementPermissions.Reservations.Complete,
+            BanquetHallManagementPermissions.Reservations.RecordPayment,
+
+            BanquetHallManagementPermissions.Finance.PaymentsCreate,
+            BanquetHallManagementPermissions.Finance.PaymentsView,
         };
 
         await _permissionDataSeeder.SeedAsync(
