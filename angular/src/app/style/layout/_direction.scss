@@ -31,16 +31,16 @@ html[dir='rtl'] .submenu-item.active-link {
 
 /* --- Page / table headers (text block alignment) --- */
 
-html[dir='ltr'] .table-header > div,
-html[dir='ltr'] .header > div,
-html[dir='ltr'] .reports-header > div {
+/* start = left in LTR, right in RTL (requires inherited direction) */
+.table-header > div,
+.header > div,
+.reports-header > div,
+.reports-header h1,
+.reports-header p,
+.table-header h2,
+.table-header span,
+.section-title {
   text-align: start;
-}
-
-html[dir='rtl'] .table-header > div,
-html[dir='rtl'] .header > div,
-html[dir='rtl'] .reports-header > div {
-  text-align: end;
 }
 
 /* --- Material expansion chevron follows reading direction --- */
@@ -48,4 +48,174 @@ html[dir='rtl'] .reports-header > div {
 html[dir='rtl'] .menu-panel .mat-expansion-indicator {
   margin-inline-start: auto;
   margin-inline-end: 0;
+}
+
+/* =============================================================================
+   Forms, dialogs, and lists — system-wide direction
+   ============================================================================= */
+
+html[dir='ltr'] .mat-mdc-dialog-container,
+html[dir='ltr'] .dialog-content,
+html[dir='ltr'] .dialog-container,
+html[dir='ltr'] .form-group {
+  direction: ltr;
+  text-align: start;
+}
+
+html[dir='rtl'] .mat-mdc-dialog-container,
+html[dir='rtl'] .dialog-content,
+html[dir='rtl'] .dialog-container,
+html[dir='rtl'] .form-group {
+  direction: rtl;
+  text-align: start;
+}
+
+html[dir='ltr'] .form-group input,
+html[dir='ltr'] .form-group select,
+html[dir='ltr'] .form-group textarea,
+html[dir='ltr'] .dialog-content input,
+html[dir='ltr'] .dialog-content select,
+html[dir='ltr'] .dialog-content textarea {
+  direction: ltr;
+  text-align: start;
+}
+
+html[dir='rtl'] .form-group input,
+html[dir='rtl'] .form-group select,
+html[dir='rtl'] .form-group textarea,
+html[dir='rtl'] .dialog-content input,
+html[dir='rtl'] .dialog-content select,
+html[dir='rtl'] .dialog-content textarea {
+  direction: rtl;
+  text-align: start;
+}
+
+/* Checkbox / service option rows — DOM: [input][text] */
+html[dir='ltr'] .services-list,
+html[dir='ltr'] .service-option {
+  direction: ltr;
+  text-align: start;
+}
+
+html[dir='rtl'] .services-list,
+html[dir='rtl'] .service-option {
+  direction: rtl;
+  text-align: start;
+}
+
+html[dir='rtl'] .service-option input[type='checkbox'],
+html[dir='rtl'] .service-option input[type='radio'] {
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+}
+
+/* Summary / key-value rows in forms */
+html[dir='ltr'] .summary-row,
+html[dir='ltr'] .summary-service-item,
+html[dir='ltr'] .summary-total,
+html[dir='rtl'] .summary-row,
+html[dir='rtl'] .summary-service-item,
+html[dir='rtl'] .summary-total {
+  direction: inherit;
+  text-align: start;
+}
+
+/* Material form fields */
+html[dir='rtl'] .mat-mdc-form-field .mat-mdc-input-element,
+html[dir='rtl'] .mat-mdc-form-field .mat-mdc-select-value {
+  text-align: start;
+}
+
+html[dir='ltr'] .mat-mdc-form-field .mat-mdc-input-element,
+html[dir='ltr'] .mat-mdc-form-field .mat-mdc-select-value {
+  text-align: start;
+}
+
+/* Dialog action bars — logical end alignment */
+html[dir='ltr'] .dialog-actions,
+html[dir='ltr'] .mat-mdc-dialog-actions {
+  direction: ltr;
+  justify-content: flex-end;
+}
+
+html[dir='rtl'] .dialog-actions,
+html[dir='rtl'] .mat-mdc-dialog-actions {
+  direction: rtl;
+  justify-content: flex-end;
+}
+
+/* =============================================================================
+   Reports page — Material table, filters, KPI cards
+   ============================================================================= */
+
+html[dir='ltr'] .reports-page,
+html[dir='ltr'] .reports-content,
+html[dir='ltr'] .reports-page .filter-card,
+html[dir='ltr'] .reports-page .stats-section,
+html[dir='ltr'] .reports-page .report-section {
+  direction: ltr;
+  text-align: start;
+}
+
+html[dir='rtl'] .reports-page,
+html[dir='rtl'] .reports-content,
+html[dir='rtl'] .reports-page .filter-card,
+html[dir='rtl'] .reports-page .stats-section,
+html[dir='rtl'] .reports-page .report-section {
+  direction: rtl;
+  text-align: start;
+}
+
+html[dir='rtl'] .reports-page .reports-header,
+html[dir='rtl'] .reports-page .reports-header h1,
+html[dir='rtl'] .reports-page .reports-header p,
+html[dir='rtl'] .reports-page .table-header,
+html[dir='rtl'] .reports-page .table-header > div,
+html[dir='rtl'] .reports-page .table-header h2,
+html[dir='rtl'] .reports-page .table-header span,
+html[dir='rtl'] .reports-page .section-title,
+html[dir='rtl'] .reports-page .analytics-card,
+html[dir='rtl'] .reports-page .analytics-label,
+html[dir='rtl'] .reports-page .trend,
+html[dir='rtl'] .reports-page .card-title,
+html[dir='rtl'] .reports-page .card-content {
+  text-align: start;
+}
+
+html[dir='rtl'] .reports-page .filter-actions {
+  direction: rtl;
+}
+
+html[dir='rtl'] .reports-page .filter-card .mat-mdc-form-field,
+html[dir='rtl'] .reports-page .filter-card .mat-mdc-text-field-wrapper,
+html[dir='rtl'] .reports-page .filter-card .mat-mdc-form-field-infix {
+  direction: rtl;
+  text-align: start;
+}
+
+html[dir='rtl'] .reports-page .filter-actions .mat-mdc-button-base {
+  direction: rtl;
+}
+
+/* mat-table — explicit dir on table + inherited cell alignment */
+html[dir='rtl'] .reports-page table.mat-mdc-table,
+html[dir='rtl'] .reports-page table.mat-mdc-table[dir='rtl'] {
+  direction: rtl;
+}
+
+html[dir='ltr'] .reports-page table.mat-mdc-table,
+html[dir='ltr'] .reports-page table.mat-mdc-table[dir='ltr'] {
+  direction: ltr;
+}
+
+html[dir='rtl'] .reports-page .mat-mdc-header-cell,
+html[dir='rtl'] .reports-page .mat-mdc-cell,
+html[dir='rtl'] .reports-page .mat-mdc-footer-cell {
+  text-align: start;
+}
+
+html[dir='ltr'] .reports-page .mat-mdc-header-cell,
+html[dir='ltr'] .reports-page .mat-mdc-cell,
+html[dir='ltr'] .reports-page .mat-mdc-footer-cell {
+  text-align: start;
 }

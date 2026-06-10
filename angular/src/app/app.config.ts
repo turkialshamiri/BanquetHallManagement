@@ -1,5 +1,5 @@
 import { ApplicationConfig, importProvidersFrom, inject, provideAppInitializer } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 
@@ -13,7 +13,7 @@ import { LanguageDirectionService } from './core/services/language-direction.ser
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(APP_ROUTES),
+    provideRouter(APP_ROUTES, withEnabledBlockingInitialNavigation()),
     provideAnimations(),
     importProvidersFrom(MatSnackBarModule),
 

@@ -86,6 +86,8 @@
   flex-direction: column;
   margin-bottom: 0.75rem;
   min-width: 0;
+  direction: inherit;
+  text-align: start;
 }
 
 label {
@@ -146,24 +148,32 @@ select.invalid {
   border: 1px solid var(--border-color);
   border-radius: 10px;
   background: #f8fafc;
+  direction: inherit;
 }
 
 .service-option {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.625rem;
   font-size: 0.875rem;
   color: var(--text-primary);
   cursor: pointer;
   word-break: break-word;
+  direction: inherit;
+  text-align: start;
 }
 
 .service-option input {
   width: 1rem;
   height: 1rem;
-  margin: 0.125rem 0 0;
+  margin: 0;
   flex-shrink: 0;
   cursor: pointer;
+}
+
+.service-option span {
+  flex: 1;
+  text-align: start;
 }
 
 .reservation-summary-card {
@@ -173,6 +183,8 @@ select.invalid {
   border-radius: 14px;
   background: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
   border: 1px solid #bfdbfe;
+  direction: inherit;
+  text-align: start;
 }
 
 .reservation-summary-card h3 {

@@ -13,6 +13,11 @@ const hallsRouteDefaults = {
 
 export const APP_ROUTES: Routes = [
   {
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'account/login',
+  },
+  {
     path: 'login',
     redirectTo: 'account/login',
     pathMatch: 'full',
@@ -172,6 +177,6 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'dashboard',
+    redirectTo: 'account/login',
   },
 ];

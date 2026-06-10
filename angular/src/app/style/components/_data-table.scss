@@ -1,4 +1,61 @@
 /* =========================================
+   SHARED DATA TABLE — RTL/LTR
+   Applies to all current and future tables inside .table-wrapper
+========================================= */
+
+html[dir='ltr'] .table-wrapper {
+  direction: ltr;
+}
+
+html[dir='rtl'] .table-wrapper {
+  direction: rtl;
+}
+
+.table-wrapper table,
+.table-wrapper .mat-mdc-table,
+.table-wrapper .report-table,
+.table-wrapper table[mat-table] {
+  width: 100%;
+  direction: inherit;
+}
+
+html[dir='rtl'] .table-wrapper table[mat-table][dir='rtl'],
+html[dir='rtl'] .table-wrapper .mat-mdc-table {
+  direction: rtl;
+}
+
+html[dir='ltr'] .table-wrapper table[mat-table][dir='ltr'],
+html[dir='ltr'] .table-wrapper .mat-mdc-table {
+  direction: ltr;
+}
+
+.table-wrapper .mat-mdc-header-row,
+.table-wrapper .mat-mdc-row,
+.table-wrapper .mat-mdc-footer-row {
+  direction: inherit;
+}
+
+.table-wrapper th,
+.table-wrapper td,
+.table-wrapper .mat-mdc-header-cell,
+.table-wrapper .mat-mdc-cell,
+.table-wrapper .mat-mdc-footer-cell {
+  text-align: start;
+}
+
+.table-wrapper thead th,
+.table-wrapper .mat-mdc-header-row .mat-mdc-header-cell {
+  font-weight: 600;
+}
+
+/* Keep empty / status cells centered in both directions */
+.table-wrapper .empty-state,
+.table-wrapper .empty-row td,
+.table-wrapper td.empty-state {
+  text-align: center;
+}
+
+/* =========================================
    SHARED DATA TABLE RESPONSIVE STYLES
 ========================================= */
 

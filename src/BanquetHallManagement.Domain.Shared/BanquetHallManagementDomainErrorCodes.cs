@@ -37,4 +37,52 @@ public static class BanquetHallManagementDomainErrorCodes
 
     public const string ReservationSchedulingConflict =
         "BanquetHallManagement:Reservation:SchedulingConflict";
+
+    public const string ReservationCannotMarkFullyPaid =
+        "BanquetHallManagement:Reservation:CannotMarkFullyPaid";
+
+    public const string ReservationCannotConfirmHallEntry =
+        "BanquetHallManagement:Reservation:CannotConfirmHallEntry";
+
+    public const string PaymentDepositBelowMinimum =
+        "BanquetHallManagement:Payment:DepositBelowMinimum";
+
+    public const string PaymentInstallmentBelowMinimum =
+        "BanquetHallManagement:Payment:InstallmentBelowMinimum";
+
+    public const string PaymentInvalidReservationStatus =
+        "BanquetHallManagement:Payment:InvalidReservationStatus";
+
+    public const string PaymentAlreadyRecorded =
+        "BanquetHallManagement:Payment:AlreadyRecorded";
+
+    public const string PaymentAmountInvalid =
+        "BanquetHallManagement:Payment:AmountInvalid";
+
+    public const string PaymentNotFound =
+        "BanquetHallManagement:Payment:NotFound";
+
+    public const string AccountNotFound =
+        "BanquetHallManagement:Finance:AccountNotFound";
+
+    public const string JournalEntryUnbalanced =
+        "BanquetHallManagement:JournalEntry:Unbalanced";
+
+    public const string JournalEntryAlreadyPosted =
+        "BanquetHallManagement:JournalEntry:AlreadyPosted";
+
+    public const string JournalEntryNotFound =
+        "BanquetHallManagement:JournalEntry:NotFound";
+
+    public const string InvoiceNotFound =
+        "BanquetHallManagement:Invoice:NotFound";
+
+    public const string RefundNotAllowed =
+        "BanquetHallManagement:Refund:NotAllowed";
+
+    public const string RefundAmountExceedsLiability =
+        "BanquetHallManagement:Refund:AmountExceedsLiability";
+
+    public const string HallAccessCardNotFound =
+        "BanquetHallManagement:HallAccessCard:NotFound";
 }

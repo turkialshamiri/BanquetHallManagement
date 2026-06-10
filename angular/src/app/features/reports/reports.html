@@ -175,7 +175,7 @@
                         </div>
                     </div>
                     <div class="table-wrapper">
-                        <table mat-table [dataSource]="reports.hallPerformance" class="report-table">
+                        <table mat-table [attr.dir]="(direction$ | async) ?? 'ltr'" [dataSource]="reports.hallPerformance" class="report-table">
                             <ng-container matColumnDef="hallName">
                                 <th mat-header-cell *matHeaderCellDef>{{ 'Reports:Column:HallName' | appLocalization }}</th>
                                 <td mat-cell *matCellDef="let row">{{ row.hallName }}</td>
@@ -213,7 +213,7 @@
                         </div>
                     </div>
                     <div class="table-wrapper">
-                        <table mat-table [dataSource]="reports.customerActivity" class="report-table">
+                        <table mat-table [attr.dir]="(direction$ | async) ?? 'ltr'" [dataSource]="reports.customerActivity" class="report-table">
                             <ng-container matColumnDef="customerName">
                                 <th mat-header-cell *matHeaderCellDef>{{ 'Reports:Column:CustomerName' | appLocalization }}</th>
                                 <td mat-cell *matCellDef="let row">{{ row.customerName }}</td>
@@ -243,7 +243,7 @@
                         </div>
                     </div>
                     <div class="table-wrapper">
-                        <table mat-table [dataSource]="reports.monthlyReport" class="report-table">
+                        <table mat-table [attr.dir]="(direction$ | async) ?? 'ltr'" [dataSource]="reports.monthlyReport" class="report-table">
                             <ng-container matColumnDef="monthLabel">
                                 <th mat-header-cell *matHeaderCellDef>{{ 'Reports:Column:Month' | appLocalization }}</th>
                                 <td mat-cell *matCellDef="let row">{{ row.monthLabel }}</td>

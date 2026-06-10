@@ -24,6 +24,7 @@ import {
 import { HallService } from 'src/app/core/services/hall.service';
 import { ReportService } from 'src/app/core/services/report.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
+import { LanguageDirectionService } from 'src/app/core/services/language-direction.service';
 
 @Component({
   selector: 'app-reports',
@@ -48,6 +49,9 @@ export class Reports implements OnInit {
   private hallService = inject(HallService);
   private cdr = inject(ChangeDetectorRef);
   private l10n = inject(AppLocalizationService);
+  private languageDirection = inject(LanguageDirectionService);
+
+  readonly direction$ = this.languageDirection.direction$;
 
   reports: ReportsResult | null = null;
   halls: Hall[] = [];

@@ -13,6 +13,12 @@ body {
   background: var(--background);
   color: var(--text-primary);
   font-family: var(--font-family);
+  text-align: start;
+}
+
+/* CDK overlays (dialogs, menus) inherit document direction */
+.cdk-overlay-container {
+  direction: inherit;
 }
 
 /* Material dialog — fit mobile viewports */
