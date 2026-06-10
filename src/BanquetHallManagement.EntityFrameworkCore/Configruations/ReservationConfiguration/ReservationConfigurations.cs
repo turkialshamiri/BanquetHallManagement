@@ -48,6 +48,21 @@ namespace BanquetHallManagement.Configurations.ReservationConfigurations
                 .IsRequired()
                 .HasComment("التكلفة الإجمالية للحجز متضمنة الخدمات الإضافية.");
 
+            builder.Property(x => x.PaidAmount)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired()
+                .HasDefaultValue(0m)
+                .HasComment("إجمالي المبالغ المدفوعة على الحجز.");
+
+            builder.Property(x => x.CancellationReason)
+                .HasMaxLength(500)
+                .HasComment("سبب إلغاء الحجز عند توفره.");
+
+            builder.Property(x => x.CancellationType)
+                .HasConversion<string>()
+                .HasMaxLength(50)
+                .HasComment("نوع إلغاء الحجز مثل تعارض أو إلغاء يدوي أو إلغاء تلقائي.");
+
             builder.Property(x => x.Status)
                 .IsRequired()
                 .HasConversion<string>()

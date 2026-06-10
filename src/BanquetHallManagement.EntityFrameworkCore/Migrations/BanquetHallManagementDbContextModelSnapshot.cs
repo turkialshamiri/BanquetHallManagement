@@ -235,6 +235,16 @@ namespace BanquetHallManagement.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("CreatorId");
 
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("سبب إلغاء الحجز عند توفره.");
+
+                    b.Property<string>("CancellationType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("نوع إلغاء الحجز مثل تعارض أو إلغاء يدوي أو إلغاء تلقائي.");
+
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier")
                         .HasComment("معرف العميل الذي قام بإنشاء الحجز.");
@@ -281,6 +291,12 @@ namespace BanquetHallManagement.Migrations
                     b.Property<Guid?>("LastModifierId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("LastModifierId");
+
+                    b.Property<decimal>("PaidAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m)
+                        .HasComment("إجمالي المبالغ المدفوعة على الحجز.");
 
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time")

@@ -424,7 +424,7 @@
 
     "BanquetHallManagement:Reservation:CannotConfirm": "لا يمكن تأكيد الحجز إلا إذا كان في حالة قيد الانتظار.",
     "BanquetHallManagement:Reservation:CannotCancel": "لا يمكن إلغاء الحجز في حالته الحالية.",
-    "BanquetHallManagement:Reservation:CannotComplete": "لا يمكن إكمال الحجز إلا إذا كان في حالة مؤكد.",
+    "BanquetHallManagement:Reservation:CannotComplete": "لا يمكن إكمال الحجز إلا إذا كان مدفوعاً بالكامل.",
     "BanquetHallManagement:Reservation:CannotUpdate": "لا يمكن تعديل الحجز في حالته الحالية.",
     "BanquetHallManagement:Reservation:CannotDelete": "لا يمكن حذف الحجز إلا إذا كان في حالة قيد الانتظار.",
     "BanquetHallManagement:Reservation:SchedulingConflict": "هذه القاعة محجوزة بالفعل في هذا الوقت.",

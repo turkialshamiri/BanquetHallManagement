@@ -155,7 +155,8 @@ namespace BanquetHallManagement.Halls
 
             var hallIds = await AsyncExecuter.ToListAsync(
                 query
-                    .Where(r => r.Status == ReservationStatus.Confirmed)
+                    .Where(r => r.Status == ReservationStatus.Confirmed
+                        || r.Status == ReservationStatus.FullyPaid)
                     .Where(r =>
                         r.EventDate.Date > today ||
                         (r.EventDate.Date == today && r.EndTime > currentTime))

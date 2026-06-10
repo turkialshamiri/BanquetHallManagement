@@ -36,7 +36,7 @@ public class HallAvailabilityManager : DomainService
 
     public bool IsActiveConfirmedReservation(Reservation reservation, DateTime asOf)
     {
-        return reservation.Status == ReservationStatus.Confirmed
+        return reservation.Status is ReservationStatus.Confirmed or ReservationStatus.FullyPaid
                && reservation.GetEventEndDateTime() > asOf;
     }
 

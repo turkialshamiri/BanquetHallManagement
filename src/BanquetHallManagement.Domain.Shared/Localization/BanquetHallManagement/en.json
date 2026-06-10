@@ -424,7 +424,7 @@
 
     "BanquetHallManagement:Reservation:CannotConfirm": "The reservation can only be confirmed when it is pending.",
     "BanquetHallManagement:Reservation:CannotCancel": "The reservation cannot be cancelled in its current state.",
-    "BanquetHallManagement:Reservation:CannotComplete": "The reservation can only be completed when it is confirmed.",
+    "BanquetHallManagement:Reservation:CannotComplete": "The reservation can only be completed when it is fully paid.",
     "BanquetHallManagement:Reservation:CannotUpdate": "The reservation cannot be updated in its current state.",
     "BanquetHallManagement:Reservation:CannotDelete": "The reservation can only be deleted when it is pending.",
     "BanquetHallManagement:Reservation:SchedulingConflict": "This hall is already booked at the selected time.",

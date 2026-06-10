@@ -16,8 +16,12 @@ namespace BanquetHallManagement.Reservations
 
         public int GuestsCount { get; set; }
         public decimal TotalPrice { get; set; }
+        public decimal PaidAmount { get; set; }
 
         public string Status { get; set; }
+
+        public string? CancellationReason { get; set; }
+        public string? CancellationType { get; set; }
 
         public List<Guid> ServiceIds { get; set; }
     }

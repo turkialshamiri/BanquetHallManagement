@@ -29,8 +29,13 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
 
     public int GuestsCount { get; set; }
     public decimal TotalPrice { get; set; }
+    public decimal PaidAmount { get; set; }
 
     public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
+
+    public string? CancellationReason { get; private set; }
+
+    public CancellationType? CancellationType { get; private set; }
 
     public ICollection<ReservationService> Services { get; set; } = new List<ReservationService>();
 
@@ -92,6 +97,13 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
 
     public void Cancel()
     {
+        CancelWithReason(Enums.CancellationType.Manual);
+    }
+
+    public void CancelWithReason(
+        CancellationType cancellationType,
+        string? cancellationReason = null)
+    {
         if (Status == ReservationStatus.Cancelled ||
             Status == ReservationStatus.Completed)
         {
@@ -99,14 +111,33 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
                 BanquetHallManagementDomainErrorCodes.ReservationCannotCancel);
         }
 
+        CancellationType = cancellationType;
+        CancellationReason = cancellationReason;
         Status = ReservationStatus.Cancelled;
         AddLocalEvent(new ReservationCancelledDomainEvent(
             ReservationEventSnapshot.FromReservation(this)));
     }
 
-    public void Complete()
+    public void MarkFullyPaid()
     {
         if (Status != ReservationStatus.Confirmed)
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.ReservationCannotMarkFullyPaid);
+        }
+
+        if (PaidAmount < TotalPrice)
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.ReservationCannotMarkFullyPaid);
+        }
+
+        Status = ReservationStatus.FullyPaid;
+    }
+
+    public void Complete()
+    {
+        if (Status != ReservationStatus.FullyPaid)
         {
             throw new BusinessException(
                 BanquetHallManagementDomainErrorCodes.ReservationCannotComplete);
@@ -134,12 +165,24 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
 
     public bool BlocksScheduling(DateTime asOf)
     {
-        if (Status is ReservationStatus.Cancelled or ReservationStatus.Completed)
+        if (Status is not (ReservationStatus.Confirmed or ReservationStatus.FullyPaid))
         {
             return false;
         }
 
         return GetEventEndDateTime() > asOf;
+    }
+
+    public bool OverlapsSchedulingWith(Reservation other)
+    {
+        if (HallId != other.HallId)
+        {
+            return false;
+        }
+
+        return EventDate.Date == other.EventDate.Date
+               && StartTime < other.EndTime
+               && EndTime > other.StartTime;
     }
 
     public bool HasSchedulingConflictWith(
@@ -151,18 +194,11 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
             return false;
         }
 
-        if (HallId != other.HallId)
+        if (!OverlapsSchedulingWith(other))
         {
             return false;
         }
 
-        if (!BlocksScheduling(asOf) || !other.BlocksScheduling(asOf))
-        {
-            return false;
-        }
-
-        return EventDate.Date == other.EventDate.Date
-               && StartTime < other.EndTime
-               && EndTime > other.StartTime;
+        return BlocksScheduling(asOf) || other.BlocksScheduling(asOf);
     }
 }

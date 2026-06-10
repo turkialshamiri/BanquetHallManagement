@@ -222,12 +222,18 @@ public class ReservationAppService :
             throw new UserFriendlyException(L["Validation:GuestsExceedCapacity"]);
         }
 
+        var candidateStatus = reservation.Status is ReservationStatus.Confirmed
+            or ReservationStatus.FullyPaid
+            ? reservation.Status
+            : ReservationStatus.Pending;
+
         await _reservationSchedulingManager.EnsureNoSchedulingConflictAsync(
             input.HallId,
             input.EventDate,
             input.StartTime,
             input.EndTime,
-            reservation.Id);
+            reservation.Id,
+            candidateStatus);
 
         var services = await LoadRequestedServicesAsync(input.ServiceIds);
         var totalPrice = Reservation.CalculateTotalPrice(
@@ -265,11 +271,16 @@ public class ReservationAppService :
             reservation.EventDate,
             reservation.StartTime,
             reservation.EndTime,
-            reservation.Id);
+            reservation.Id,
+            ReservationStatus.Confirmed);
 
         reservation.Confirm();
 
-        await _reservationRepository.UpdateAsync(reservation);
+        await _reservationRepository.UpdateAsync(reservation, autoSave: false);
+
+        await _reservationSchedulingManager.CancelConflictingPendingAsync(reservation.Id);
+
+        await CurrentUnitOfWork.SaveChangesAsync();
 
         return MapToDto(reservation);
     }
@@ -375,6 +386,7 @@ public class ReservationAppService :
     {
         var dto = ObjectMapper.Map<Reservation, ReservationDto>(reservation);
         dto.Status = reservation.Status.ToString();
+        dto.CancellationType = reservation.CancellationType?.ToString();
         dto.ServiceIds = serviceIds?.ToList()
             ?? reservation.Services?.Select(rs => rs.ServiceId).ToList()
             ?? [];
