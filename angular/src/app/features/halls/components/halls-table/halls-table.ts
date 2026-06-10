@@ -8,13 +8,13 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import { Hall } from 'src/app/core/models/hall.model';
 import { HallService } from 'src/app/core/services/hall.service';
-import {
-  getHallStatusClass,
-  getHallStatusLabel,
-} from 'src/app/core/utils/hall-status.util';
+import { getHallStatusClass } from 'src/app/core/utils/hall-status.util';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
+import { StatusLocalizationService } from 'src/app/core/services/status-localization.service';
 import { AddHallDialog } from 'src/app/shared/components/add-hall-dialog/add-hall-dialog';
 import { DialogService } from 'src/app/shared/services/dialog.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
@@ -23,7 +23,7 @@ import { PolicyService } from 'src/app/core/services/policy.service';
 @Component({
   selector: 'app-halls-table',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatDialogModule],
+  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe],
   templateUrl: './halls-table.html',
   styleUrl: './halls-table.scss',
 })
@@ -35,15 +35,16 @@ export class HallsTableComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private policy = inject(PolicyService);
   private notification = inject(NotificationService);
+  private l10n = inject(AppLocalizationService);
+  readonly statusL10n = inject(StatusLocalizationService);
 
   halls: Hall[] = [];
-  pageTitle = 'القاعات';
-  pageSubtitle = 'جميع القاعات المسجلة بالنظام';
+  pageTitleKey = 'Halls:Title';
+  pageSubtitleKey = 'Halls:Subtitle';
   statusFilter: number | null = null;
   isLoading = false;
   loadError: string | null = null;
 
-  getHallStatusLabel = getHallStatusLabel;
   getHallStatusClass = getHallStatusClass;
 
   canCreateHall = this.policy.hasSnapshot('BanquetHallManagement.Halls.Create');
@@ -71,7 +72,7 @@ export class HallsTableComponent implements OnInit {
       error: (error) => {
         this.loadError = getAbpErrorMessage(
           error,
-          'تعذّر تحميل بيانات القاعات'
+          this.l10n.instant('Halls:LoadFailed')
         );
         this.isLoading = false;
         this.cdr.markForCheck();
@@ -95,24 +96,19 @@ export class HallsTableComponent implements OnInit {
         },
         error: (error) => {
           this.notification.showError(
-            getAbpErrorMessage(error, 'تعذّر إضافة القاعة')
+            getAbpErrorMessage(error, this.l10n.instant('Halls:CreateFailed'))
           );
         },
       });
     });
   }
 
-  getTypeText(type: number): string {
-    switch (type) {
-      case 1:
-        return 'أفراح';
-      case 2:
-        return 'مؤتمرات';
-      case 3:
-        return 'اجتماعات';
-      default:
-        return 'غير معروف';
-    }
+  hallTypeLabel(type: number): string {
+    return this.statusL10n.hallType(type);
+  }
+
+  hallStatusLabel(status: number): string {
+    return this.statusL10n.hallStatus(status);
   }
 
   editHall(id: string): void {
@@ -139,7 +135,7 @@ export class HallsTableComponent implements OnInit {
         },
         error: (error) => {
           this.notification.showError(
-            getAbpErrorMessage(error, 'تعذّر تحديث القاعة')
+            getAbpErrorMessage(error, this.l10n.instant('Halls:UpdateFailed'))
           );
         },
       });
@@ -149,8 +145,8 @@ export class HallsTableComponent implements OnInit {
   deleteHall(id: string): void {
     this.dialogService
       .confirm(
-        'حذف القاعة',
-        'هل أنت متأكد من حذف هذه القاعة؟ لا يمكن التراجع عن العملية.'
+        this.l10n.instant('Halls:Delete:Title'),
+        this.l10n.instant('Halls:Delete:Message')
       )
       .subscribe((result) => {
         if (!result) {
@@ -163,7 +159,7 @@ export class HallsTableComponent implements OnInit {
           },
           error: (error) => {
             this.notification.showError(
-              getAbpErrorMessage(error, 'تعذّر حذف القاعة')
+              getAbpErrorMessage(error, this.l10n.instant('Halls:DeleteFailed'))
             );
           },
         });
@@ -173,9 +169,8 @@ export class HallsTableComponent implements OnInit {
   private applyRouteConfig(
     data: Record<string, unknown> = this.route.snapshot.data
   ): void {
-    this.pageTitle = (data['pageTitle'] as string) ?? 'القاعات';
-    this.pageSubtitle =
-      (data['pageSubtitle'] as string) ?? 'جميع القاعات المسجلة بالنظام';
+    this.pageTitleKey = (data['pageTitleKey'] as string) ?? 'Halls:Title';
+    this.pageSubtitleKey = (data['pageSubtitleKey'] as string) ?? 'Halls:Subtitle';
     this.statusFilter = (data['statusFilter'] as number | null) ?? null;
   }
 }

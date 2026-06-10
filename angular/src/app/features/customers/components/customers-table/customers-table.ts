@@ -8,6 +8,8 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import { leaveCreateRoute } from 'src/app/core/utils/create-route.util';
 import { Customer } from 'src/app/core/models/customer.model';
 import { CustomerService } from 'src/app/core/services/customer.service';
@@ -20,7 +22,7 @@ import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 @Component({
   selector: 'app-customers-table',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatDialogModule],
+  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe],
   templateUrl: './customers-table.html',
   styleUrl: './customers-table.scss',
 })
@@ -32,6 +34,7 @@ export class CustomersTableComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private policy = inject(PolicyService);
   private notification = inject(NotificationService);
+  private l10n = inject(AppLocalizationService);
 
   customers: Customer[] = [];
   canCreate = this.policy.hasSnapshot('BanquetHallManagement.Customers.Create');
@@ -50,7 +53,7 @@ export class CustomersTableComponent implements OnInit {
       },
       error: (error) => {
         this.notification.showError(
-          getAbpErrorMessage(error, 'تعذّر تحميل العملاء')
+          getAbpErrorMessage(error, this.l10n.instant('Customers:LoadFailed'))
         );
       },
     });
@@ -74,7 +77,7 @@ export class CustomersTableComponent implements OnInit {
         },
         error: (error) => {
           this.notification.showError(
-            getAbpErrorMessage(error, 'تعذّر إضافة العميل')
+            getAbpErrorMessage(error, this.l10n.instant('Customers:CreateFailed'))
           );
         },
       });
@@ -105,7 +108,7 @@ export class CustomersTableComponent implements OnInit {
         },
         error: (error) => {
           this.notification.showError(
-            getAbpErrorMessage(error, 'تعذّر تحديث العميل')
+            getAbpErrorMessage(error, this.l10n.instant('Customers:UpdateFailed'))
           );
         },
       });
@@ -115,8 +118,8 @@ export class CustomersTableComponent implements OnInit {
   deleteCustomer(id: string): void {
     this.dialogService
       .confirm(
-        'حذف العميل',
-        'هل أنت متأكد من حذف هذا العميل؟ لا يمكن التراجع عن العملية.'
+        this.l10n.instant('Customers:Delete:Title'),
+        this.l10n.instant('Customers:Delete:Message')
       )
       .subscribe((result) => {
         if (!result) {
@@ -129,7 +132,7 @@ export class CustomersTableComponent implements OnInit {
           },
           error: (error) => {
             this.notification.showError(
-              getAbpErrorMessage(error, 'تعذّر حذف العميل')
+              getAbpErrorMessage(error, this.l10n.instant('Customers:DeleteFailed'))
             );
           },
         });

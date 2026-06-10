@@ -34,4 +34,7 @@ public static class BanquetHallManagementDomainErrorCodes
 
     public const string ServiceCannotDeleteUsedByReservations =
         "BanquetHallManagement:Service:CannotDeleteUsedByReservations";
+
+    public const string ReservationSchedulingConflict =
+        "BanquetHallManagement:Reservation:SchedulingConflict";
 }

@@ -1,11 +1,19 @@
 :root {
-
-  --font-family: "Cairo", sans-serif;
+  --font-family: "Cairo", "Roboto", system-ui, sans-serif;
+  --font-family-ltr: "Roboto", system-ui, sans-serif;
+  --font-family-rtl: "Cairo", "Noto Sans Arabic", system-ui, sans-serif;
 
   --font-xs: 12px;
   --font-sm: 14px;
   --font-md: 16px;
   --font-lg: 20px;
   --font-xl: 24px;
+}
 
+html[dir='ltr'] body {
+  font-family: var(--font-family-ltr);
+}
+
+html[dir='rtl'] body {
+  font-family: var(--font-family-rtl);
 }

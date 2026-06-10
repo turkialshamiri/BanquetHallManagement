@@ -1,16 +1,14 @@
 <div class="dialog-container">
 
     <h2>
-
         {{ isEditMode
-        ? 'تعديل العميل'
-        : 'إضافة عميل جديد' }}
-
+            ? ('Customers:Dialog:EditTitle' | appLocalization)
+            : ('Customers:Dialog:AddTitle' | appLocalization) }}
     </h2>
 
     <div class="form-group">
 
-        <label>اسم العميل <span class="required">*</span></label>
+        <label>{{ 'Customers:Field:Name' | appLocalization }} <span class="required">*</span></label>
 
         <input
             type="text"
@@ -26,7 +24,7 @@
 
     <div class="form-group">
 
-        <label>رقم الهاتف <span class="required">*</span></label>
+        <label>{{ 'Customers:Field:Phone' | appLocalization }} <span class="required">*</span></label>
 
         <input
             type="text"
@@ -42,28 +40,22 @@
 
     <div class="form-group">
 
-        <label>اسم الشركة</label>
+        <label>{{ 'Customers:Field:Company' | appLocalization }}</label>
 
-        <input
-            type="text"
-            [(ngModel)]="customer.company">
+        <input type="text" [(ngModel)]="customer.company">
 
     </div>
 
     <div class="actions">
 
         <button class="cancel-btn" type="button" (click)="close()">
-
-            إلغاء
-
+            {{ 'Cancel' | appLocalization }}
         </button>
 
         <button class="save-btn" type="button" (click)="save()">
-
             {{ isEditMode
-            ? 'حفظ التعديلات'
-            : 'إضافة العميل' }}
-
+                ? ('Dialog:SaveChanges' | appLocalization)
+                : ('Customers:Dialog:AddSubmit' | appLocalization) }}
         </button>
 
     </div>

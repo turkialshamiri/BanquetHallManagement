@@ -1,1 +1,18 @@
-/* Uses global app-layout styles from style/layout/_app-layout.scss */
+/* Shell grid is defined globally in _app-layout.scss (inherits html[dir]). */
+
+.app-shell__backdrop {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .app-shell__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    padding: 0;
+    border: none;
+    background: rgba(15, 23, 42, 0.45);
+    cursor: pointer;
+  }
+}

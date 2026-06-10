@@ -4,19 +4,15 @@
 
         <div>
 
-            <h2>العملاء</h2>
+            <h2>{{ 'Customers:Title' | appLocalization }}</h2>
 
-            <span>
-                جميع العملاء المسجلين بالنظام
-            </span>
+            <span>{{ 'Customers:Subtitle' | appLocalization }}</span>
 
         </div>
 
         @if (canCreate) {
             <button class="add-btn" (click)="openAddCustomerDialog()">
-
-                + إضافة عميل
-
+                + {{ 'Customers:Add' | appLocalization }}
             </button>
         }
 
@@ -30,13 +26,10 @@
 
                 <tr>
 
-                    <th>اسم العميل</th>
-
-                    <th>رقم الهاتف</th>
-
-                    <th>اسم الشركة</th>
-
-                    <th>العمليات</th>
+                    <th>{{ 'Customers:Column:Name' | appLocalization }}</th>
+                    <th>{{ 'Customers:Column:Phone' | appLocalization }}</th>
+                    <th>{{ 'Customers:Column:Company' | appLocalization }}</th>
+                    <th>{{ 'Actions' | appLocalization }}</th>
 
                 </tr>
 
@@ -54,19 +47,11 @@
 
                                 <div class="customer-info">
 
-                                    <div class="customer-avatar">
-
-                                        👤
-
-                                    </div>
+                                    <div class="customer-avatar">👤</div>
 
                                     <div>
 
-                                        <strong>
-
-                                            {{ customer.name }}
-
-                                        </strong>
+                                        <strong>{{ customer.name }}</strong>
 
                                     </div>
 
@@ -74,17 +59,9 @@
 
                             </td>
 
-                            <td>
+                            <td>{{ customer.phone }}</td>
 
-                                {{ customer.phone }}
-
-                            </td>
-
-                            <td>
-
-                                {{ customer.company || '—' }}
-
-                            </td>
+                            <td>{{ customer.company || '—' }}</td>
 
                             <td>
 
@@ -94,13 +71,7 @@
                                         <button
                                             class="action-btn edit-btn"
                                             (click)="editCustomer(customer.id)">
-
-                                            <mat-icon>
-
-                                                edit
-
-                                            </mat-icon>
-
+                                            <mat-icon>edit</mat-icon>
                                         </button>
                                     }
 
@@ -108,13 +79,7 @@
                                         <button
                                             class="action-btn delete-btn"
                                             (click)="deleteCustomer(customer.id)">
-
-                                            <mat-icon>
-
-                                                delete
-
-                                            </mat-icon>
-
+                                            <mat-icon>delete</mat-icon>
                                         </button>
                                     }
 
@@ -129,13 +94,9 @@
                 } @else {
 
                     <tr>
-
                         <td colspan="4" class="empty-state">
-
-                            لا يوجد عملاء مسجلون حالياً
-
+                            {{ 'Customers:Empty' | appLocalization }}
                         </td>
-
                     </tr>
 
                 }

@@ -1,4 +1,4 @@
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, inject, provideAppInitializer } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -9,6 +9,7 @@ import { registerLocaleForEsBuild } from '@abp/ng.core/locale';
 
 import { environment } from '../environments/environment';
 import { APP_ROUTES } from './app.routes';
+import { LanguageDirectionService } from './core/services/language-direction.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -24,5 +25,9 @@ export const appConfig: ApplicationConfig = {
     ),
 
     provideAbpOAuth(),
+
+    provideAppInitializer(() => {
+      inject(LanguageDirectionService).init();
+    }),
   ],
 };

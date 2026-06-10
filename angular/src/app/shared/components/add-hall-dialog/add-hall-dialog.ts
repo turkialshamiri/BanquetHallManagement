@@ -4,22 +4,25 @@ import {
   MatDialogRef,
   MAT_DIALOG_DATA
 } from '@angular/material/dialog';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
 import { Hall, HallFormModel } from 'src/app/core/models/hall.model';
 import {
   HALL_STATUS,
   OperationalHallStatus,
 } from 'src/app/core/utils/hall-status.util';
+import { StatusLocalizationService } from 'src/app/core/services/status-localization.service';
 
 @Component({
   selector: 'app-add-hall-dialog',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AppLocalizationPipe],
   templateUrl: './add-hall-dialog.html',
   styleUrl: './add-hall-dialog.scss'
 })
 export class AddHallDialog implements OnInit {
 
   dialogRef = inject(MatDialogRef<AddHallDialog>);
+  readonly statusL10n = inject(StatusLocalizationService);
 
   data = inject(MAT_DIALOG_DATA, {
     optional: true
@@ -57,6 +60,14 @@ export class AddHallDialog implements OnInit {
 
     }
 
+  }
+
+  hallStatusLabel(status: number): string {
+    return this.statusL10n.hallStatus(status);
+  }
+
+  hallTypeLabel(type: number): string {
+    return this.statusL10n.hallType(type);
   }
 
   save(): void {

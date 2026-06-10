@@ -2,6 +2,8 @@ import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import { Employee, CreateEmployee, UpdateEmployee } from 'src/app/core/models/employee.model';
 import { EmployeeService } from 'src/app/core/services/employee.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
@@ -15,10 +17,12 @@ import { ResetPasswordDialog } from 'src/app/shared/components/reset-password-di
 import { PolicyService } from 'src/app/core/services/policy.service';
 import { getFriendlyIdentityErrorMessage } from 'src/app/core/utils/identity-error.util';
 import { formatRoleLabels } from 'src/app/core/utils/role-label.util';
+import { StatusLocalizationService } from 'src/app/core/services/status-localization.service';
+
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatDialogModule],
+  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe],
   templateUrl: './users.html',
   styleUrl: './users.scss',
 })
@@ -29,6 +33,8 @@ export class Users implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private policy = inject(PolicyService);
   private notification = inject(NotificationService);
+  private l10n = inject(AppLocalizationService);
+  private statusL10n = inject(StatusLocalizationService);
 
   employees: Employee[] = [];
   isLoading = false;
@@ -56,7 +62,10 @@ export class Users implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.loadError = getAbpErrorMessage(err);
+        this.loadError = getAbpErrorMessage(
+          err,
+          this.l10n.instant('Users:LoadFailed')
+        );
         this.cdr.markForCheck();
       },
     });
@@ -94,7 +103,10 @@ export class Users implements OnInit {
               role: payload.role as EmployeeFormState['role'],
               isActive: true,
             },
-            getFriendlyIdentityErrorMessage(err, 'تعذر إضافة الموظف')
+            getFriendlyIdentityErrorMessage(
+              err,
+              this.l10n.instant('Users:CreateFailed')
+            )
           );
         },
       });
@@ -128,9 +140,9 @@ export class Users implements OnInit {
     this.dialogService
       .confirm({
         type: 'delete',
-        title: 'حذف الموظف',
-        message: `هل أنت متأكد من حذف الموظف (${employee.userName})؟`,
-        warningMessage: 'تحذير: لا يمكن التراجع عن هذه العملية.',
+        title: this.l10n.instant('Users:Delete:Title'),
+        message: this.l10n.instant('Users:Delete:Message', employee.userName),
+        warningMessage: this.l10n.instant('Users:Delete:Warning'),
       })
       .subscribe((confirmed) => {
         if (!confirmed) return;
@@ -139,7 +151,7 @@ export class Users implements OnInit {
           next: () => this.loadEmployees(),
           error: (err) => {
             this.notification.showError(
-              getAbpErrorMessage(err, 'تعذّر حذف الموظف')
+              getAbpErrorMessage(err, this.l10n.instant('Users:DeleteFailed'))
             );
           },
         });
@@ -177,7 +189,10 @@ export class Users implements OnInit {
             employee,
             result,
             result,
-            getFriendlyIdentityErrorMessage(err, 'تعذر إعادة تعيين كلمة المرور')
+            getFriendlyIdentityErrorMessage(
+              err,
+              this.l10n.instant('Users:ResetPasswordFailed')
+            )
           );
         },
       });
@@ -193,14 +208,13 @@ export class Users implements OnInit {
       next: () => this.loadEmployees(),
       error: (err) => {
         this.notification.showError(
-          getAbpErrorMessage(err, 'تعذّر تحديث حالة الموظف')
+          getAbpErrorMessage(err, this.l10n.instant('Users:UpdateStatusFailed'))
         );
       },
     });
   }
 
   roleLabel(employee: Employee): string {
-    return formatRoleLabels(employee.roles);
+    return formatRoleLabels(employee.roles, this.statusL10n);
   }
 }
-

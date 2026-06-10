@@ -1,13 +1,13 @@
 <div class="content-card users-page">
   <div class="header">
     <div>
-      <h2>المستخدمون</h2>
-      <span>إدارة الموظفين وصلاحياتهم</span>
+      <h2>{{ 'Users:Title' | appLocalization }}</h2>
+      <span>{{ 'Users:Subtitle' | appLocalization }}</span>
     </div>
 
     @if (canCreate) {
       <button class="add-btn" (click)="openCreateDialog()">
-        + إضافة موظف
+        + {{ 'Users:Add' | appLocalization }}
       </button>
     }
   </div>
@@ -16,20 +16,20 @@
     <table>
       <thead>
         <tr>
-          <th>اسم المستخدم</th>
-          <th>الاسم</th>
-          <th>البريد</th>
-          <th>الهاتف</th>
-          <th>الدور</th>
-          <th>الحالة</th>
-          <th>العمليات</th>
+          <th>{{ 'Users:Column:UserName' | appLocalization }}</th>
+          <th>{{ 'Users:Column:Name' | appLocalization }}</th>
+          <th>{{ 'Users:Column:Email' | appLocalization }}</th>
+          <th>{{ 'Users:Column:Phone' | appLocalization }}</th>
+          <th>{{ 'Users:Column:Role' | appLocalization }}</th>
+          <th>{{ 'Users:Column:Status' | appLocalization }}</th>
+          <th>{{ 'Actions' | appLocalization }}</th>
         </tr>
       </thead>
 
       <tbody>
         @if (isLoading) {
           <tr>
-            <td colspan="7" class="empty-state">جاري تحميل البيانات...</td>
+            <td colspan="7" class="empty-state">{{ 'Users:Loading' | appLocalization }}</td>
           </tr>
         } @else if (loadError) {
           <tr>
@@ -37,7 +37,7 @@
           </tr>
         } @else if (employees.length === 0) {
           <tr>
-            <td colspan="7" class="empty-state">لا يوجد موظفون</td>
+            <td colspan="7" class="empty-state">{{ 'Users:Empty' | appLocalization }}</td>
           </tr>
         } @else {
           @for (e of employees; track e.id) {
@@ -49,31 +49,31 @@
               <td>{{ roleLabel(e) }}</td>
               <td>
                 <span class="status" [class.active]="e.isActive" [class.inactive]="!e.isActive">
-                  {{ e.isActive ? 'نشط' : 'غير نشط' }}
+                  {{ e.isActive ? ('Users:Status:Active' | appLocalization) : ('Users:Status:Inactive' | appLocalization) }}
                 </span>
               </td>
               <td>
                 <div class="actions">
                   @if (canUpdate) {
-                    <button class="action-btn edit" (click)="openEditDialog(e)" title="تعديل">
+                    <button class="action-btn edit" (click)="openEditDialog(e)" [title]="'Edit' | appLocalization">
                       <mat-icon>edit</mat-icon>
                     </button>
                   }
 
                   @if (canResetPassword) {
-                    <button class="action-btn key" (click)="resetPassword(e)" title="إعادة تعيين كلمة المرور">
+                    <button class="action-btn key" (click)="resetPassword(e)" [title]="'Users:ResetPassword' | appLocalization">
                       <mat-icon>vpn_key</mat-icon>
                     </button>
                   }
 
                   @if ((e.isActive && canDeactivate) || (!e.isActive && canActivate)) {
-                    <button class="action-btn toggle" (click)="toggleActive(e)" title="تفعيل/تعطيل">
+                    <button class="action-btn toggle" (click)="toggleActive(e)" [title]="'Users:ToggleActive' | appLocalization">
                       <mat-icon>{{ e.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
                     </button>
                   }
 
                   @if (canDelete) {
-                    <button class="action-btn delete" (click)="deleteEmployee(e)" title="حذف">
+                    <button class="action-btn delete" (click)="deleteEmployee(e)" [title]="'Delete' | appLocalization">
                       <mat-icon>delete</mat-icon>
                     </button>
                   }

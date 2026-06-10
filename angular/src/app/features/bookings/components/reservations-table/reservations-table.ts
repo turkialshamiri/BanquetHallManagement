@@ -9,6 +9,8 @@ import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { leaveCreateRoute } from 'src/app/core/utils/create-route.util';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import { forkJoin } from 'rxjs';
 import { Customer } from 'src/app/core/models/customer.model';
 import { Hall } from 'src/app/core/models/hall.model';
@@ -28,8 +30,8 @@ import {
   canDeleteReservation,
   canEditReservation,
   getReservationStatusClass,
-  getReservationStatusLabel,
 } from 'src/app/core/utils/reservation-status.util';
+import { StatusLocalizationService } from 'src/app/core/services/status-localization.service';
 import {
   ADD_RESERVATION_DIALOG_CONFIG,
   AddReservationDialog,
@@ -42,7 +44,7 @@ import { PolicyService } from 'src/app/core/services/policy.service';
 @Component({
   selector: 'app-reservations-table',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatDialogModule],
+  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe],
   templateUrl: './reservations-table.html',
   styleUrl: './reservations-table.scss',
 })
@@ -56,12 +58,13 @@ export class ReservationsTableComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private policy = inject(PolicyService);
   private notification = inject(NotificationService);
+  private l10n = inject(AppLocalizationService);
+  readonly statusL10n = inject(StatusLocalizationService);
 
   reservations: Reservation[] = [];
   customersMap = new Map<string, Customer>();
   hallsMap = new Map<string, Hall>();
 
-  getReservationStatusLabel = getReservationStatusLabel;
   getReservationStatusClass = getReservationStatusClass;
   canConfirmReservation = canConfirmReservation;
   canCancelReservation = canCancelReservation;
@@ -99,10 +102,14 @@ export class ReservationsTableComponent implements OnInit {
       },
       error: (error) => {
         this.notification.showError(
-          getAbpErrorMessage(error, 'تعذّر تحميل الحجوزات')
+          getAbpErrorMessage(error, this.l10n.instant('Reservations:LoadFailed'))
         );
       },
     });
+  }
+
+  reservationStatusLabel(status: string): string {
+    return this.statusL10n.reservationStatus(status);
   }
 
   getCustomerName(customerId: string): string {
@@ -164,8 +171,8 @@ export class ReservationsTableComponent implements OnInit {
     this.dialogService
       .confirm({
         type: 'confirm',
-        title: 'تأكيد الحجز',
-        message: 'هل أنت متأكد من تأكيد هذا الحجز؟',
+        title: this.l10n.instant('Reservations:Confirm:Title'),
+        message: this.l10n.instant('Reservations:Confirm:Message'),
       })
       .subscribe((confirmed) => {
         if (!confirmed) {
@@ -187,8 +194,8 @@ export class ReservationsTableComponent implements OnInit {
     this.dialogService
       .confirm({
         type: 'cancel',
-        title: 'إلغاء الحجز',
-        message: 'هل أنت متأكد من إلغاء هذا الحجز؟',
+        title: this.l10n.instant('Reservations:Cancel:Title'),
+        message: this.l10n.instant('Reservations:Cancel:Message'),
       })
       .subscribe((confirmed) => {
         if (!confirmed) {
@@ -210,8 +217,8 @@ export class ReservationsTableComponent implements OnInit {
     this.dialogService
       .confirm({
         type: 'complete',
-        title: 'إكمال الحجز',
-        message: 'هل أنت متأكد من إكمال هذا الحجز؟',
+        title: this.l10n.instant('Reservations:Complete:Title'),
+        message: this.l10n.instant('Reservations:Complete:Message'),
       })
       .subscribe((confirmed) => {
         if (!confirmed) {
@@ -286,9 +293,9 @@ export class ReservationsTableComponent implements OnInit {
     this.dialogService
       .confirm({
         type: 'delete',
-        title: 'حذف الحجز',
-        message: 'هل أنت متأكد من حذف هذا الحجز؟',
-        warningMessage: 'تحذير: لا يمكن التراجع عن هذه العملية.',
+        title: this.l10n.instant('Reservations:Delete:Title'),
+        message: this.l10n.instant('Reservations:Delete:Message'),
+        warningMessage: this.l10n.instant('Reservations:Delete:Warning'),
       })
       .subscribe((result) => {
         if (!result) {

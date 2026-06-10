@@ -44,7 +44,7 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
 
         if (dateFrom > dateTo)
         {
-            throw new UserFriendlyException("تاريخ البداية يجب أن يكون قبل تاريخ النهاية");
+            throw new UserFriendlyException(L["Validation:ReportDateRangeInvalid"]);
         }
 
         var reservationQuery = await _reservationRepository.GetQueryableAsync();

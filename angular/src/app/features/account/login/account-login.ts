@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '@abp/ng.core';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 
 @Component({
   selector: 'app-account-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AppLocalizationPipe],
   templateUrl: './account-login.html',
   styleUrl: './account-login.scss',
 })
@@ -16,6 +18,7 @@ export class AccountLogin {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
+  private l10n = inject(AppLocalizationService);
 
   loading = false;
   errorMessage: string | null = null;
@@ -35,8 +38,9 @@ export class AccountLogin {
     this.loading = true;
     this.errorMessage = null;
 
+    const query = this.route.snapshot.queryParamMap;
     const redirectUrl =
-      this.route.snapshot.queryParamMap.get('redirectUrl') ?? '/dashboard';
+      query.get('redirectUrl') ?? query.get('returnUrl') ?? '/dashboard';
 
     const { username, password, rememberMe } = this.form.getRawValue();
 
@@ -52,9 +56,8 @@ export class AccountLogin {
           this.errorMessage =
             err?.error?.error_description ??
             getAbpErrorMessage(err) ??
-            'تعذر تسجيل الدخول. تحقق من اسم المستخدم وكلمة المرور.';
+            this.l10n.instant('Login:Failed');
         },
       });
   }
 }
-

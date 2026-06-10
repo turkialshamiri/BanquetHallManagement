@@ -143,8 +143,7 @@ public class ReservationAppService :
 
         if (input.GuestsCount <= 0)
         {
-            throw new UserFriendlyException(
-                "عدد الضيوف يجب أن يكون أكبر من صفر");
+            throw new UserFriendlyException(L["Validation:GuestsCountRequired"]);
         }
 
         var hall = await _hallRepository.GetAsync(input.HallId);
@@ -154,8 +153,7 @@ public class ReservationAppService :
 
         if (input.GuestsCount > hall.Capacity)
         {
-            throw new UserFriendlyException(
-                "عدد الضيوف يتجاوز سعة القاعة");
+            throw new UserFriendlyException(L["Validation:GuestsExceedCapacity"]);
         }
 
         await _reservationSchedulingManager.EnsureNoSchedulingConflictAsync(
@@ -210,8 +208,7 @@ public class ReservationAppService :
 
         if (input.GuestsCount <= 0)
         {
-            throw new UserFriendlyException(
-                "عدد الضيوف يجب أن يكون أكبر من صفر");
+            throw new UserFriendlyException(L["Validation:GuestsCountRequired"]);
         }
 
         await _customerRepository.GetAsync(input.CustomerId);
@@ -222,8 +219,7 @@ public class ReservationAppService :
 
         if (input.GuestsCount > hall.Capacity)
         {
-            throw new UserFriendlyException(
-                "عدد الضيوف يتجاوز سعة القاعة");
+            throw new UserFriendlyException(L["Validation:GuestsExceedCapacity"]);
         }
 
         await _reservationSchedulingManager.EnsureNoSchedulingConflictAsync(
@@ -362,16 +358,14 @@ public class ReservationAppService :
             }
         }
 
-        throw new UserFriendlyException(
-            "تعذر إتمام العملية بسبب تعارض حجز متزامن. يرجى المحاولة مرة أخرى.");
+        throw new UserFriendlyException(L["Validation:SchedulingConcurrencyFailed"]);
     }
 
-    private static void ValidateReservationTimes(CreateUpdateReservationDto input)
+    private void ValidateReservationTimes(CreateUpdateReservationDto input)
     {
         if (input.StartTime >= input.EndTime)
         {
-            throw new UserFriendlyException(
-                "وقت البداية يجب أن يكون أقل من وقت النهاية");
+            throw new UserFriendlyException(L["Validation:StartTimeBeforeEndTime"]);
         }
     }
 

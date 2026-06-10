@@ -1,0 +1,51 @@
+/* =============================================================================
+   Direction-aware UI (html[dir] set by LanguageDirectionService)
+
+   Icon + text pattern — DOM order is always [icon][text]:
+     LTR: icon left,  text right  (English — unchanged)
+     RTL: icon right, text left   (automatic via inherited dir + flex row)
+
+   Do NOT use flex-direction: row-reverse on these rows in RTL — it double-flips
+   visual order and restores the LTR layout in Arabic.
+   ============================================================================= */
+
+/* --- Sidebar interactions --- */
+
+html[dir='ltr'] .submenu-item:hover {
+  transform: translateX(-4px);
+}
+
+html[dir='rtl'] .submenu-item:hover {
+  transform: translateX(4px);
+}
+
+html[dir='ltr'] .submenu-item.active-link {
+  border-inline-start: none;
+  border-inline-end: 4px solid var(--primary-color);
+}
+
+html[dir='rtl'] .submenu-item.active-link {
+  border-inline-end: none;
+  border-inline-start: 4px solid var(--primary-color);
+}
+
+/* --- Page / table headers (text block alignment) --- */
+
+html[dir='ltr'] .table-header > div,
+html[dir='ltr'] .header > div,
+html[dir='ltr'] .reports-header > div {
+  text-align: start;
+}
+
+html[dir='rtl'] .table-header > div,
+html[dir='rtl'] .header > div,
+html[dir='rtl'] .reports-header > div {
+  text-align: end;
+}
+
+/* --- Material expansion chevron follows reading direction --- */
+
+html[dir='rtl'] .menu-panel .mat-expansion-indicator {
+  margin-inline-start: auto;
+  margin-inline-end: 0;
+}

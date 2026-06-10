@@ -52,8 +52,8 @@ public class ReservationSchedulingManager : DomainService
 
         if (hasConflict)
         {
-            throw new UserFriendlyException(
-                "هذه القاعة محجوزة بالفعل في هذا الوقت");
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.ReservationSchedulingConflict);
         }
     }
 }

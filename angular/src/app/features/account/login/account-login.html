@@ -1,13 +1,13 @@
 <div class="login-page">
   <div class="login-card">
     <div class="header">
-      <h1>تسجيل الدخول</h1>
-      <p>أدخل بيانات حسابك للمتابعة</p>
+      <h1>{{ 'Login:Title' | appLocalization }}</h1>
+      <p>{{ 'Login:Subtitle' | appLocalization }}</p>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
       <div class="field">
-        <label>اسم المستخدم</label>
+        <label>{{ 'Login:Username' | appLocalization }}</label>
         <input
           type="text"
           formControlName="username"
@@ -15,12 +15,12 @@
           [class.invalid]="form.controls.username.touched && form.controls.username.invalid"
         />
         @if (form.controls.username.touched && form.controls.username.invalid) {
-          <div class="error">اسم المستخدم مطلوب</div>
+          <div class="error">{{ 'Login:UsernameRequired' | appLocalization }}</div>
         }
       </div>
 
       <div class="field">
-        <label>كلمة المرور</label>
+        <label>{{ 'Login:Password' | appLocalization }}</label>
         <input
           type="password"
           formControlName="password"
@@ -28,13 +28,13 @@
           [class.invalid]="form.controls.password.touched && form.controls.password.invalid"
         />
         @if (form.controls.password.touched && form.controls.password.invalid) {
-          <div class="error">كلمة المرور مطلوبة</div>
+          <div class="error">{{ 'Login:PasswordRequired' | appLocalization }}</div>
         }
       </div>
 
       <label class="remember">
         <input type="checkbox" formControlName="rememberMe" />
-        تذكرني
+        {{ 'Login:RememberMe' | appLocalization }}
       </label>
 
       @if (errorMessage) {
@@ -44,9 +44,8 @@
       }
 
       <button type="submit" [disabled]="loading">
-        {{ loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول' }}
+        {{ loading ? ('Login:Submitting' | appLocalization) : ('Login:Submit' | appLocalization) }}
       </button>
     </form>
   </div>
 </div>
-

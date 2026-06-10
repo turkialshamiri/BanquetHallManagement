@@ -7,7 +7,7 @@
                 mat-icon-button
                 class="nav-btn menu-toggle"
                 type="button"
-                aria-label="فتح القائمة"
+                [attr.aria-label]="'Navbar:OpenMenu' | appLocalization"
                 (click)="layoutService.toggleSidebar()">
 
                 <mat-icon>menu</mat-icon>
@@ -17,17 +17,15 @@
 
         <div class="page-section">
 
-            <h2>لوحة التحكم</h2>
+            <h2>{{ 'Navbar:Title' | appLocalization }}</h2>
 
             <span>
-                إدارة القاعات والحجوزات
+                {{ 'Navbar:Subtitle' | appLocalization }}
             </span>
 
         </div>
 
     </div>
-
-    <!-- البحث -->
 
     <div class="search-wrapper">
 
@@ -35,55 +33,53 @@
             search
         </mat-icon>
 
-        <input type="text" placeholder="ابحث عن قاعة، عميل، حجز..." />
+        <input
+            type="text"
+            [placeholder]="'Search:Placeholder' | appLocalization" />
 
     </div>
 
-    <!-- العمليات -->
-
     <div class="navbar-actions">
 
-        <!-- الوضع الليلي -->
+        <button
+            mat-icon-button
+            class="nav-btn"
+            [matMenuTriggerFor]="languageMenu"
+            [attr.aria-label]="'Language' | appLocalization">
 
-        <button mat-icon-button class="nav-btn">
-
-            <mat-icon>
-                dark_mode
-            </mat-icon>
-
-        </button>
-
-        <!-- اللغة -->
-
-        <button mat-icon-button class="nav-btn">
-
-            <mat-icon>
-                language
-            </mat-icon>
+            <mat-icon>language</mat-icon>
 
         </button>
 
-        <!-- الإشعارات -->
+        <mat-menu #languageMenu="matMenu">
+            @for (lang of languages; track lang.cultureName) {
+                <button
+                    mat-menu-item
+                    type="button"
+                    [class.active-language]="isCurrentLanguage(lang.cultureName)"
+                    (click)="switchLanguage(lang.cultureName)">
+
+                    <span>{{ lang.displayNameKey | appLocalization }}</span>
+
+                    @if (isCurrentLanguage(lang.cultureName)) {
+                        <mat-icon class="language-check">check</mat-icon>
+                    }
+
+                </button>
+            }
+        </mat-menu>
 
         <button mat-icon-button class="nav-btn" [matBadge]="5" matBadgeColor="warn">
 
-            <mat-icon>
-                notifications
-            </mat-icon>
+            <mat-icon>notifications</mat-icon>
 
         </button>
-
-        <!-- الرسائل -->
 
         <button mat-icon-button class="nav-btn" [matBadge]="2" matBadgeColor="accent">
 
-            <mat-icon>
-                mail
-            </mat-icon>
+            <mat-icon>mail</mat-icon>
 
         </button>
-
-        <!-- المستخدم -->
 
         <button mat-button [matMenuTriggerFor]="userMenu" class="user-profile">
 
@@ -92,7 +88,7 @@
             </mat-icon>
 
             <div class="avatar">
-                م
+                {{ ((currentUser$ | async)?.userName ?? '?').charAt(0) | uppercase }}
             </div>
 
             <span class="user-name">
@@ -101,14 +97,12 @@
 
         </button>
 
-        <!-- القائمة -->
-
         <mat-menu #userMenu="matMenu">
 
             <div class="user-menu-header">
 
                 <div class="avatar large">
-                    م
+                    {{ ((currentUser$ | async)?.userName ?? '?').charAt(0) | uppercase }}
                 </div>
 
                 <div class="menu-user-info">
@@ -127,26 +121,26 @@
 
             <mat-divider></mat-divider>
 
-            <button mat-menu-item>
+            <button mat-menu-item type="button">
                 <mat-icon>person</mat-icon>
-                <span>الملف الشخصي</span>
+                <span>{{ 'Navbar:Profile' | appLocalization }}</span>
             </button>
 
-            <button mat-menu-item>
+            <button mat-menu-item type="button">
                 <mat-icon>settings</mat-icon>
-                <span>الإعدادات</span>
+                <span>{{ 'Navbar:Settings' | appLocalization }}</span>
             </button>
 
-            <button mat-menu-item>
+            <button mat-menu-item type="button">
                 <mat-icon>vpn_key</mat-icon>
-                <span>تغيير كلمة المرور</span>
+                <span>{{ 'Navbar:ChangePassword' | appLocalization }}</span>
             </button>
 
             <mat-divider></mat-divider>
 
-            <button mat-menu-item (click)="logout()">
+            <button mat-menu-item type="button" (click)="logout()">
                 <mat-icon>logout</mat-icon>
-                <span>تسجيل الخروج</span>
+                <span>{{ 'Navbar:Logout' | appLocalization }}</span>
             </button>
 
         </mat-menu>

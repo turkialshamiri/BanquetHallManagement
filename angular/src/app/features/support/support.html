@@ -1,19 +1,16 @@
 <div class="content-card">
 
-    <h2>{{ pageTitle }}</h2>
+    <h2>{{ pageTitleKey | appLocalization }}</h2>
 
-    <p>{{ pageDescription }}</p>
+    <p>{{ pageDescriptionKey | appLocalization }}</p>
 
     @if (isTicketPage) {
 
         <div class="info-box">
 
-            <strong>إرسال شكوى</strong>
+            <strong>{{ 'Support:Ticket:Title' | appLocalization }}</strong>
 
-            <p>
-                يرجى التواصل مع فريق الدعم الفني عبر البريد
-                الإلكتروني أو الهاتف لتسجيل شكواك ومتابعتها.
-            </p>
+            <p>{{ 'Support:Ticket:Instructions' | appLocalization }}</p>
 
         </div>
 
@@ -21,13 +18,13 @@
 
         <div class="info-box">
 
-            <strong>بيانات التواصل</strong>
+            <strong>{{ 'Support:Contact:DetailsTitle' | appLocalization }}</strong>
 
-            <p>البريد الإلكتروني: support@banquethall.local</p>
+            <p>{{ 'Support:Contact:Email' | appLocalization }}: {{ 'Support:Contact:EmailValue' | appLocalization }}</p>
 
-            <p>الهاتف: 920000000</p>
+            <p>{{ 'Support:Contact:Phone' | appLocalization }}: {{ 'Support:Contact:PhoneValue' | appLocalization }}</p>
 
-            <p>ساعات العمل: الأحد – الخميس، 9:00 ص – 5:00 م</p>
+            <p>{{ 'Support:Contact:Hours' | appLocalization }}: {{ 'Support:Contact:HoursValue' | appLocalization }}</p>
 
         </div>
 

@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef
@@ -19,8 +20,10 @@ import {
 export class ConfirmDialog {
 
   readonly dialogRef = inject(MatDialogRef<ConfirmDialog>);
+  private l10n = inject(AppLocalizationService);
   readonly data = resolveConfirmDialogData(
-    inject<ConfirmDialogData>(MAT_DIALOG_DATA)
+    inject<ConfirmDialogData>(MAT_DIALOG_DATA),
+    this.l10n
   );
 
   confirm(): void {

@@ -4,19 +4,15 @@
 
         <div>
 
-            <h2>الخدمات</h2>
+            <h2>{{ 'Services:Title' | appLocalization }}</h2>
 
-            <span>
-                جميع الخدمات الإضافية المتاحة للحجز
-            </span>
+            <span>{{ 'Services:Subtitle' | appLocalization }}</span>
 
         </div>
 
         @if (canCreate) {
             <button class="add-btn" (click)="openAddServiceDialog()">
-
-                + إضافة خدمة
-
+                + {{ 'Services:Add' | appLocalization }}
             </button>
         }
 
@@ -30,12 +26,11 @@
 
                 <tr>
 
-                    <th>اسم الخدمة</th>
-
-                    <th>السعر</th>
+                    <th>{{ 'Services:Column:Name' | appLocalization }}</th>
+                    <th>{{ 'Services:Column:Price' | appLocalization }}</th>
 
                     @if (showActionsColumn) {
-                        <th>العمليات</th>
+                        <th>{{ 'Actions' | appLocalization }}</th>
                     }
 
                 </tr>
@@ -54,19 +49,11 @@
 
                                 <div class="service-info">
 
-                                    <div class="service-avatar">
-
-                                        🛎️
-
-                                    </div>
+                                    <div class="service-avatar">🛎️</div>
 
                                     <div>
 
-                                        <strong>
-
-                                            {{ service.name }}
-
-                                        </strong>
+                                        <strong>{{ service.name }}</strong>
 
                                     </div>
 
@@ -74,11 +61,7 @@
 
                             </td>
 
-                            <td>
-
-                                {{ service.price | number }}
-
-                            </td>
+                            <td>{{ service.price | number }}</td>
 
                             @if (showActionsColumn) {
                                 <td>
@@ -89,13 +72,7 @@
                                             <button
                                                 class="action-btn edit-btn"
                                                 (click)="editService(service.id)">
-
-                                                <mat-icon>
-
-                                                    edit
-
-                                                </mat-icon>
-
+                                                <mat-icon>edit</mat-icon>
                                             </button>
                                         }
 
@@ -103,13 +80,7 @@
                                             <button
                                                 class="action-btn delete-btn"
                                                 (click)="deleteService(service.id)">
-
-                                                <mat-icon>
-
-                                                    delete
-
-                                                </mat-icon>
-
+                                                <mat-icon>delete</mat-icon>
                                             </button>
                                         }
 
@@ -125,13 +96,9 @@
                 } @else {
 
                     <tr>
-
                         <td [attr.colspan]="showActionsColumn ? 3 : 2" class="empty-state">
-
-                            لا توجد خدمات مسجلة حالياً
-
+                            {{ 'Services:Empty' | appLocalization }}
                         </td>
-
                     </tr>
 
                 }

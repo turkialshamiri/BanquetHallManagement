@@ -1,22 +1,17 @@
 import { Routes } from '@angular/router';
-import { asyncAbpOAuthGuard } from '@abp/ng.oauth';
+import { authGuard, guestGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 
 const hallsPage = () =>
   import('./features/halls/halls').then((m) => m.Halls);
 
 const hallsRouteDefaults = {
-  pageTitle: 'القاعات',
-  pageSubtitle: 'جميع القاعات المسجلة بالنظام',
+  pageTitleKey: 'Halls:Title',
+  pageSubtitleKey: 'Halls:Subtitle',
   statusFilter: null,
 };
 
 export const APP_ROUTES: Routes = [
-  {
-    path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full',
-  },
   {
     path: 'login',
     redirectTo: 'account/login',
@@ -24,15 +19,21 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: 'account/login',
+    canActivate: [guestGuard],
     loadComponent: () =>
       import('./features/account/login/account-login').then((m) => m.AccountLogin),
   },
   {
     path: '',
-    canActivate: [asyncAbpOAuthGuard],
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./layout/main-layout/main-layout').then((m) => m.MainLayout),
     children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'dashboard',
+      },
       {
         path: 'dashboard',
         loadComponent: () =>
@@ -47,8 +48,8 @@ export const APP_ROUTES: Routes = [
         path: 'halls/available',
         loadComponent: hallsPage,
         data: {
-          pageTitle: 'القاعات المتاحة',
-          pageSubtitle: 'القاعات الجاهزة للحجز',
+          pageTitleKey: 'Halls:Available:Title',
+          pageSubtitleKey: 'Halls:Available:Subtitle',
           statusFilter: 1,
         },
       },
@@ -56,8 +57,8 @@ export const APP_ROUTES: Routes = [
         path: 'halls/booked',
         loadComponent: hallsPage,
         data: {
-          pageTitle: 'القاعات المحجوزة',
-          pageSubtitle: 'القاعات ذات حجوزات مؤكدة نشطة',
+          pageTitleKey: 'Halls:Booked:Title',
+          pageSubtitleKey: 'Halls:Booked:Subtitle',
           statusFilter: 3,
         },
       },
@@ -65,8 +66,8 @@ export const APP_ROUTES: Routes = [
         path: 'halls/maintenance',
         loadComponent: hallsPage,
         data: {
-          pageTitle: 'قاعات تحت الصيانة',
-          pageSubtitle: 'القاعات غير المتاحة مؤقتاً',
+          pageTitleKey: 'Halls:Maintenance:Title',
+          pageSubtitleKey: 'Halls:Maintenance:Subtitle',
           statusFilter: 2,
         },
       },
@@ -153,8 +154,8 @@ export const APP_ROUTES: Routes = [
           import('./features/support/support').then((m) => m.Support),
         data: {
           page: 'contact',
-          pageTitle: 'تواصل معنا',
-          pageDescription: 'طرق التواصل مع فريق الدعم الفني',
+          pageTitleKey: 'Support:Contact:Title',
+          pageDescriptionKey: 'Support:Contact:Description',
         },
       },
       {
@@ -163,8 +164,8 @@ export const APP_ROUTES: Routes = [
           import('./features/support/support').then((m) => m.Support),
         data: {
           page: 'ticket',
-          pageTitle: 'إرسال شكوى',
-          pageDescription: 'تسجيل شكوى أو بلاغ للمتابعة',
+          pageTitleKey: 'Support:Ticket:Title',
+          pageDescriptionKey: 'Support:Ticket:Description',
         },
       },
     ],

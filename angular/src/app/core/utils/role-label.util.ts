@@ -1,23 +1,21 @@
-export function formatRoleLabels(roles: string[] | null | undefined): string {
+import { StatusLocalizationService } from '../services/status-localization.service';
+
+export function formatRoleLabels(
+  roles: string[] | null | undefined,
+  statusL10n: StatusLocalizationService
+): string {
   if (!roles?.length) {
     return '—';
   }
 
-  return roles.map(formatSingleRoleLabel).join(' / ');
+  return roles.map((role) => formatSingleRoleLabel(role, statusL10n)).join(' / ');
 }
 
-export function formatSingleRoleLabel(role: string): string {
-  const normalized = role.trim().toLowerCase();
-
-  if (normalized === 'admin') {
-    return 'مدير النظام';
-  }
-
-  if (normalized === 'employee') {
-    return 'موظف';
-  }
-
-  return role;
+export function formatSingleRoleLabel(
+  role: string,
+  statusL10n: StatusLocalizationService
+): string {
+  return statusL10n.roleLabel(role);
 }
 
 export function normalizeEmployeeRoles(raw: unknown): string[] {

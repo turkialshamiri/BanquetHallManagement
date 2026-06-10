@@ -4,19 +4,15 @@
 
         <div>
 
-            <h2>{{ pageTitle }}</h2>
+            <h2>{{ pageTitleKey | appLocalization }}</h2>
 
-            <span>
-                {{ pageSubtitle }}
-            </span>
+            <span>{{ pageSubtitleKey | appLocalization }}</span>
 
         </div>
 
         @if (canCreateHall) {
             <button class="add-btn" (click)="openAddHallDialog()">
-
-                + إضافة قاعة
-
+                + {{ 'Halls:Add' | appLocalization }}
             </button>
         }
 
@@ -30,21 +26,14 @@
 
                 <tr>
 
-                    <th>اسم القاعة</th>
-
-                    <th>الموقع</th>
-
-                    <th>السعة</th>
-
-                    <th>السعر / ساعة</th>
-
-                    <th>الحالة</th>
-
-                    <th>النوع</th>
-
-                    <th>تاريخ الإنشاء</th>
-
-                    <th>العمليات</th>
+                    <th>{{ 'Halls:Column:Name' | appLocalization }}</th>
+                    <th>{{ 'Halls:Column:Location' | appLocalization }}</th>
+                    <th>{{ 'Halls:Column:Capacity' | appLocalization }}</th>
+                    <th>{{ 'Halls:Column:PricePerHour' | appLocalization }}</th>
+                    <th>{{ 'Halls:Column:Status' | appLocalization }}</th>
+                    <th>{{ 'Halls:Column:Type' | appLocalization }}</th>
+                    <th>{{ 'Halls:Column:Created' | appLocalization }}</th>
+                    <th>{{ 'Actions' | appLocalization }}</th>
 
                 </tr>
 
@@ -55,7 +44,7 @@
                 @if (isLoading) {
                     <tr>
                         <td colspan="8" class="empty-state">
-                            جاري تحميل القاعات...
+                            {{ 'Halls:Loading' | appLocalization }}
                         </td>
                     </tr>
                 } @else if (loadError) {
@@ -63,7 +52,7 @@
                         <td colspan="8" class="empty-state error-state">
                             {{ loadError }}
                             <button type="button" class="retry-btn" (click)="loadHalls()">
-                                إعادة المحاولة
+                                {{ 'Retry' | appLocalization }}
                             </button>
                         </td>
                     </tr>
@@ -77,25 +66,13 @@
 
                                 <div class="hall-info">
 
-                                    <div class="hall-avatar">
-
-                                        🏛️
-
-                                    </div>
+                                    <div class="hall-avatar">🏛️</div>
 
                                     <div>
 
-                                        <strong>
+                                        <strong>{{ hall.name }}</strong>
 
-                                            {{ hall.name }}
-
-                                        </strong>
-
-                                        <span>
-
-                                            {{ hall.description }}
-
-                                        </span>
+                                        <span>{{ hall.description }}</span>
 
                                     </div>
 
@@ -103,23 +80,9 @@
 
                             </td>
 
-                            <td>
-
-                                {{ hall.location }}
-
-                            </td>
-
-                            <td>
-
-                                {{ hall.capacity }}
-
-                            </td>
-
-                            <td>
-
-                                {{ hall.pricePerHour | number }}
-
-                            </td>
+                            <td>{{ hall.location }}</td>
+                            <td>{{ hall.capacity }}</td>
+                            <td>{{ hall.pricePerHour | number }}</td>
 
                             <td>
 
@@ -127,23 +90,14 @@
                                     class="status"
                                     [ngClass]="getHallStatusClass(hall.status)">
 
-                                    {{ getHallStatusLabel(hall.status) }}
+                                    {{ hallStatusLabel(hall.status) }}
 
                                 </span>
 
                             </td>
 
-                            <td>
-
-                                {{ getTypeText(hall.type) }}
-
-                            </td>
-
-                            <td>
-
-                                {{ hall.creationTime | date:'yyyy/MM/dd' }}
-
-                            </td>
+                            <td>{{ hallTypeLabel(hall.type) }}</td>
+                            <td>{{ hall.creationTime | date:'yyyy/MM/dd' }}</td>
 
                             <td>
 
@@ -153,9 +107,7 @@
                                         <button
                                             class="action-btn edit-btn"
                                             (click)="editHall(hall.id)">
-
                                             <mat-icon>edit</mat-icon>
-
                                         </button>
                                     }
 
@@ -163,9 +115,7 @@
                                         <button
                                             class="action-btn delete-btn"
                                             (click)="deleteHall(hall.id)">
-
                                             <mat-icon>delete</mat-icon>
-
                                         </button>
                                     }
 
@@ -180,13 +130,9 @@
                 } @else {
 
                     <tr>
-
                         <td colspan="8" class="empty-state">
-
-                            لا توجد قاعات مسجلة حالياً
-
+                            {{ 'Halls:Empty' | appLocalization }}
                         </td>
-
                     </tr>
 
                 }

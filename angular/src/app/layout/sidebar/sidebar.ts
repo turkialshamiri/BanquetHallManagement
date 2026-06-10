@@ -2,9 +2,9 @@ import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 import { ConfigStateService } from '@abp/ng.core';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
 import { filter, Subscription } from 'rxjs';
 
-import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -12,14 +12,15 @@ import { LayoutService } from '../services/layout.service';
 import { PolicyService } from 'src/app/core/services/policy.service';
 
 interface SidebarChildItem {
-  title: string;
+  titleKey: string;
   icon: string;
   route: string;
   exact?: boolean;
 }
 
 interface SidebarMenuItem {
-  title: string;
+  sectionId: string;
+  titleKey: string;
   icon: string;
   children: SidebarChildItem[];
 }
@@ -29,9 +30,9 @@ interface SidebarMenuItem {
   standalone: true,
   imports: [
     CommonModule,
-    MatSidenavModule,
     MatExpansionModule,
     MatIconModule,
+    AppLocalizationPipe,
   ],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.scss'],
@@ -45,13 +46,24 @@ export class Sidebar implements OnInit, OnDestroy {
 
   menuItems: SidebarMenuItem[] = [];
 
+  private readonly sectionPermissions: Record<string, string> = {
+    dashboard: 'BanquetHallManagement.Dashboard',
+    halls: 'BanquetHallManagement.Halls',
+    customers: 'BanquetHallManagement.Customers',
+    services: 'BanquetHallManagement.Services',
+    reservations: 'BanquetHallManagement.Reservations',
+    reports: 'BanquetHallManagement.Reports',
+    users: 'BanquetHallManagement.Users',
+  };
+
   private readonly allMenuItems: SidebarMenuItem[] = [
     {
-      title: 'لوحة التحكم',
+      sectionId: 'dashboard',
+      titleKey: 'Menu:Section:Dashboard',
       icon: 'dashboard',
       children: [
         {
-          title: 'الرئيسية',
+          titleKey: 'Menu:Dashboard:Home',
           icon: 'home',
           route: '/dashboard',
           exact: true,
@@ -59,29 +71,30 @@ export class Sidebar implements OnInit, OnDestroy {
       ],
     },
     {
-      title: 'القاعات',
+      sectionId: 'halls',
+      titleKey: 'Menu:Section:Halls',
       icon: 'apartment',
       children: [
         {
-          title: 'جميع القاعات',
+          titleKey: 'Menu:Halls:All',
           icon: 'apartment',
           route: '/halls/all',
           exact: true,
         },
         {
-          title: 'القاعات المتاحة',
+          titleKey: 'Menu:Halls:Available',
           icon: 'check_circle',
           route: '/halls/available',
           exact: true,
         },
         {
-          title: 'القاعات المحجوزة',
+          titleKey: 'Menu:Halls:Booked',
           icon: 'event_busy',
           route: '/halls/booked',
           exact: true,
         },
         {
-          title: 'تحت الصيانة',
+          titleKey: 'Menu:Halls:Maintenance',
           icon: 'build',
           route: '/halls/maintenance',
           exact: true,
@@ -89,17 +102,18 @@ export class Sidebar implements OnInit, OnDestroy {
       ],
     },
     {
-      title: 'العملاء',
+      sectionId: 'customers',
+      titleKey: 'Menu:Section:Customers',
       icon: 'groups',
       children: [
         {
-          title: 'عرض العملاء',
+          titleKey: 'Menu:Customers:List',
           icon: 'group',
           route: '/customers',
           exact: true,
         },
         {
-          title: 'إضافة عميل',
+          titleKey: 'Menu:Customers:Create',
           icon: 'person_add',
           route: '/customers/create',
           exact: true,
@@ -107,17 +121,18 @@ export class Sidebar implements OnInit, OnDestroy {
       ],
     },
     {
-      title: 'الخدمات',
+      sectionId: 'services',
+      titleKey: 'Menu:Section:Services',
       icon: 'room_service',
       children: [
         {
-          title: 'عرض الخدمات',
+          titleKey: 'Menu:Services:List',
           icon: 'list_alt',
           route: '/services',
           exact: true,
         },
         {
-          title: 'إضافة خدمة',
+          titleKey: 'Menu:Services:Create',
           icon: 'add_circle',
           route: '/services/create',
           exact: true,
@@ -125,17 +140,18 @@ export class Sidebar implements OnInit, OnDestroy {
       ],
     },
     {
-      title: 'الحجوزات',
+      sectionId: 'reservations',
+      titleKey: 'Menu:Section:Reservations',
       icon: 'event_available',
       children: [
         {
-          title: 'عرض الحجوزات',
+          titleKey: 'Menu:Reservations:List',
           icon: 'calendar_month',
           route: '/bookings',
           exact: true,
         },
         {
-          title: 'إضافة حجز',
+          titleKey: 'Menu:Reservations:Create',
           icon: 'add_circle',
           route: '/bookings/create',
           exact: true,
@@ -143,11 +159,12 @@ export class Sidebar implements OnInit, OnDestroy {
       ],
     },
     {
-      title: 'التقارير',
+      sectionId: 'reports',
+      titleKey: 'Menu:Section:Reports',
       icon: 'analytics',
       children: [
         {
-          title: 'التقارير والتحليلات',
+          titleKey: 'Menu:Reports:Analytics',
           icon: 'insights',
           route: '/reports',
           exact: true,
@@ -155,11 +172,12 @@ export class Sidebar implements OnInit, OnDestroy {
       ],
     },
     {
-      title: 'المستخدمون',
+      sectionId: 'users',
+      titleKey: 'Menu:Section:Users',
       icon: 'manage_accounts',
       children: [
         {
-          title: 'إدارة الموظفين',
+          titleKey: 'Menu:Users:Employees',
           icon: 'group_manage',
           route: '/users',
           exact: true,
@@ -167,11 +185,12 @@ export class Sidebar implements OnInit, OnDestroy {
       ],
     },
     {
-      title: 'من نحن',
+      sectionId: 'about',
+      titleKey: 'Menu:Section:About',
       icon: 'info',
       children: [
         {
-          title: 'التعريف بالنظام',
+          titleKey: 'Menu:About:System',
           icon: 'info_outline',
           route: '/about',
           exact: true,
@@ -179,17 +198,18 @@ export class Sidebar implements OnInit, OnDestroy {
       ],
     },
     {
-      title: 'الدعم الفني',
+      sectionId: 'support',
+      titleKey: 'Menu:Section:Support',
       icon: 'support_agent',
       children: [
         {
-          title: 'تواصل معنا',
+          titleKey: 'Menu:Support:Contact',
           icon: 'contact_support',
           route: '/support/contact',
           exact: true,
         },
         {
-          title: 'إرسال شكوى',
+          titleKey: 'Menu:Support:Ticket',
           icon: 'report_problem',
           route: '/support/ticket',
           exact: true,
@@ -224,23 +244,9 @@ export class Sidebar implements OnInit, OnDestroy {
 
     for (const section of this.allMenuItems) {
       const sectionVisible =
-        section.title === 'لوحة التحكم'
-          ? can('BanquetHallManagement.Dashboard')
-          : section.title === 'القاعات'
-          ? can('BanquetHallManagement.Halls')
-          : section.title === 'العملاء'
-          ? can('BanquetHallManagement.Customers')
-          : section.title === 'الخدمات'
-          ? can('BanquetHallManagement.Services')
-          : section.title === 'الحجوزات'
-          ? can('BanquetHallManagement.Reservations')
-          : section.title === 'التقارير'
-          ? can('BanquetHallManagement.Reports')
-          : section.title === 'المستخدمون'
-          ? can('BanquetHallManagement.Users')
-          : section.title === 'من نحن' || section.title === 'الدعم الفني'
+        section.sectionId === 'about' || section.sectionId === 'support'
           ? can('BanquetHallManagement.Halls.Create')
-          : false;
+          : can(this.sectionPermissions[section.sectionId] ?? '');
 
       if (!sectionVisible) {
         continue;
@@ -269,16 +275,6 @@ export class Sidebar implements OnInit, OnDestroy {
     this.menuItems = filtered;
   }
 
-  get sidenavMode(): 'over' | 'side' {
-    return this.layoutService.isMobile() ? 'over' : 'side';
-  }
-
-  get sidenavOpened(): boolean {
-    return this.layoutService.isMobile()
-      ? this.layoutService.sidebarOpen()
-      : true;
-  }
-
   isSectionActive(item: SidebarMenuItem): boolean {
     const currentUrl = this.router.url.split('?')[0];
 
@@ -299,4 +295,3 @@ export class Sidebar implements OnInit, OnDestroy {
     }
   }
 }
-

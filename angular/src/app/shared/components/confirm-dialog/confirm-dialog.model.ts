@@ -1,3 +1,5 @@
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
+
 export type ConfirmDialogType = 'confirm' | 'complete' | 'cancel' | 'delete';
 
 export interface ConfirmDialogData {
@@ -13,54 +15,56 @@ export interface ConfirmDialogData {
 interface ConfirmDialogPreset {
   type: ConfirmDialogType;
   icon: string;
-  confirmLabel: string;
-  cancelLabel: string;
+  confirmLabelKey: string;
+  cancelLabelKey: string;
 }
 
-export const CONFIRM_DIALOG_PRESETS: Record<
+export const CONFIRM_DIALOG_PRESET_KEYS: Record<
   ConfirmDialogType,
   ConfirmDialogPreset
 > = {
   confirm: {
     type: 'confirm',
     icon: 'check_circle',
-    confirmLabel: 'تأكيد الحجز',
-    cancelLabel: 'إلغاء',
+    confirmLabelKey: 'ConfirmDialog:ConfirmReservation',
+    cancelLabelKey: 'Cancel',
   },
   complete: {
     type: 'complete',
     icon: 'task_alt',
-    confirmLabel: 'إكمال الحجز',
-    cancelLabel: 'إلغاء',
+    confirmLabelKey: 'ConfirmDialog:CompleteReservation',
+    cancelLabelKey: 'Cancel',
   },
   cancel: {
     type: 'cancel',
     icon: 'warning_amber',
-    confirmLabel: 'إلغاء الحجز',
-    cancelLabel: 'رجوع',
+    confirmLabelKey: 'ConfirmDialog:CancelReservation',
+    cancelLabelKey: 'Dialog:Back',
   },
   delete: {
     type: 'delete',
     icon: 'delete',
-    confirmLabel: 'حذف',
-    cancelLabel: 'إلغاء',
+    confirmLabelKey: 'Delete',
+    cancelLabelKey: 'Cancel',
   },
 };
 
 export function resolveConfirmDialogData(
-  data: ConfirmDialogData
+  data: ConfirmDialogData,
+  l10n: AppLocalizationService
 ): Required<
   Pick<ConfirmDialogData, 'type' | 'icon' | 'confirmLabel' | 'cancelLabel'>
 > &
   ConfirmDialogData {
   const type = data.type ?? 'delete';
-  const preset = CONFIRM_DIALOG_PRESETS[type];
+  const preset = CONFIRM_DIALOG_PRESET_KEYS[type];
 
   return {
     ...data,
     type,
     icon: data.icon ?? preset.icon,
-    confirmLabel: data.confirmLabel ?? preset.confirmLabel,
-    cancelLabel: data.cancelLabel ?? preset.cancelLabel,
+    confirmLabel:
+      data.confirmLabel ?? l10n.instant(preset.confirmLabelKey),
+    cancelLabel: data.cancelLabel ?? l10n.instant(preset.cancelLabelKey),
   };
 }

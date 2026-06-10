@@ -4,6 +4,8 @@ import {
   MatDialogRef,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import { Customer, CreateUpdateCustomer } from 'src/app/core/models/customer.model';
 
 interface CustomerFormErrors {
@@ -14,12 +16,13 @@ interface CustomerFormErrors {
 @Component({
   selector: 'app-add-customer-dialog',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AppLocalizationPipe],
   templateUrl: './add-customer-dialog.html',
   styleUrl: './add-customer-dialog.scss',
 })
 export class AddCustomerDialog implements OnInit {
   dialogRef = inject(MatDialogRef<AddCustomerDialog>);
+  private l10n = inject(AppLocalizationService);
 
   data = inject<Customer | undefined>(MAT_DIALOG_DATA, {
     optional: true,
@@ -74,11 +77,11 @@ export class AddCustomerDialog implements OnInit {
     const errors: CustomerFormErrors = {};
 
     if (!this.customer.name?.trim()) {
-      errors.name = 'اسم العميل مطلوب';
+      errors.name = this.l10n.instant('Customers:Validation:NameRequired');
     }
 
     if (!this.customer.phone?.trim()) {
-      errors.phone = 'رقم الهاتف مطلوب';
+      errors.phone = this.l10n.instant('Customers:Validation:PhoneRequired');
     }
 
     this.errors = errors;

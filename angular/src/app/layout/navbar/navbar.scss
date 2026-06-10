@@ -17,8 +17,6 @@
 
     gap: 16px;
 
-    direction: rtl;
-    
     background: var(--surface);
 
     border-bottom: 1px solid var(--border-color);
@@ -396,5 +394,15 @@
     .navbar-actions > .nav-btn {
         display: none;
     }
+}
+
+.language-check {
+    margin-inline-start: auto;
+    font-size: 18px;
+    color: var(--primary-color, #2563eb);
+}
+
+.active-language {
+    font-weight: 600;
 }
 

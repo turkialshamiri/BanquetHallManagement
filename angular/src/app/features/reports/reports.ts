@@ -12,6 +12,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import { forkJoin } from 'rxjs';
 import { Hall } from 'src/app/core/models/hall.model';
 import {
@@ -22,6 +24,7 @@ import {
 import { HallService } from 'src/app/core/services/hall.service';
 import { ReportService } from 'src/app/core/services/report.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
+
 @Component({
   selector: 'app-reports',
   standalone: true,
@@ -35,6 +38,7 @@ import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
     MatInputModule,
     MatSelectModule,
     MatTableModule,
+    AppLocalizationPipe,
   ],
   templateUrl: './reports.html',
   styleUrl: './reports.scss',
@@ -43,6 +47,7 @@ export class Reports implements OnInit {
   private reportService = inject(ReportService);
   private hallService = inject(HallService);
   private cdr = inject(ChangeDetectorRef);
+  private l10n = inject(AppLocalizationService);
 
   reports: ReportsResult | null = null;
   halls: Hall[] = [];
@@ -81,6 +86,21 @@ export class Reports implements OnInit {
     });
   }
 
+  statusOptionLabel(value: number | null): string {
+    if (value == null) {
+      return this.l10n.instant('Reports:Filters:AllStatuses');
+    }
+
+    const statusMap: Record<number, string> = {
+      1: 'Enum:ReservationStatus:Pending',
+      2: 'Enum:ReservationStatus:Confirmed',
+      3: 'Enum:ReservationStatus:Cancelled',
+      4: 'Enum:ReservationStatus:Completed',
+    };
+
+    return this.l10n.instant(statusMap[value] ?? 'Unknown');
+  }
+
   applyFilters(): void {
     this.appliedFilters = { ...this.filters };
     this.loadReports();
@@ -105,7 +125,7 @@ export class Reports implements OnInit {
       error: (error) => {
         this.loadError = getAbpErrorMessage(
           error,
-          'تعذّر تحميل التقارير'
+          this.l10n.instant('Reports:LoadFailed')
         );
         this.isLoading = false;
         this.cdr.markForCheck();

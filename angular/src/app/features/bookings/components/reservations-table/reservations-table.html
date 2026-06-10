@@ -4,19 +4,17 @@
 
         <div>
 
-            <h2>الحجوزات</h2>
+            <h2>{{ 'Reservations:Title' | appLocalization }}</h2>
 
-            <span>
-                جميع حجوزات القاعات المسجلة بالنظام
-            </span>
+            <span>{{ 'Reservations:Subtitle' | appLocalization }}</span>
 
         </div>
 
-        <button class="add-btn" (click)="openAddReservationDialog()">
-
-            + إضافة حجز
-
-        </button>
+        @if (canCreate) {
+            <button class="add-btn" (click)="openAddReservationDialog()">
+                + {{ 'Reservations:Add' | appLocalization }}
+            </button>
+        }
 
     </div>
 
@@ -28,23 +26,15 @@
 
                 <tr>
 
-                    <th>العميل</th>
-
-                    <th>القاعة</th>
-
-                    <th>تاريخ المناسبة</th>
-
-                    <th>وقت البداية</th>
-
-                    <th>وقت النهاية</th>
-
-                    <th>عدد الضيوف</th>
-
-                    <th>السعر الإجمالي</th>
-
-                    <th>الحالة</th>
-
-                    <th>العمليات</th>
+                    <th>{{ 'Reservations:Column:Customer' | appLocalization }}</th>
+                    <th>{{ 'Reservations:Column:Hall' | appLocalization }}</th>
+                    <th>{{ 'Reservations:Column:Date' | appLocalization }}</th>
+                    <th>{{ 'Reservations:Column:StartTime' | appLocalization }}</th>
+                    <th>{{ 'Reservations:Column:EndTime' | appLocalization }}</th>
+                    <th>{{ 'Reservations:Column:Guests' | appLocalization }}</th>
+                    <th>{{ 'Reservations:Column:TotalPrice' | appLocalization }}</th>
+                    <th>{{ 'Reservations:Column:Status' | appLocalization }}</th>
+                    <th>{{ 'Actions' | appLocalization }}</th>
 
                 </tr>
 
@@ -62,19 +52,11 @@
 
                                 <div class="reservation-info">
 
-                                    <div class="reservation-avatar">
-
-                                        📅
-
-                                    </div>
+                                    <div class="reservation-avatar">📅</div>
 
                                     <div>
 
-                                        <strong>
-
-                                            {{ getCustomerName(reservation.customerId) }}
-
-                                        </strong>
+                                        <strong>{{ getCustomerName(reservation.customerId) }}</strong>
 
                                     </div>
 
@@ -82,41 +64,17 @@
 
                             </td>
 
-                            <td>
+                            <td>{{ getHallName(reservation.hallId) }}</td>
 
-                                {{ getHallName(reservation.hallId) }}
+                            <td>{{ reservation.eventDate | date:'yyyy/MM/dd' }}</td>
 
-                            </td>
+                            <td>{{ formatTime(reservation.startTime) }}</td>
 
-                            <td>
+                            <td>{{ formatTime(reservation.endTime) }}</td>
 
-                                {{ reservation.eventDate | date:'yyyy/MM/dd' }}
+                            <td>{{ reservation.guestsCount }}</td>
 
-                            </td>
-
-                            <td>
-
-                                {{ formatTime(reservation.startTime) }}
-
-                            </td>
-
-                            <td>
-
-                                {{ formatTime(reservation.endTime) }}
-
-                            </td>
-
-                            <td>
-
-                                {{ reservation.guestsCount }}
-
-                            </td>
-
-                            <td>
-
-                                {{ reservation.totalPrice | number }}
-
-                            </td>
+                            <td>{{ reservation.totalPrice | number }}</td>
 
                             <td>
 
@@ -124,7 +82,7 @@
                                     class="status-badge"
                                     [ngClass]="getReservationStatusClass(reservation.status)">
 
-                                    {{ getReservationStatusLabel(reservation.status) }}
+                                    {{ reservationStatusLabel(reservation.status) }}
 
                                 </span>
 
@@ -137,55 +95,45 @@
                                     @if (canConfirm && canConfirmReservation(reservation.status)) {
                                         <button
                                             class="action-btn confirm-btn"
-                                            title="تأكيد"
+                                            [title]="'Reservations:Action:Confirm' | appLocalization"
                                             (click)="confirmReservation(reservation.id)">
-
                                             <mat-icon>check_circle</mat-icon>
-
                                         </button>
                                     }
 
                                     @if (canComplete && canCompleteReservation(reservation.status)) {
                                         <button
                                             class="action-btn complete-btn"
-                                            title="إكمال"
+                                            [title]="'Reservations:Action:Complete' | appLocalization"
                                             (click)="completeReservation(reservation.id)">
-
                                             <mat-icon>task_alt</mat-icon>
-
                                         </button>
                                     }
 
                                     @if (canCancel && canCancelReservation(reservation.status)) {
                                         <button
                                             class="action-btn cancel-btn"
-                                            title="إلغاء"
+                                            [title]="'Reservations:Action:Cancel' | appLocalization"
                                             (click)="cancelReservation(reservation.id)">
-
                                             <mat-icon>cancel</mat-icon>
-
                                         </button>
                                     }
 
                                     @if (canUpdate && canEditReservation(reservation.status)) {
                                         <button
                                             class="action-btn edit-btn"
-                                            title="تعديل"
+                                            [title]="'Edit' | appLocalization"
                                             (click)="editReservation(reservation.id)">
-
                                             <mat-icon>edit</mat-icon>
-
                                         </button>
                                     }
 
                                     @if (canDelete && canDeleteReservation(reservation.status)) {
                                         <button
                                             class="action-btn delete-btn"
-                                            title="حذف"
+                                            [title]="'Delete' | appLocalization"
                                             (click)="deleteReservation(reservation.id)">
-
                                             <mat-icon>delete</mat-icon>
-
                                         </button>
                                     }
 
@@ -200,13 +148,9 @@
                 } @else {
 
                     <tr>
-
                         <td colspan="9" class="empty-state">
-
-                            لا توجد حجوزات مسجلة حالياً
-
+                            {{ 'Reservations:Empty' | appLocalization }}
                         </td>
-
                     </tr>
 
                 }

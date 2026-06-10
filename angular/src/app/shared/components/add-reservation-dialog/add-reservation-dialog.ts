@@ -7,6 +7,8 @@ import {
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import { forkJoin, of } from 'rxjs';
 import { PolicyService } from 'src/app/core/services/policy.service';
 import { PagedServiceResult } from 'src/app/core/models/service.model';
@@ -63,7 +65,7 @@ interface ReservationFormState {
 @Component({
   selector: 'app-add-reservation-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, MatButtonModule],
+  imports: [CommonModule, FormsModule, MatDialogModule, MatButtonModule, AppLocalizationPipe],
   templateUrl: './add-reservation-dialog.html',
   styleUrl: './add-reservation-dialog.scss',
 })
@@ -73,6 +75,7 @@ export class AddReservationDialog implements OnInit {
   private serviceService = inject(ServiceService);
   private policy = inject(PolicyService);
   private cdr = inject(ChangeDetectorRef);
+  private l10n = inject(AppLocalizationService);
 
   dialogRef = inject(MatDialogRef<AddReservationDialog>);
 
@@ -224,7 +227,7 @@ export class AddReservationDialog implements OnInit {
       error: (error) => {
         console.error(error);
         this.isLoading = false;
-        this.apiError = 'تعذر تحميل بيانات النموذج';
+        this.apiError = this.l10n.instant('Reservations:LoadFormFailed');
         this.cdr.markForCheck();
       },
     });
@@ -234,23 +237,23 @@ export class AddReservationDialog implements OnInit {
     const errors: ReservationFormErrors = {};
 
     if (!this.form.customerId) {
-      errors.customerId = 'يجب اختيار العميل';
+      errors.customerId = this.l10n.instant('Reservations:Validation:CustomerRequired');
     }
 
     if (!this.form.hallId) {
-      errors.hallId = 'يجب اختيار القاعة';
+      errors.hallId = this.l10n.instant('Reservations:Validation:HallRequired');
     }
 
     if (!this.form.eventDate) {
-      errors.eventDate = 'يجب تحديد تاريخ المناسبة';
+      errors.eventDate = this.l10n.instant('Reservations:Validation:EventDateRequired');
     }
 
     if (!this.form.startTime) {
-      errors.startTime = 'يجب تحديد وقت البداية';
+      errors.startTime = this.l10n.instant('Reservations:Validation:StartTimeRequired');
     }
 
     if (!this.form.endTime) {
-      errors.endTime = 'يجب تحديد وقت النهاية';
+      errors.endTime = this.l10n.instant('Reservations:Validation:EndTimeRequired');
     }
 
     if (
@@ -258,19 +261,18 @@ export class AddReservationDialog implements OnInit {
       this.form.endTime &&
       this.form.startTime >= this.form.endTime
     ) {
-      errors.endTime = 'وقت البداية يجب أن يكون أقل من وقت النهاية';
+      errors.endTime = this.l10n.instant('Validation:StartTimeBeforeEndTime');
     }
 
     if (this.form.startTime && this.form.endTime && !this.priceBreakdown.isValid) {
-      errors.endTime = 'مدة الحجز يجب أن تكون أكبر من صفر';
+      errors.endTime = this.l10n.instant('Reservations:Validation:DurationMustBePositive');
     }
 
     if (!this.form.guestsCount || this.form.guestsCount <= 0) {
-      errors.guestsCount = 'عدد الضيوف يجب أن يكون أكبر من صفر';
+      errors.guestsCount = this.l10n.instant('Validation:GuestsCountRequired');
     }
 
     this.errors = errors;
     return Object.keys(errors).length === 0;
   }
 }
-

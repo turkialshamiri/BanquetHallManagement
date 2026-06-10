@@ -9,6 +9,8 @@ import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { leaveCreateRoute } from 'src/app/core/utils/create-route.util';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import {
   CreateUpdateService,
   ServiceItem,
@@ -26,7 +28,7 @@ import { PolicyService } from 'src/app/core/services/policy.service';
 @Component({
   selector: 'app-services-table',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatDialogModule],
+  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe],
   templateUrl: './services-table.html',
   styleUrl: './services-table.scss',
 })
@@ -38,6 +40,7 @@ export class ServicesTableComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private policy = inject(PolicyService);
   private notification = inject(NotificationService);
+  private l10n = inject(AppLocalizationService);
 
   services: ServiceItem[] = [];
 
@@ -69,7 +72,7 @@ export class ServicesTableComponent implements OnInit {
       },
       error: (error) => {
         this.notification.showError(
-          getAbpErrorMessage(error, 'تعذّر تحميل الخدمات')
+          getAbpErrorMessage(error, this.l10n.instant('Services:LoadFailed'))
         );
       },
     });
@@ -157,8 +160,8 @@ export class ServicesTableComponent implements OnInit {
   deleteService(id: string): void {
     this.dialogService
       .confirm(
-        'حذف الخدمة',
-        'هل أنت متأكد من حذف هذه الخدمة؟ لا يمكن التراجع عن العملية.'
+        this.l10n.instant('Services:Delete:Title'),
+        this.l10n.instant('Services:Delete:Message')
       )
       .subscribe((result) => {
         if (!result) {
@@ -171,7 +174,7 @@ export class ServicesTableComponent implements OnInit {
           },
           error: (error) => {
             this.notification.showError(
-              getAbpErrorMessage(error, 'تعذّر حذف الخدمة')
+              getAbpErrorMessage(error, this.l10n.instant('Services:DeleteFailed'))
             );
           },
         });

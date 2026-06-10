@@ -62,14 +62,12 @@ namespace BanquetHallManagement.Services
 
             if (string.IsNullOrWhiteSpace(input.Name))
             {
-                throw new UserFriendlyException(
-                    "اسم الخدمة مطلوب");
+                throw new UserFriendlyException(L["Validation:ServiceNameRequired"]);
             }
 
             if (input.Price <= 0)
             {
-                throw new UserFriendlyException(
-                    "سعر الخدمة يجب أن يكون أكبر من صفر");
+                throw new UserFriendlyException(L["Validation:ServicePriceMustBePositive"]);
             }
 
             var exists = await _serviceRepository.AnyAsync(
@@ -77,8 +75,7 @@ namespace BanquetHallManagement.Services
 
             if (exists)
             {
-                throw new UserFriendlyException(
-                    "الخدمة موجودة مسبقاً");
+                throw new UserFriendlyException(L["Validation:ServiceNameDuplicate"]);
             }
 
             var service = ObjectMapper.Map<
@@ -99,14 +96,12 @@ namespace BanquetHallManagement.Services
 
             if (string.IsNullOrWhiteSpace(input.Name))
             {
-                throw new UserFriendlyException(
-                    "اسم الخدمة مطلوب");
+                throw new UserFriendlyException(L["Validation:ServiceNameRequired"]);
             }
 
             if (input.Price <= 0)
             {
-                throw new UserFriendlyException(
-                    "سعر الخدمة يجب أن يكون أكبر من صفر");
+                throw new UserFriendlyException(L["Validation:ServicePriceMustBePositive"]);
             }
 
             var exists = await _serviceRepository.AnyAsync(
@@ -114,8 +109,7 @@ namespace BanquetHallManagement.Services
 
             if (exists)
             {
-                throw new UserFriendlyException(
-                    "يوجد خدمة أخرى بنفس الاسم");
+                throw new UserFriendlyException(L["Validation:ServiceNameDuplicateOther"]);
             }
 
             service.Name = input.Name;

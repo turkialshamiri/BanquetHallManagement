@@ -4,6 +4,8 @@ import {
   MatDialogRef,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
+import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import {
   CreateUpdateService,
   ServiceItem,
@@ -21,12 +23,13 @@ export interface AddServiceDialogData extends Partial<ServiceItem> {
 @Component({
   selector: 'app-add-service-dialog',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AppLocalizationPipe],
   templateUrl: './add-service-dialog.html',
   styleUrl: './add-service-dialog.scss',
 })
 export class AddServiceDialog implements OnInit {
   dialogRef = inject(MatDialogRef<AddServiceDialog>);
+  private l10n = inject(AppLocalizationService);
 
   data = inject<AddServiceDialogData | undefined>(MAT_DIALOG_DATA, {
     optional: true,
@@ -92,11 +95,11 @@ export class AddServiceDialog implements OnInit {
     const errors: ServiceFormErrors = {};
 
     if (!this.service.name?.trim()) {
-      errors.name = 'اسم الخدمة مطلوب';
+      errors.name = this.l10n.instant('Validation:ServiceNameRequired');
     }
 
     if (this.service.price == null || this.service.price <= 0) {
-      errors.price = 'سعر الخدمة يجب أن يكون أكبر من صفر';
+      errors.price = this.l10n.instant('Validation:ServicePriceMustBePositive');
     }
 
     this.errors = errors;

@@ -1,7 +1,20 @@
-<div class="app-layout">
-  <app-sidebar></app-sidebar>
+<div class="app-shell">
+  <aside
+    class="app-shell__sidebar"
+    [class.app-shell__sidebar--open]="layoutService.isMobile() && layoutService.sidebarOpen()">
+    <app-sidebar></app-sidebar>
+  </aside>
 
-  <div class="main-layout">
+  @if (layoutService.isMobile() && layoutService.sidebarOpen()) {
+    <button
+      type="button"
+      class="app-shell__backdrop"
+      [attr.aria-label]="'Close' | appLocalization"
+      (click)="layoutService.closeSidebar()">
+    </button>
+  }
+
+  <div class="app-shell__main main-layout">
     <app-navbar></app-navbar>
 
     <div class="page-container">

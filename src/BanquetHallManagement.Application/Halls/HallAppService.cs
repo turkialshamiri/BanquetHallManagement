@@ -127,21 +127,21 @@ namespace BanquetHallManagement.Halls
                 .ToList();
         }
 
-        private static void ValidateInput(CreateUpdateHallDto input)
+        private void ValidateInput(CreateUpdateHallDto input)
         {
             if (string.IsNullOrWhiteSpace(input.Name))
             {
-                throw new UserFriendlyException("اسم القاعة مطلوب");
+                throw new UserFriendlyException(L["Validation:HallNameRequired"]);
             }
 
             if (input.Capacity <= 0)
             {
-                throw new UserFriendlyException("السعة يجب أن تكون أكبر من صفر");
+                throw new UserFriendlyException(L["Validation:CapacityMustBePositive"]);
             }
 
             if (input.PricePerHour <= 0)
             {
-                throw new UserFriendlyException("السعر يجب أن يكون أكبر من صفر");
+                throw new UserFriendlyException(L["Validation:PriceMustBePositive"]);
             }
         }
 

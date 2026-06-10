@@ -9,8 +9,14 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
 
-import { LayoutService } from '../services/layout.service';
 import { AuthService, ConfigStateService } from '@abp/ng.core';
+import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
+import { LayoutService } from '../services/layout.service';
+import {
+  AppLanguage,
+  LanguageDirectionService,
+  SUPPORTED_LANGUAGES,
+} from 'src/app/core/services/language-direction.service';
 
 @Component({
   selector: 'app-navbar',
@@ -25,6 +31,7 @@ import { AuthService, ConfigStateService } from '@abp/ng.core';
     MatMenuModule,
     MatBadgeModule,
     MatDividerModule,
+    AppLocalizationPipe,
   ],
 })
 export class Navbar {
@@ -32,8 +39,29 @@ export class Navbar {
   private configState = inject(ConfigStateService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private languageDirection = inject(LanguageDirectionService);
 
   currentUser$ = this.configState.getOne$('currentUser');
+  readonly languages: AppLanguage[] = SUPPORTED_LANGUAGES;
+
+  get currentLanguage(): string {
+    return this.languageDirection.getCurrentLanguage();
+  }
+
+  get currentLanguageLabelKey(): string {
+    return (
+      this.languages.find((lang) => lang.cultureName === this.currentLanguage)
+        ?.displayNameKey ?? 'Language'
+    );
+  }
+
+  isCurrentLanguage(cultureName: string): boolean {
+    return this.currentLanguage === cultureName;
+  }
+
+  switchLanguage(cultureName: string): void {
+    this.languageDirection.switchLanguage(cultureName);
+  }
 
   logout(): void {
     this.authService.logout().subscribe({

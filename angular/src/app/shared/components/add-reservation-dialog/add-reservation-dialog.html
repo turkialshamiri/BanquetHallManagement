@@ -1,445 +1,225 @@
 <div class="dialog-shell">
 
-
-
   <div mat-dialog-title class="dialog-header">
 
     <h2>
-
-      {{ isEditMode ? 'تعديل الحجز' : 'إضافة حجز جديد' }}
-
+      {{ isEditMode
+          ? ('Reservations:Dialog:EditTitle' | appLocalization)
+          : ('Reservations:Dialog:AddTitle' | appLocalization) }}
     </h2>
 
   </div>
 
-
-
   @if (apiError) {
-
-    <div class="api-error" role="alert">
-
-      {{ apiError }}
-
-    </div>
-
+    <div class="api-error" role="alert">{{ apiError }}</div>
   }
-
-
 
   <mat-dialog-content class="dialog-content">
 
-
-
     @if (isLoading) {
-
       <div class="loading-state">
-
-        جاري تحميل البيانات...
-
+        {{ 'Loading' | appLocalization }}
       </div>
-
     } @else {
 
-
-
       <div class="grid">
 
-
-
         <div class="form-group">
-
-          <label>العميل <span class="required">*</span></label>
-
+          <label>{{ 'Reservations:Field:Customer' | appLocalization }} <span class="required">*</span></label>
           <select
-
             [(ngModel)]="form.customerId"
-
             (ngModelChange)="onFormFieldChange('customerId')"
-
             [class.invalid]="errors.customerId">
-
-            <option value="">— اختر العميل —</option>
-
+            <option value="">— {{ 'Reservations:Select:Customer' | appLocalization }} —</option>
             @for (customer of customers; track customer.id) {
-
               <option [value]="customer.id">
-
                 {{ customer.name }} ({{ customer.phone }})
-
               </option>
-
             }
-
           </select>
-
           @if (errors.customerId) {
-
             <span class="error-message">{{ errors.customerId }}</span>
-
           }
-
         </div>
 
-
-
         <div class="form-group">
-
-          <label>القاعة <span class="required">*</span></label>
-
+          <label>{{ 'Reservations:Field:Hall' | appLocalization }} <span class="required">*</span></label>
           <select
-
             [(ngModel)]="form.hallId"
-
             (ngModelChange)="onFormFieldChange('hallId')"
-
             [class.invalid]="errors.hallId">
-
-            <option value="">— اختر القاعة —</option>
-
+            <option value="">— {{ 'Reservations:Select:Hall' | appLocalization }} —</option>
             @for (hall of halls; track hall.id) {
-
               <option [value]="hall.id">
-
-                {{ hall.name }} ({{ hall.capacity }} ضيف)
-
+                {{ hall.name }} ({{ hall.capacity }} {{ 'Reservations:GuestsSuffix' | appLocalization }})
               </option>
-
             }
-
           </select>
-
           @if (errors.hallId) {
-
             <span class="error-message">{{ errors.hallId }}</span>
-
           }
-
         </div>
-
-
 
       </div>
 
-
-
       <div class="grid">
 
-
-
         <div class="form-group">
-
-          <label>تاريخ المناسبة <span class="required">*</span></label>
-
+          <label>{{ 'Reservations:Field:EventDate' | appLocalization }} <span class="required">*</span></label>
           <input
-
             type="date"
-
             [(ngModel)]="form.eventDate"
-
             (ngModelChange)="onFormFieldChange('eventDate')"
-
             [class.invalid]="errors.eventDate">
-
           @if (errors.eventDate) {
-
             <span class="error-message">{{ errors.eventDate }}</span>
-
           }
-
         </div>
-
-
 
         <div class="form-group">
-
-          <label>عدد الضيوف <span class="required">*</span></label>
-
+          <label>{{ 'Reservations:Field:GuestsCount' | appLocalization }} <span class="required">*</span></label>
           <input
-
             type="number"
-
             min="1"
-
             [(ngModel)]="form.guestsCount"
-
             (ngModelChange)="onFormFieldChange('guestsCount')"
-
             [class.invalid]="errors.guestsCount">
-
           @if (errors.guestsCount) {
-
             <span class="error-message">{{ errors.guestsCount }}</span>
-
           }
-
         </div>
 
-
-
       </div>
-
-
 
       <div class="grid">
 
-
-
         <div class="form-group">
-
-          <label>وقت البداية <span class="required">*</span></label>
-
+          <label>{{ 'Reservations:Field:StartTime' | appLocalization }} <span class="required">*</span></label>
           <input
-
             type="time"
-
             [(ngModel)]="form.startTime"
-
             (ngModelChange)="onFormFieldChange('startTime')"
-
             [class.invalid]="errors.startTime">
-
           @if (errors.startTime) {
-
             <span class="error-message">{{ errors.startTime }}</span>
-
           }
-
         </div>
-
-
 
         <div class="form-group">
-
-          <label>وقت النهاية <span class="required">*</span></label>
-
+          <label>{{ 'Reservations:Field:EndTime' | appLocalization }} <span class="required">*</span></label>
           <input
-
             type="time"
-
             [(ngModel)]="form.endTime"
-
             (ngModelChange)="onFormFieldChange('endTime')"
-
             [class.invalid]="errors.endTime">
-
           @if (errors.endTime) {
-
             <span class="error-message">{{ errors.endTime }}</span>
-
           }
-
         </div>
-
-
 
       </div>
-
-
 
       @if (canSelectServices) {
-
         <div class="form-group">
-
-          <label>الخدمات الإضافية</label>
-
-
+          <label>{{ 'Reservations:Field:Services' | appLocalization }}</label>
 
           @if (services.length > 0) {
-
             <div class="services-list">
-
               @for (service of services; track service.id) {
-
                 <label class="service-option">
-
                   <input
-
                     type="checkbox"
-
                     [checked]="isServiceSelected(service.id)"
-
                     (change)="toggleService(service.id)">
-
-                  <span>
-
-                    {{ service.name }}
-
-                    ({{ service.price | number }})
-
-                  </span>
-
+                  <span>{{ service.name }} ({{ service.price | number }})</span>
                 </label>
-
               }
-
             </div>
-
           } @else {
-
-            <span class="hint-text">لا توجد خدمات متاحة حالياً</span>
-
+            <span class="hint-text">{{ 'Reservations:NoServices' | appLocalization }}</span>
           }
-
         </div>
-
       }
 
-
-
       <div class="reservation-summary-card">
-
-        <h3>ملخص الحجز</h3>
-
-
+        <h3>{{ 'Reservations:Summary:Title' | appLocalization }}</h3>
 
         <div class="summary-row">
-
-          <span>القاعة:</span>
-
+          <span>{{ 'Reservations:Summary:Hall' | appLocalization }}:</span>
           <strong>{{ priceBreakdown.hallName }}</strong>
-
         </div>
 
-
-
         <div class="summary-row">
-
-          <span>سعر الساعة:</span>
-
-          <strong>{{ priceBreakdown.pricePerHour | number:'1.0-0' }} ريال</strong>
-
+          <span>{{ 'Reservations:Summary:PricePerHour' | appLocalization }}:</span>
+          <strong>{{ priceBreakdown.pricePerHour | number:'1.0-0' }} {{ 'Currency:YER' | appLocalization }}</strong>
         </div>
 
-
-
         <div class="summary-row">
-
-          <span>عدد الساعات:</span>
-
+          <span>{{ 'Reservations:Summary:Hours' | appLocalization }}:</span>
           <strong>{{ priceBreakdown.hours | number:'1.0-2' }}</strong>
-
         </div>
-
-
 
         <div class="summary-row">
-
-          <span>تكلفة القاعة:</span>
-
-          <strong>{{ priceBreakdown.hallCost | number:'1.0-0' }} ريال</strong>
-
+          <span>{{ 'Reservations:Summary:HallCost' | appLocalization }}:</span>
+          <strong>{{ priceBreakdown.hallCost | number:'1.0-0' }} {{ 'Currency:YER' | appLocalization }}</strong>
         </div>
-
-
 
         @if (canSelectServices) {
-
           <div class="summary-services">
-
-            <span class="summary-label">الخدمات:</span>
-
-
+            <span class="summary-label">{{ 'Reservations:Summary:Services' | appLocalization }}:</span>
 
             @if (priceBreakdown.selectedServices.length > 0) {
-
               @for (service of priceBreakdown.selectedServices; track service.name) {
-
                 <div class="summary-service-item">
-
                   <span>{{ service.name }}</span>
-
-                  <strong>{{ service.price | number:'1.0-0' }} ريال</strong>
-
+                  <strong>{{ service.price | number:'1.0-0' }} {{ 'Currency:YER' | appLocalization }}</strong>
                 </div>
-
               }
 
-
-
               <div class="summary-row">
-
-                <span>إجمالي الخدمات:</span>
-
-                <strong>{{ priceBreakdown.servicesCost | number:'1.0-0' }} ريال</strong>
-
+                <span>{{ 'Reservations:Summary:ServicesTotal' | appLocalization }}:</span>
+                <strong>{{ priceBreakdown.servicesCost | number:'1.0-0' }} {{ 'Currency:YER' | appLocalization }}</strong>
               </div>
-
             } @else {
-
-              <span class="hint-text">لم يتم اختيار خدمات إضافية</span>
-
+              <span class="hint-text">{{ 'Reservations:Summary:NoServicesSelected' | appLocalization }}</span>
             }
-
           </div>
-
         }
 
-
-
         <div class="summary-total">
-
-          <span>الإجمالي النهائي:</span>
-
+          <span>{{ 'Reservations:Summary:GrandTotal' | appLocalization }}:</span>
           @if (isEditMode && totalPrice != null) {
-
-            <strong>{{ totalPrice | number:'1.0-0' }} ريال</strong>
-
+            <strong>{{ totalPrice | number:'1.0-0' }} {{ 'Currency:YER' | appLocalization }}</strong>
           } @else if (priceBreakdown.isValid && form.hallId) {
-
-            <strong>{{ priceBreakdown.totalCost | number:'1.0-0' }} ريال</strong>
-
+            <strong>{{ priceBreakdown.totalCost | number:'1.0-0' }} {{ 'Currency:YER' | appLocalization }}</strong>
           } @else {
-
-            <span class="hint-text">حدد القاعة والأوقات لحساب الإجمالي</span>
-
+            <span class="hint-text">{{ 'Reservations:Summary:SetTimesHint' | appLocalization }}</span>
           }
-
         </div>
-
       </div>
-
-
 
     }
 
-
-
   </mat-dialog-content>
-
-
 
   <mat-dialog-actions align="end" class="dialog-actions">
 
     <button class="cancel-btn" type="button" mat-button (click)="close()">
-
-      إلغاء
-
+      {{ 'Cancel' | appLocalization }}
     </button>
 
-
-
     <button
-
       class="save-btn"
-
       type="button"
-
       mat-flat-button
-
       color="primary"
-
       [disabled]="isLoading"
-
       (click)="save()">
-
-      {{ isEditMode ? 'حفظ التعديلات' : 'إضافة الحجز' }}
-
+      {{ isEditMode
+          ? ('Dialog:SaveChanges' | appLocalization)
+          : ('Reservations:Dialog:AddSubmit' | appLocalization) }}
     </button>
 
   </mat-dialog-actions>
 
-
-
 </div>
-
-

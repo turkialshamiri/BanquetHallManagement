@@ -1,82 +1,65 @@
-<mat-sidenav-container
-  class="sidebar-container"
-  [class.is-mobile]="layoutService.isMobile()"
-  [class.is-open]="layoutService.sidebarOpen()">
+<div class="logo">
 
-  <mat-sidenav
-    [mode]="sidenavMode"
-    [opened]="sidenavOpened"
-    (closedStart)="layoutService.closeSidebar()"
-    class="sidebar">
+  <div class="logo-circle">
+    🏛️
+  </div>
 
-    <div class="logo">
+  <h2>{{ 'AppName' | appLocalization }}</h2>
 
-      <div class="logo-circle">
-        🏛️
-      </div>
+</div>
 
-      <h2>نظام إدارة القاعات</h2>
+<mat-accordion multi>
 
-      <span>Hall Booking System</span>
+  <mat-expansion-panel
+    *ngFor="let item of menuItems"
+    class="menu-panel"
+    [expanded]="isSectionActive(item)">
 
-    </div>
+    <mat-expansion-panel-header>
 
-    <mat-accordion multi>
+      <div class="menu-header">
 
-      <mat-expansion-panel
-        *ngFor="let item of menuItems"
-        class="menu-panel"
-        [expanded]="isSectionActive(item)">
+        <div class="menu-icon-wrapper">
 
-        <mat-expansion-panel-header>
-
-          <div class="menu-header">
-
-            <div class="menu-icon-wrapper">
-
-              <mat-icon>
-                {{ item.icon }}
-              </mat-icon>
-
-            </div>
-
-            <span class="menu-title">
-              {{ item.title }}
-            </span>
-
-          </div>
-
-        </mat-expansion-panel-header>
-
-        <div class="submenu">
-
-          <a
-            *ngFor="let child of item.children"
-            href="#"
-            class="submenu-item"
-            [class.active-link]="isRouteActive(child.route)"
-            (click)="navigateTo(child.route); $event.preventDefault()">
-
-            <div class="submenu-icon">
-
-              <mat-icon>
-                {{ child.icon }}
-              </mat-icon>
-
-            </div>
-
-            <span class="submenu-title">
-              {{ child.title }}
-            </span>
-
-          </a>
+          <mat-icon>
+            {{ item.icon }}
+          </mat-icon>
 
         </div>
 
-      </mat-expansion-panel>
+        <span class="menu-title">
+          {{ item.titleKey | appLocalization }}
+        </span>
 
-    </mat-accordion>
+      </div>
 
-  </mat-sidenav>
+    </mat-expansion-panel-header>
 
-</mat-sidenav-container>
+    <div class="submenu">
+
+      <a
+        *ngFor="let child of item.children"
+        href="#"
+        class="submenu-item"
+        [class.active-link]="isRouteActive(child.route)"
+        (click)="navigateTo(child.route); $event.preventDefault()">
+
+        <div class="submenu-icon">
+
+          <mat-icon>
+            {{ child.icon }}
+          </mat-icon>
+
+        </div>
+
+        <span class="submenu-title">
+          {{ child.titleKey | appLocalization }}
+        </span>
+
+      </a>
+
+    </div>
+
+  </mat-expansion-panel>
+
+</mat-accordion>

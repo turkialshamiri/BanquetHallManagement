@@ -1,43 +1,11 @@
-/* ===========================
-   Sidebar Container
-=========================== */
-
-.sidebar-container {
-  height: 100vh;
-  height: 100dvh;
-  flex-shrink: 0;
-}
-
-/* ===========================
-   Sidebar
-=========================== */
-
-.sidebar {
-
-  width: var(--sidebar-width);
-
-  background:
-    linear-gradient(
-      180deg,
-      var(--sidebar-bg-start),
-      var(--sidebar-bg-end)
-    );
-
-  color: var(--sidebar-text);
-
-  border-left: 1px solid var(--sidebar-border);
-
-  direction: rtl;
-
-  border-radius: 0 !important;
-
-  overflow-y: auto;
+:host {
+  display: block;
+  height: 100%;
 }
 
 /* ===========================
    Logo
 =========================== */
-
 .logo {
 
   text-align: center;
@@ -242,8 +210,6 @@
   background: rgba(255,255,255,.05);
 
   color: white;
-
-  transform: translateX(-4px);
 }
 
 .submenu-item:hover .submenu-icon {
@@ -260,14 +226,11 @@
 
 .active-link {
 
-  background:
-    linear-gradient(
-      90deg,
-      rgba(37,99,235,.25),
-      rgba(59,130,246,.05)
-    );
-
-  border-right: 4px solid var(--primary-color);
+  background: linear-gradient(
+    to inline-end,
+    rgba(37, 99, 235, 0.25),
+    rgba(59, 130, 246, 0.05)
+  );
 
   color: white !important;
 }
@@ -283,43 +246,10 @@
 }
 
 /* ===========================
-   Scrollbar
-=========================== */
-
-.sidebar::-webkit-scrollbar {
-
-  width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-
-  background: var(--sidebar-border);
-
-  border-radius: 10px;
-}
-
-/* ===========================
    Responsive
 =========================== */
 
 @media (max-width: 767px) {
-  .sidebar-container {
-    width: 0;
-    min-width: 0;
-    overflow: visible;
-  }
-
-  .sidebar-container.is-open {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    z-index: 1100;
-  }
-
-  .sidebar {
-    width: min(85vw, var(--sidebar-width)) !important;
-  }
-
   .logo {
     padding: 20px 16px;
   }
@@ -344,11 +274,5 @@
 
   .submenu-item {
     padding: 10px 12px;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1024px) {
-  .sidebar {
-    width: 220px !important;
   }
 }

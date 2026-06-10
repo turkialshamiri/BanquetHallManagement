@@ -1,122 +1,104 @@
 @if (isLoading) {
     <div class="stats-state loading">
-        جاري تحميل الإحصائيات...
+        {{ 'Dashboard:Loading' | appLocalization }}
     </div>
 } @else if (loadError) {
     <div class="stats-state error">
         <p>{{ loadError }}</p>
         <button type="button" (click)="loadStats()">
-            إعادة المحاولة
+            {{ 'Retry' | appLocalization }}
         </button>
     </div>
 } @else if (stats) {
 
     @if (isEmpty) {
         <div class="stats-state empty">
-            لا توجد بيانات بعد. ابدأ بإضافة قاعات وعملاء وحجوزات.
+            {{ 'Dashboard:Empty' | appLocalization }}
         </div>
     }
 
     <div class="stats-section">
 
-        <h3 class="section-title">مؤشرات الأداء الرئيسية</h3>
+        <h3 class="section-title">{{ 'Dashboard:KpiTitle' | appLocalization }}</h3>
 
         <div class="stats-grid primary" [class.without-revenue]="!canViewRevenue">
 
             <div class="stat-card halls">
-                <div class="card-icon">
-                    <span>🏛️</span>
-                </div>
+                <div class="card-icon"><span>🏛️</span></div>
                 <div class="card-content">
-                    <span class="card-title">إجمالي القاعات</span>
+                    <span class="card-title">{{ 'Dashboard:TotalHalls' | appLocalization }}</span>
                     <h2>{{ stats.totalHalls }}</h2>
                 </div>
             </div>
 
             <div class="stat-card customers">
-                <div class="card-icon">
-                    <span>👥</span>
-                </div>
+                <div class="card-icon"><span>👥</span></div>
                 <div class="card-content">
-                    <span class="card-title">إجمالي العملاء</span>
+                    <span class="card-title">{{ 'Dashboard:TotalCustomers' | appLocalization }}</span>
                     <h2>{{ stats.totalCustomers }}</h2>
                 </div>
             </div>
 
             <div class="stat-card services">
-                <div class="card-icon">
-                    <span>🛎️</span>
-                </div>
+                <div class="card-icon"><span>🛎️</span></div>
                 <div class="card-content">
-                    <span class="card-title">إجمالي الخدمات</span>
+                    <span class="card-title">{{ 'Dashboard:TotalServices' | appLocalization }}</span>
                     <h2>{{ stats.totalServices }}</h2>
                 </div>
             </div>
 
             <div class="stat-card bookings">
-                <div class="card-icon">
-                    <span>📅</span>
-                </div>
+                <div class="card-icon"><span>📅</span></div>
                 <div class="card-content">
-                    <span class="card-title">إجمالي الحجوزات</span>
+                    <span class="card-title">{{ 'Dashboard:TotalReservations' | appLocalization }}</span>
                     <h2>{{ stats.totalReservations }}</h2>
                 </div>
             </div>
 
             @if (canViewRevenue) {
                 <div class="stat-card revenue">
-                    <div class="card-icon">
-                        <span>💰</span>
-                    </div>
+                    <div class="card-icon"><span>💰</span></div>
                     <div class="card-content">
-                        <span class="card-title">إجمالي الإيرادات</span>
-                        <h2>{{ stats.totalRevenue | number:'1.0-0' }} <small>ر.ي</small></h2>
+                        <span class="card-title">{{ 'Dashboard:TotalRevenue' | appLocalization }}</span>
+                        <h2>{{ stats.totalRevenue | number:'1.0-0' }} <small>{{ 'Currency:YER' | appLocalization }}</small></h2>
                     </div>
                 </div>
             }
 
         </div>
 
-        <h3 class="section-title">ملخص حالات الحجز</h3>
+        <h3 class="section-title">{{ 'Dashboard:StatusTitle' | appLocalization }}</h3>
 
         <div class="stats-grid status">
 
             <div class="stat-card pending">
-                <div class="card-icon">
-                    <span>⏳</span>
-                </div>
+                <div class="card-icon"><span>⏳</span></div>
                 <div class="card-content">
-                    <span class="card-title">قيد الانتظار</span>
+                    <span class="card-title">{{ 'Dashboard:Pending' | appLocalization }}</span>
                     <h2>{{ stats.pendingReservations }}</h2>
                 </div>
             </div>
 
             <div class="stat-card confirmed">
-                <div class="card-icon">
-                    <span>✔️</span>
-                </div>
+                <div class="card-icon"><span>✔️</span></div>
                 <div class="card-content">
-                    <span class="card-title">مؤكدة</span>
+                    <span class="card-title">{{ 'Dashboard:Confirmed' | appLocalization }}</span>
                     <h2>{{ stats.confirmedReservations }}</h2>
                 </div>
             </div>
 
             <div class="stat-card cancelled">
-                <div class="card-icon">
-                    <span>❌</span>
-                </div>
+                <div class="card-icon"><span>❌</span></div>
                 <div class="card-content">
-                    <span class="card-title">ملغاة</span>
+                    <span class="card-title">{{ 'Dashboard:Cancelled' | appLocalization }}</span>
                     <h2>{{ stats.cancelledReservations }}</h2>
                 </div>
             </div>
 
             <div class="stat-card completed">
-                <div class="card-icon">
-                    <span>✅</span>
-                </div>
+                <div class="card-icon"><span>✅</span></div>
                 <div class="card-content">
-                    <span class="card-title">مكتملة</span>
+                    <span class="card-title">{{ 'Dashboard:Completed' | appLocalization }}</span>
                     <h2>{{ stats.completedReservations }}</h2>
                 </div>
             </div>

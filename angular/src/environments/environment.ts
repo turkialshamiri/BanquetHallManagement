@@ -18,6 +18,9 @@ export const environment = {
     baseUrl,
     name: 'BanquetHallManagement',
   },
+  localization: {
+    defaultResourceName: 'BanquetHallManagement',
+  },
   oAuthConfig,
   apis: {
     default: {
