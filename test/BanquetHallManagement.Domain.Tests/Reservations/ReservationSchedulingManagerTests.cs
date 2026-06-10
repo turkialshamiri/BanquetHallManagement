@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Shouldly;
 using Volo.Abp;
+using Volo.Abp.DependencyInjection;
 using Volo.Abp.Linq;
 using Volo.Abp.Timing;
 using Xunit;
@@ -122,9 +123,12 @@ public class ReservationSchedulingManagerTests
 
     private static ReservationSchedulingManager CreateManager(IReservationRepository repository)
     {
+        var clock = Substitute.For<IClock>();
+        clock.Now.Returns(AsOf);
+
         var services = new ServiceCollection();
         services.AddSingleton<IAsyncQueryableExecuter, AsyncQueryableExecuter>();
-        services.AddSingleton<IClock>(new Clock());
+        services.AddSingleton(clock);
 
         var manager = new ReservationSchedulingManager(repository)
         {

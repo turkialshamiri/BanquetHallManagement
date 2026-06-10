@@ -3,8 +3,12 @@ using BanquetHallManagement.Configurations.HallConfigurations;
 using BanquetHallManagement.Configurations.ReservationConfigurations;
 using BanquetHallManagement.Configurations.ReservationServiceConfigurations;
 using BanquetHallManagement.Configurations.ServiceConfigurations;
+using BanquetHallManagement.Configurations.Finance;
 using BanquetHallManagement.Customers;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
+using BanquetHallManagement.Finance.Accounts;
+using BanquetHallManagement.Finance.JournalEntries;
+using BanquetHallManagement.Finance.Sequences;
 using BanquetHallManagement.Reservations;
 using BanquetHallManagement.ReservationServices;
 using BanquetHallManagement.Services;
@@ -41,6 +45,10 @@ public class BanquetHallManagementDbContext :
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Reservation> Reservations { get; set; }
     public DbSet<ReservationService> ReservationServices { get; set; }
+    public DbSet<Account> FinanceAccounts { get; set; }
+    public DbSet<JournalEntry> JournalEntries { get; set; }
+    public DbSet<JournalEntryLine> JournalEntryLines { get; set; }
+    public DbSet<FinanceNumberSequence> FinanceNumberSequences { get; set; }
     #region Entities from the modules
 
     /* Notice: We only implemented IIdentityProDbContext and ISaasDbContext
@@ -107,5 +115,9 @@ public class BanquetHallManagementDbContext :
         builder.ApplyConfiguration(new ReservationServiceConfiguration());
         builder.ApplyConfiguration(new ServiceConfiguration());
         builder.ApplyConfiguration(new CustomerConfiguration());
+        builder.ApplyConfiguration(new AccountConfiguration());
+        builder.ApplyConfiguration(new JournalEntryConfiguration());
+        builder.ApplyConfiguration(new JournalEntryLineConfiguration());
+        builder.ApplyConfiguration(new FinanceNumberSequenceConfiguration());
     }
 }

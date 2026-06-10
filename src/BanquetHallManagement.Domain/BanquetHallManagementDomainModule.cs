@@ -1,3 +1,4 @@
+using BanquetHallManagement.Finance.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using BanquetHallManagement.Localization;
@@ -45,6 +46,10 @@ public class BanquetHallManagementDomainModule : AbpModule
             options.IsEnabled = MultiTenancyConsts.IsEnabled;
         });
 
+
+        context.Services.AddTransient<IEntryNumberGenerator, EntryNumberGenerator>();
+        context.Services.AddTransient<IReceiptNumberGenerator, ReceiptNumberGenerator>();
+        context.Services.AddTransient<IInvoiceNumberGenerator, InvoiceNumberGenerator>();
 
 #if DEBUG
         context.Services.Replace(ServiceDescriptor.Singleton<IEmailSender, NullEmailSender>());

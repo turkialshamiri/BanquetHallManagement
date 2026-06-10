@@ -36,6 +36,17 @@ public class BanquetHallManagementPermissionDefinitionProvider : PermissionDefin
         reservations.AddChild(BanquetHallManagementPermissions.Reservations.Confirm, L("Permission:Reservations.Confirm"));
         reservations.AddChild(BanquetHallManagementPermissions.Reservations.Cancel, L("Permission:Reservations.Cancel"));
         reservations.AddChild(BanquetHallManagementPermissions.Reservations.Complete, L("Permission:Reservations.Complete"));
+        reservations.AddChild(BanquetHallManagementPermissions.Reservations.RecordPayment, L("Permission:Reservations.RecordPayment"));
+        reservations.AddChild(BanquetHallManagementPermissions.Reservations.ConfirmHallEntry, L("Permission:Reservations.ConfirmHallEntry"));
+
+        var finance = group.AddPermission(BanquetHallManagementPermissions.Finance.Default, L("Permission:Finance"));
+        finance.AddChild(BanquetHallManagementPermissions.Finance.ViewAccounts, L("Permission:Finance.ViewAccounts"));
+        finance.AddChild(BanquetHallManagementPermissions.Finance.ViewJournalEntries, L("Permission:Finance.ViewJournalEntries"));
+        finance.AddChild(BanquetHallManagementPermissions.Finance.ViewReports, L("Permission:Finance.ViewReports"));
+        finance.AddChild(BanquetHallManagementPermissions.Finance.PaymentsCreate, L("Permission:Finance.Payments.Create"));
+        finance.AddChild(BanquetHallManagementPermissions.Finance.PaymentsView, L("Permission:Finance.Payments.View"));
+        finance.AddChild(BanquetHallManagementPermissions.Finance.InvoicesView, L("Permission:Finance.Invoices.View"));
+        finance.AddChild(BanquetHallManagementPermissions.Finance.InvoicesPrint, L("Permission:Finance.Invoices.Print"));
 
         group.AddPermission(BanquetHallManagementPermissions.Reports.Default, L("Permission:Reports"));
 

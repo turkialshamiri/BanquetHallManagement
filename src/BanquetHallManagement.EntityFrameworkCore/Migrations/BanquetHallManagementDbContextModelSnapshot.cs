@@ -330,6 +330,259 @@ namespace BanquetHallManagement.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BanquetHallManagement.Finance.Accounts.Account", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasComment("رمز الحساب مثل 1100.");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)")
+                        .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasComment("هل الحساب نشط؟");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasComment("اسم الحساب.");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("نوع الحساب: أصل أو التزام أو إيراد.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("FinanceAccounts", null, t =>
+                        {
+                            t.HasComment("جدول شجرة الحسابات المالية.");
+                        });
+                });
+
+            modelBuilder.Entity("BanquetHallManagement.Finance.JournalEntries.JournalEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)")
+                        .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("وصف القيد.");
+
+                    b.Property<DateTime>("EntryDate")
+                        .HasColumnType("datetime2")
+                        .HasComment("تاريخ القيد.");
+
+                    b.Property<string>("EntryNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("رقم القيد مثل JE-2026-00001.");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ExtraProperties");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<bool>("IsPosted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasComment("هل تم ترحيل القيد؟");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid?>("PaymentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasComment("معرف الدفعة المرتبطة بالقيد إن وجد.");
+
+                    b.Property<DateTime?>("PostedTime")
+                        .HasColumnType("datetime2")
+                        .HasComment("تاريخ ووقت ترحيل القيد.");
+
+                    b.Property<Guid?>("ReservationId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasComment("معرف الحجز المرتبط بالقيد إن وجد.");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("مصدر القيد مثل إيراد عربون أو ترحيل إيراد.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntryDate");
+
+                    b.HasIndex("EntryNumber")
+                        .IsUnique();
+
+                    b.HasIndex("PaymentId");
+
+                    b.HasIndex("ReservationId");
+
+                    b.ToTable("JournalEntries", null, t =>
+                        {
+                            t.HasComment("جدول القيود المحاسبية.");
+                        });
+                });
+
+            modelBuilder.Entity("BanquetHallManagement.Finance.JournalEntries.JournalEntryLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasComment("معرف الحساب المرتبط بالبند.");
+
+                    b.Property<decimal>("Credit")
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("مبلغ الدائن.");
+
+                    b.Property<decimal>("Debit")
+                        .HasColumnType("decimal(18,2)")
+                        .HasComment("مبلغ المدين.");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasComment("وصف البند.");
+
+                    b.Property<Guid>("JournalEntryId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasComment("معرف القيد المحاسبي.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("JournalEntryId");
+
+                    b.ToTable("JournalEntryLines", null, t =>
+                        {
+                            t.HasComment("جدول بنود القيود المحاسبية.");
+                        });
+                });
+
+            modelBuilder.Entity("BanquetHallManagement.Finance.Sequences.FinanceNumberSequence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("LastNumber")
+                        .HasColumnType("int")
+                        .HasComment("آخر رقم تم إصداره.");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasComment("بادئة الرقم مثل JE أو RC أو INV.");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int")
+                        .HasComment("السنة المرتبطة بالتسلسل.");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Prefix", "Year")
+                        .IsUnique();
+
+                    b.ToTable("FinanceNumberSequences", null, t =>
+                        {
+                            t.HasComment("جدول تسلسل أرقام المستندات المالية.");
+                        });
+                });
+
             modelBuilder.Entity("BanquetHallManagement.Services.Service", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2389,6 +2642,21 @@ namespace BanquetHallManagement.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("BanquetHallManagement.Finance.JournalEntries.JournalEntryLine", b =>
+                {
+                    b.HasOne("BanquetHallManagement.Finance.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BanquetHallManagement.Finance.JournalEntries.JournalEntry", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("JournalEntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLogAction", b =>
                 {
                     b.HasOne("Volo.Abp.AuditLogging.AuditLog", null)
@@ -2594,6 +2862,11 @@ namespace BanquetHallManagement.Migrations
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BanquetHallManagement.Finance.JournalEntries.JournalEntry", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("BanquetHallManagement.Reservations.Reservation", b =>

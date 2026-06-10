@@ -68,6 +68,12 @@ public static class BanquetHallManagementDomainErrorCodes
     public const string JournalEntryUnbalanced =
         "BanquetHallManagement:JournalEntry:Unbalanced";
 
+    public const string JournalEntryHasNoLines =
+        "BanquetHallManagement:JournalEntry:HasNoLines";
+
+    public const string JournalEntryLineAmountInvalid =
+        "BanquetHallManagement:JournalEntryLine:AmountInvalid";
+
     public const string JournalEntryAlreadyPosted =
         "BanquetHallManagement:JournalEntry:AlreadyPosted";
 
