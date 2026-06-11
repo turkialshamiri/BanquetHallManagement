@@ -1,0 +1,53 @@
+<div class="table-card">
+  <div class="table-header">
+    <div>
+      <h2 class="table-title">{{ 'Finance:Invoices:Title' | appLocalization }}</h2>
+      <span>{{ 'Finance:Invoices:Subtitle' | appLocalization }}</span>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'Finance:Invoices:Column:Number' | appLocalization }}</th>
+          <th>{{ 'Finance:Invoices:Column:Type' | appLocalization }}</th>
+          <th>{{ 'Finance:Invoices:Column:Amount' | appLocalization }}</th>
+          <th>{{ 'Finance:Invoices:Column:IssuedAt' | appLocalization }}</th>
+          <th>{{ 'Actions' | appLocalization }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="5" class="empty-state">...</td>
+          </tr>
+        } @else if (invoices().length > 0) {
+          @for (invoice of invoices(); track invoice.id) {
+            <tr>
+              <td><strong>{{ invoice.invoiceNumber }}</strong></td>
+              <td>{{ invoiceTypeLabel(invoice.invoiceType) }}</td>
+              <td>{{ invoice.amount | number }}</td>
+              <td>{{ invoice.issuedAt | date:'yyyy/MM/dd HH:mm' }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="link-btn"
+                  (click)="viewInvoice(invoice.id)">
+                  <mat-icon>visibility</mat-icon>
+                  {{ 'Finance:Invoices:View' | appLocalization }}
+                </button>
+              </td>
+            </tr>
+          }
+        } @else {
+          <tr>
+            <td colspan="5" class="empty-state">
+              {{ 'Finance:Invoices:Empty' | appLocalization }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

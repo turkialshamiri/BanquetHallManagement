@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_APP_BASE } from '../constants/api.constants';
 import { DEFAULT_LIST_MAX_RESULT_COUNT } from '../constants/pagination.constants';
 import {
   CreateUpdateReservation,
@@ -14,7 +15,7 @@ import {
 export class ReservationService {
   private http = inject(HttpClient);
 
-  private apiUrl = 'https://localhost:44324/api/app/reservation';
+  private apiUrl = `${API_APP_BASE}/reservation`;
 
   getReservations(
     skipCount = 0,
@@ -61,6 +62,13 @@ export class ReservationService {
   completeReservation(id: string): Observable<Reservation> {
     return this.http.post<Reservation>(
       `${this.apiUrl}/${id}/complete`,
+      {}
+    );
+  }
+
+  confirmHallEntry(id: string): Observable<Reservation> {
+    return this.http.post<Reservation>(
+      `${this.apiUrl}/${id}/confirm-hall-entry`,
       {}
     );
   }

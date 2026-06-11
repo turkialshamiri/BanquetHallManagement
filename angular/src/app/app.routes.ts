@@ -117,6 +117,62 @@ export const APP_ROUTES: Routes = [
         data: { openAddDialog: true },
       },
       {
+        path: 'finance/invoices',
+        canActivate: [
+          permissionGuard('BanquetHallManagement.Finance.Invoices.View'),
+        ],
+        loadComponent: () =>
+          import('./features/finance/invoices/invoices').then((m) => m.Invoices),
+      },
+      {
+        path: 'finance/invoices/:id',
+        canActivate: [
+          permissionGuard('BanquetHallManagement.Finance.Invoices.View'),
+        ],
+        loadComponent: () =>
+          import('./features/finance/invoices/invoice-detail/invoice-detail').then(
+            (m) => m.InvoiceDetail
+          ),
+      },
+      {
+        path: 'finance/journal-entries',
+        canActivate: [
+          permissionGuard('BanquetHallManagement.Finance.ViewJournalEntries'),
+        ],
+        loadComponent: () =>
+          import('./features/finance/journal-entries/journal-entries').then(
+            (m) => m.JournalEntries
+          ),
+      },
+      {
+        path: 'finance/journal-entries/:id',
+        canActivate: [
+          permissionGuard('BanquetHallManagement.Finance.ViewJournalEntries'),
+        ],
+        loadComponent: () =>
+          import(
+            './features/finance/journal-entries/journal-entry-detail/journal-entry-detail'
+          ).then((m) => m.JournalEntryDetail),
+      },
+      {
+        path: 'finance/access-cards/:id',
+        canActivate: [
+          permissionGuard('BanquetHallManagement.Finance.HallAccessCards.View'),
+        ],
+        loadComponent: () =>
+          import('./features/finance/access-cards/access-card').then(
+            (m) => m.AccessCard
+          ),
+      },
+      {
+        path: 'finance/refunds',
+        canActivate: [
+          permissionGuard('BanquetHallManagement.Finance.Refunds.View'),
+        ],
+        loadComponent: () =>
+          import('./features/finance/refunds/refunds').then((m) => m.Refunds),
+      },
+      {
         path: 'reports',
         canActivate: [permissionGuard('BanquetHallManagement.Reports')],
         loadComponent: () =>

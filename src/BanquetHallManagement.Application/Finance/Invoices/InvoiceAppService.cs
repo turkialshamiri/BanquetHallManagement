@@ -36,6 +36,23 @@ public class InvoiceAppService : BanquetHallManagementAppService, IInvoiceAppSer
         _hallRepository = hallRepository;
     }
 
+    public async Task<PagedResultDto<InvoiceDto>> GetListAsync(
+        PagedAndSortedResultRequestDto input)
+    {
+        var query = await _invoiceRepository.GetQueryableAsync();
+        var totalCount = await AsyncExecuter.CountAsync(query);
+
+        var invoices = await AsyncExecuter.ToListAsync(
+            query
+                .OrderByDescending(invoice => invoice.IssuedAt)
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount));
+
+        return new PagedResultDto<InvoiceDto>(
+            totalCount,
+            invoices.Select(MapToDto).ToList());
+    }
+
     public async Task<InvoiceDto> GetAsync(Guid id)
     {
         var invoice = await _invoiceRepository.GetAsync(id);

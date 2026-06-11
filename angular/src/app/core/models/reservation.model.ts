@@ -7,6 +7,8 @@ export interface Reservation {
   endTime: string;
   guestsCount: number;
   totalPrice: number;
+  paidAmount?: number;
+  remainingAmount?: number;
   status: string;
   serviceIds?: string[] | null;
 }

@@ -33,6 +33,9 @@
                     <th>{{ 'Reservations:Column:EndTime' | appLocalization }}</th>
                     <th>{{ 'Reservations:Column:Guests' | appLocalization }}</th>
                     <th>{{ 'Reservations:Column:TotalPrice' | appLocalization }}</th>
+                    <th>{{ 'Reservations:Column:PaidAmount' | appLocalization }}</th>
+                    <th>{{ 'Reservations:Column:RemainingAmount' | appLocalization }}</th>
+                    <th>{{ 'Reservations:Column:PaymentPercentage' | appLocalization }}</th>
                     <th>{{ 'Reservations:Column:Status' | appLocalization }}</th>
                     <th>{{ 'Actions' | appLocalization }}</th>
 
@@ -42,9 +45,9 @@
 
             <tbody>
 
-                @if (reservations.length > 0) {
+                @if (reservations().length > 0) {
 
-                    @for (reservation of reservations; track reservation.id) {
+                    @for (reservation of reservations(); track reservation.id) {
 
                         <tr>
 
@@ -76,6 +79,32 @@
 
                             <td>{{ reservation.totalPrice | number }}</td>
 
+                            <td>{{ reservation.paidAmount ?? 0 | number }}</td>
+
+                            <td>{{ getRemainingAmount(reservation) | number }}</td>
+
+                            <td>
+                                <div class="payment-progress">
+                                    <span class="payment-percent">
+                                        {{
+                                            calculatePaymentPercentage(
+                                                reservation.paidAmount ?? 0,
+                                                reservation.totalPrice
+                                            )
+                                        }}%
+                                    </span>
+                                    <div class="progress-track">
+                                        <div
+                                            class="progress-fill"
+                                            [style.width.%]="calculatePaymentPercentage(
+                                                reservation.paidAmount ?? 0,
+                                                reservation.totalPrice
+                                            )">
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
                             <td>
 
                                 <span
@@ -92,21 +121,31 @@
 
                                 <div class="actions">
 
-                                    @if (canConfirm && canConfirmReservation(reservation.status)) {
+                                    @if (
+                                        canRecordPaymentAction &&
+                                        canRecordPayment(
+                                            reservation.status,
+                                            reservation.paidAmount ?? 0,
+                                            reservation.totalPrice
+                                        )
+                                    ) {
                                         <button
-                                            class="action-btn confirm-btn"
-                                            [title]="'Reservations:Action:Confirm' | appLocalization"
-                                            (click)="confirmReservation(reservation.id)">
-                                            <mat-icon>check_circle</mat-icon>
+                                            class="action-btn payment-btn"
+                                            [title]="'Reservations:Action:RecordPayment' | appLocalization"
+                                            (click)="openRecordPaymentDialog(reservation)">
+                                            <mat-icon>payments</mat-icon>
                                         </button>
                                     }
 
-                                    @if (canComplete && canCompleteReservation(reservation.status)) {
+                                    @if (
+                                        canConfirmHallEntryAction &&
+                                        canConfirmHallEntry(reservation.status)
+                                    ) {
                                         <button
-                                            class="action-btn complete-btn"
-                                            [title]="'Reservations:Action:Complete' | appLocalization"
-                                            (click)="completeReservation(reservation.id)">
-                                            <mat-icon>task_alt</mat-icon>
+                                            class="action-btn hall-entry-btn"
+                                            [title]="'Reservations:Action:ConfirmHallEntry' | appLocalization"
+                                            (click)="confirmHallEntry(reservation.id)">
+                                            <mat-icon>door_front</mat-icon>
                                         </button>
                                     }
 
@@ -148,7 +187,7 @@
                 } @else {
 
                     <tr>
-                        <td colspan="9" class="empty-state">
+                        <td colspan="12" class="empty-state">
                             {{ 'Reservations:Empty' | appLocalization }}
                         </td>
                     </tr>

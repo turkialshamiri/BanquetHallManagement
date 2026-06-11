@@ -3,6 +3,7 @@ import {
   Component,
   inject,
   OnInit,
+  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -20,23 +21,34 @@ import {
   toTimeInputValue,
 } from 'src/app/core/models/reservation.model';
 import { ReservationService } from 'src/app/core/services/reservation.service';
+import { PaymentService } from 'src/app/core/services/payment.service';
 import { CustomerService } from 'src/app/core/services/customer.service';
 import { HallService } from 'src/app/core/services/hall.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 import {
   canCancelReservation,
-  canCompleteReservation,
-  canConfirmReservation,
+  canConfirmHallEntry,
   canDeleteReservation,
   canEditReservation,
   getReservationStatusClass,
 } from 'src/app/core/utils/reservation-status.util';
+import {
+  calculatePaymentPercentage,
+  canRecordPayment,
+  getRemainingAmount,
+} from 'src/app/core/utils/payment.util';
 import { StatusLocalizationService } from 'src/app/core/services/status-localization.service';
 import {
   ADD_RESERVATION_DIALOG_CONFIG,
   AddReservationDialog,
   AddReservationDialogData,
 } from 'src/app/shared/components/add-reservation-dialog/add-reservation-dialog';
+import {
+  RECORD_PAYMENT_DIALOG_CONFIG,
+  RecordPaymentDialog,
+  RecordPaymentDialogData,
+  RecordPaymentDialogResult,
+} from 'src/app/shared/components/record-payment-dialog/record-payment-dialog';
 import { DialogService } from 'src/app/shared/services/dialog.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { PolicyService } from 'src/app/core/services/policy.service';
@@ -50,6 +62,7 @@ import { PolicyService } from 'src/app/core/services/policy.service';
 })
 export class ReservationsTableComponent implements OnInit {
   private reservationService = inject(ReservationService);
+  private paymentService = inject(PaymentService);
   private router = inject(Router);
   private customerService = inject(CustomerService);
   private hallService = inject(HallService);
@@ -61,24 +74,30 @@ export class ReservationsTableComponent implements OnInit {
   private l10n = inject(AppLocalizationService);
   readonly statusL10n = inject(StatusLocalizationService);
 
-  reservations: Reservation[] = [];
+  readonly reservations = signal<Reservation[]>([]);
   customersMap = new Map<string, Customer>();
   hallsMap = new Map<string, Hall>();
 
   getReservationStatusClass = getReservationStatusClass;
-  canConfirmReservation = canConfirmReservation;
   canCancelReservation = canCancelReservation;
-  canCompleteReservation = canCompleteReservation;
+  canConfirmHallEntry = canConfirmHallEntry;
   canEditReservation = canEditReservation;
   canDeleteReservation = canDeleteReservation;
+  canRecordPayment = canRecordPayment;
+  getRemainingAmount = getRemainingAmount;
+  calculatePaymentPercentage = calculatePaymentPercentage;
   formatTime = toTimeInputValue;
 
   canCreate = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Create');
   canUpdate = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Update');
   canDelete = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Delete');
-  canConfirm = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Confirm');
   canCancel = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Cancel');
-  canComplete = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Complete');
+  canRecordPaymentAction = this.policy.hasSnapshot(
+    'BanquetHallManagement.Reservations.RecordPayment'
+  );
+  canConfirmHallEntryAction = this.policy.hasSnapshot(
+    'BanquetHallManagement.Reservations.ConfirmHallEntry'
+  );
 
   ngOnInit(): void {
     this.loadData();
@@ -91,7 +110,7 @@ export class ReservationsTableComponent implements OnInit {
       halls: this.hallService.getHalls(),
     }).subscribe({
       next: ({ reservations, customers, halls }) => {
-        this.reservations = reservations.items;
+        this.reservations.set(reservations.items);
         this.customersMap = new Map(
           customers.items.map((customer) => [customer.id, customer])
         );
@@ -157,30 +176,77 @@ export class ReservationsTableComponent implements OnInit {
       });
   }
 
-  editReservation(id: string): void {
-    const reservation = this.reservations.find((item) => item.id === id);
+  openRecordPaymentDialog(reservation: Reservation, apiError?: string): void {
+    const dialogRef = this.dialog.open(RecordPaymentDialog, {
+      ...RECORD_PAYMENT_DIALOG_CONFIG,
+      data: {
+        reservation,
+        customerName: this.getCustomerName(reservation.customerId),
+        hallName: this.getHallName(reservation.hallId),
+        apiError,
+      } satisfies RecordPaymentDialogData,
+    });
 
-    if (!reservation || !canEditReservation(reservation.status)) {
-      return;
-    }
+    dialogRef
+      .afterClosed()
+      .subscribe((result: RecordPaymentDialogResult | undefined) => {
+        if (!result) {
+          return;
+        }
 
-    this.openEditReservationDialog(reservation);
+        const request$ = result.isDeposit
+          ? this.paymentService.recordDeposit({
+              reservationId: reservation.id,
+              amount: result.amount,
+            })
+          : this.paymentService.recordInstallment({
+              reservationId: reservation.id,
+              amount: result.amount,
+            });
+
+        request$.subscribe({
+          next: (paymentResult) => {
+            this.notification.showSuccess(
+              this.l10n.instant('Finance:Payment:Success')
+            );
+            this.loadData();
+
+            const hallAccessCardId =
+              'hallAccessCardId' in paymentResult
+                ? paymentResult.hallAccessCardId
+                : null;
+
+            if (hallAccessCardId) {
+              void this.router.navigate([
+                '/finance/access-cards',
+                hallAccessCardId,
+              ]);
+            }
+          },
+          error: (error) => {
+            this.openRecordPaymentDialog(reservation, getAbpErrorMessage(error));
+          },
+        });
+      });
   }
 
-  confirmReservation(id: string): void {
+  confirmHallEntry(id: string): void {
     this.dialogService
       .confirm({
         type: 'confirm',
-        title: this.l10n.instant('Reservations:Confirm:Title'),
-        message: this.l10n.instant('Reservations:Confirm:Message'),
+        title: this.l10n.instant('Reservations:ConfirmHallEntry:Title'),
+        message: this.l10n.instant('Reservations:ConfirmHallEntry:Message'),
       })
       .subscribe((confirmed) => {
         if (!confirmed) {
           return;
         }
 
-        this.reservationService.confirmReservation(id).subscribe({
+        this.reservationService.confirmHallEntry(id).subscribe({
           next: () => {
+            this.notification.showSuccess(
+              this.l10n.instant('Reservations:ConfirmHallEntry:Success')
+            );
             this.loadData();
           },
           error: (error) => {
@@ -188,6 +254,16 @@ export class ReservationsTableComponent implements OnInit {
           },
         });
       });
+  }
+
+  editReservation(id: string): void {
+    const reservation = this.reservations().find((item) => item.id === id);
+
+    if (!reservation || !canEditReservation(reservation.status)) {
+      return;
+    }
+
+    this.openEditReservationDialog(reservation);
   }
 
   cancelReservation(id: string): void {
@@ -203,29 +279,6 @@ export class ReservationsTableComponent implements OnInit {
         }
 
         this.reservationService.cancelReservation(id).subscribe({
-          next: () => {
-            this.loadData();
-          },
-          error: (error) => {
-            this.notification.showError(getAbpErrorMessage(error));
-          },
-        });
-      });
-  }
-
-  completeReservation(id: string): void {
-    this.dialogService
-      .confirm({
-        type: 'complete',
-        title: this.l10n.instant('Reservations:Complete:Title'),
-        message: this.l10n.instant('Reservations:Complete:Message'),
-      })
-      .subscribe((confirmed) => {
-        if (!confirmed) {
-          return;
-        }
-
-        this.reservationService.completeReservation(id).subscribe({
           next: () => {
             this.loadData();
           },

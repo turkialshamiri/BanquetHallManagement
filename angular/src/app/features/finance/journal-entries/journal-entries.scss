@@ -1,0 +1,19 @@
+@use '../finance-table';
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.posted {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  &.draft {
+    background: #fef3c7;
+    color: #b45309;
+  }
+}

@@ -1,0 +1,69 @@
+<div class="dialog-container">
+  <div class="dialog-header">
+    <h2>{{ 'Finance:Payment:Dialog:Title' | appLocalization }}</h2>
+    <button type="button" class="close-btn" (click)="close()">×</button>
+  </div>
+
+  @if (apiError) {
+    <div class="api-error">{{ apiError }}</div>
+  }
+
+  <div class="summary-card">
+    <div class="summary-row">
+      <span>{{ 'Reservations:Column:Customer' | appLocalization }}</span>
+      <strong>{{ data.customerName }}</strong>
+    </div>
+    <div class="summary-row">
+      <span>{{ 'Reservations:Column:Hall' | appLocalization }}</span>
+      <strong>{{ data.hallName }}</strong>
+    </div>
+    <div class="summary-row">
+      <span>{{ 'Reservations:Column:TotalPrice' | appLocalization }}</span>
+      <strong>{{ data.reservation.totalPrice | number }}</strong>
+    </div>
+    <div class="summary-row">
+      <span>{{ 'Reservations:Column:PaidAmount' | appLocalization }}</span>
+      <strong>{{ data.reservation.paidAmount ?? 0 | number }}</strong>
+    </div>
+    <div class="summary-row highlight">
+      <span>{{ 'Reservations:Column:RemainingAmount' | appLocalization }}</span>
+      <strong>{{ remainingAmount() | number }}</strong>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>
+      {{
+        isDeposit()
+          ? ('Finance:Payment:Type:Deposit' | appLocalization)
+          : ('Finance:Payment:Type:Installment' | appLocalization)
+      }}
+    </label>
+    <input
+      type="number"
+      min="0"
+      step="0.01"
+      [value]="amount()"
+      (input)="updateAmount($any($event.target).value)"
+      [class.invalid]="!!amountError()"
+    />
+  </div>
+
+  <p class="hint">
+    {{ 'Finance:Payment:MinimumHint' | appLocalization }}:
+    <strong>{{ minimumAmount() | number }}</strong>
+  </p>
+
+  @if (amountError()) {
+    <div class="field-error">{{ amountError() }}</div>
+  }
+
+  <div class="dialog-actions">
+    <button type="button" class="btn-secondary" (click)="close()">
+      {{ 'Cancel' | appLocalization }}
+    </button>
+    <button type="button" class="btn-primary" (click)="submit()">
+      {{ 'Finance:Payment:Record' | appLocalization }}
+    </button>
+  </div>
+</div>

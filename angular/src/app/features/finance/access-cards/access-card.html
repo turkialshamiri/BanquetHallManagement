@@ -1,0 +1,55 @@
+<div class="page-toolbar no-print">
+  <a routerLink="/bookings" class="back-link">
+    <mat-icon>arrow_back</mat-icon>
+    {{ 'Dialog:Back' | appLocalization }}
+  </a>
+  @if (card()) {
+    <button type="button" class="print-btn" (click)="print()">
+      <mat-icon>print</mat-icon>
+      {{ 'Finance:AccessCard:Print' | appLocalization }}
+    </button>
+  }
+</div>
+
+@if (loading()) {
+  <div class="loading-state">...</div>
+} @else if (card(); as data) {
+  <article class="access-card">
+    <div class="card-brand">Banquet Hall</div>
+    <h1>{{ 'Finance:AccessCard:Title' | appLocalization }}</h1>
+    <p class="card-number">{{ data.cardNumber }}</p>
+
+    <div class="card-grid">
+      <div>
+        <span>{{ 'Reservations:Column:Customer' | appLocalization }}</span>
+        <strong>{{ data.customerName }}</strong>
+        <div class="muted">{{ data.customerPhone }}</div>
+      </div>
+      <div>
+        <span>{{ 'Reservations:Column:Hall' | appLocalization }}</span>
+        <strong>{{ data.hallName }}</strong>
+        <div class="muted">{{ data.hallLocation }}</div>
+      </div>
+      <div>
+        <span>{{ 'Finance:AccessCard:EventDate' | appLocalization }}</span>
+        <strong>{{ data.eventDate | date:'yyyy/MM/dd' }}</strong>
+      </div>
+      <div>
+        <span>{{ 'Finance:AccessCard:EntryTime' | appLocalization }}</span>
+        <strong>{{ formatTime(data.entryTime) }}</strong>
+      </div>
+      <div>
+        <span>{{ 'Finance:AccessCard:ExitTime' | appLocalization }}</span>
+        <strong>{{ formatTime(data.exitTime) }}</strong>
+      </div>
+      <div>
+        <span>{{ 'Finance:AccessCard:Guests' | appLocalization }}</span>
+        <strong>{{ data.guestsCount }}</strong>
+      </div>
+      <div>
+        <span>{{ 'Finance:AccessCard:IssuedAt' | appLocalization }}</span>
+        <strong>{{ data.issuedAt | date:'yyyy/MM/dd HH:mm' }}</strong>
+      </div>
+    </div>
+  </article>
+}

@@ -33,6 +33,7 @@ export class StatusLocalizationService {
       [RESERVATION_STATUS.Confirmed]: 'Enum:ReservationStatus:Confirmed',
       [RESERVATION_STATUS.Cancelled]: 'Enum:ReservationStatus:Cancelled',
       [RESERVATION_STATUS.Completed]: 'Enum:ReservationStatus:Completed',
+      [RESERVATION_STATUS.FullyPaid]: 'Enum:ReservationStatus:FullyPaid',
     };
 
     if (!status) {

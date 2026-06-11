@@ -1,0 +1,107 @@
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  gap: 1rem;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary-600);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  background: var(--primary-600);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.loading-state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.access-card {
+  max-width: 640px;
+  margin: 1.5rem auto 0;
+  padding: 2rem;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #0f172a, #1e3a5f);
+  color: #fff;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+
+  h1 {
+    margin: 0.5rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    opacity: 0.9;
+  }
+
+  .card-brand {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .card-number {
+    margin: 0 0 1.5rem;
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #93c5fd;
+  }
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+
+  span {
+    display: block;
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-bottom: 0.2rem;
+  }
+
+  strong {
+    font-size: 1rem;
+  }
+
+  .muted {
+    font-size: 0.85rem;
+    opacity: 0.75;
+    margin-top: 0.15rem;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .access-card {
+    box-shadow: none;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,76 @@
+<div class="page-toolbar no-print">
+  <a routerLink="/finance/invoices" class="back-link">
+    <mat-icon>arrow_back</mat-icon>
+    {{ 'Dialog:Back' | appLocalization }}
+  </a>
+  @if (invoice()) {
+    <button type="button" class="print-btn" (click)="print()">
+      <mat-icon>print</mat-icon>
+      {{ 'Finance:Invoices:Print' | appLocalization }}
+    </button>
+  }
+</div>
+
+@if (loading()) {
+  <div class="loading-state">...</div>
+} @else if (invoice(); as data) {
+  <article class="print-document">
+    <header class="doc-header">
+      <h1>{{ 'Finance:Invoices:Detail:Title' | appLocalization }}</h1>
+      <p class="doc-number">{{ data.invoiceNumber }}</p>
+    </header>
+
+    <section class="doc-grid">
+      <div>
+        <h3>{{ 'Finance:Invoices:Column:Type' | appLocalization }}</h3>
+        <p>{{ invoiceTypeLabel(data.invoiceType) }}</p>
+      </div>
+      <div>
+        <h3>{{ 'Finance:Invoices:Column:Amount' | appLocalization }}</h3>
+        <p class="amount">{{ data.amount | number }}</p>
+      </div>
+      <div>
+        <h3>{{ 'Finance:Invoices:Column:IssuedAt' | appLocalization }}</h3>
+        <p>{{ data.issuedAt | date:'yyyy/MM/dd HH:mm' }}</p>
+      </div>
+      <div>
+        <h3>{{ 'Reservations:Column:Customer' | appLocalization }}</h3>
+        <p>{{ data.customerName }}</p>
+        <p class="muted">{{ data.customerPhone }}</p>
+      </div>
+      <div>
+        <h3>{{ 'Reservations:Column:Hall' | appLocalization }}</h3>
+        <p>{{ data.hallName }}</p>
+        <p class="muted">{{ data.hallLocation }}</p>
+      </div>
+      <div>
+        <h3>{{ 'Reservations:Column:Date' | appLocalization }}</h3>
+        <p>{{ data.eventDate | date:'yyyy/MM/dd' }}</p>
+        <p class="muted">
+          {{ formatTime(data.startTime) }} – {{ formatTime(data.endTime) }}
+        </p>
+      </div>
+      <div>
+        <h3>{{ 'Reservations:Column:Guests' | appLocalization }}</h3>
+        <p>{{ data.guestsCount }}</p>
+      </div>
+      <div>
+        <h3>{{ 'Reservations:Column:Status' | appLocalization }}</h3>
+        <p>{{ statusL10n.reservationStatus(data.reservationStatus) }}</p>
+      </div>
+      <div>
+        <h3>{{ 'Reservations:Column:TotalPrice' | appLocalization }}</h3>
+        <p>{{ data.totalPrice | number }}</p>
+      </div>
+      <div>
+        <h3>{{ 'Reservations:Column:PaidAmount' | appLocalization }}</h3>
+        <p>{{ data.paidAmount | number }}</p>
+      </div>
+    </section>
+
+    <footer class="doc-footer">
+      <span>{{ 'Finance:Invoices:Column:Number' | appLocalization }}: {{ data.receiptNumber }}</span>
+      <span>{{ data.paymentDate | date:'yyyy/MM/dd' }}</span>
+    </footer>
+  </article>
+}

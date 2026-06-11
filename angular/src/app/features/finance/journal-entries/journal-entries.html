@@ -1,0 +1,60 @@
+<div class="table-card">
+  <div class="table-header">
+    <div>
+      <h2 class="table-title">{{ 'Finance:JournalEntries:Title' | appLocalization }}</h2>
+      <span>{{ 'Finance:JournalEntries:Subtitle' | appLocalization }}</span>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'Finance:JournalEntries:Column:Number' | appLocalization }}</th>
+          <th>{{ 'Finance:JournalEntries:Column:Date' | appLocalization }}</th>
+          <th>{{ 'Finance:JournalEntries:Column:Source' | appLocalization }}</th>
+          <th>{{ 'Finance:JournalEntries:Column:Debit' | appLocalization }}</th>
+          <th>{{ 'Finance:JournalEntries:Column:Credit' | appLocalization }}</th>
+          <th>{{ 'Finance:JournalEntries:Column:Posted' | appLocalization }}</th>
+          <th>{{ 'Actions' | appLocalization }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="7" class="empty-state">...</td>
+          </tr>
+        } @else if (entries().length > 0) {
+          @for (entry of entries(); track entry.id) {
+            <tr>
+              <td><strong>{{ entry.entryNumber }}</strong></td>
+              <td>{{ entry.entryDate | date:'yyyy/MM/dd' }}</td>
+              <td>{{ sourceTypeLabel(entry.sourceType) }}</td>
+              <td>{{ entry.totalDebit | number }}</td>
+              <td>{{ entry.totalCredit | number }}</td>
+              <td>
+                @if (entry.isPosted) {
+                  <span class="badge posted">{{ 'Yes' | appLocalization }}</span>
+                } @else {
+                  <span class="badge draft">{{ 'No' | appLocalization }}</span>
+                }
+              </td>
+              <td>
+                <button type="button" class="link-btn" (click)="viewEntry(entry.id)">
+                  <mat-icon>visibility</mat-icon>
+                  {{ 'Finance:JournalEntries:View' | appLocalization }}
+                </button>
+              </td>
+            </tr>
+          }
+        } @else {
+          <tr>
+            <td colspan="7" class="empty-state">
+              {{ 'Finance:JournalEntries:Empty' | appLocalization }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

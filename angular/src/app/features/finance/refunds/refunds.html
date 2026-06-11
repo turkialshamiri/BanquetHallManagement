@@ -1,0 +1,62 @@
+<div class="table-card">
+  <div class="table-header">
+    <div>
+      <h2 class="table-title">{{ 'Finance:Refunds:Title' | appLocalization }}</h2>
+      <span>{{ 'Finance:Refunds:Subtitle' | appLocalization }}</span>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'Finance:Refunds:Column:Customer' | appLocalization }}</th>
+          <th>{{ 'Finance:Refunds:Column:EventDate' | appLocalization }}</th>
+          <th>{{ 'Finance:Refunds:Column:Paid' | appLocalization }}</th>
+          <th>{{ 'Finance:Refunds:Column:RefundAmount' | appLocalization }}</th>
+          <th>{{ 'Finance:Refunds:Column:CancelledAt' | appLocalization }}</th>
+          @if (canProcess) {
+            <th>{{ 'Actions' | appLocalization }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td [attr.colspan]="canProcess ? 6 : 5" class="empty-state">...</td>
+          </tr>
+        } @else if (refunds().length > 0) {
+          @for (refund of refunds(); track refund.reservationId) {
+            <tr>
+              <td><strong>{{ refund.customerName }}</strong></td>
+              <td>
+                {{ refund.eventDate | date:'yyyy/MM/dd' }}
+                <div class="muted">{{ formatTime(refund.startTime) }}</div>
+              </td>
+              <td>{{ refund.paidAmount | number }}</td>
+              <td class="refund-amount">{{ refund.refundAmount | number }}</td>
+              <td>{{ refund.cancelledAt | date:'yyyy/MM/dd HH:mm' }}</td>
+              @if (canProcess) {
+                <td>
+                  <button
+                    type="button"
+                    class="action-btn"
+                    [disabled]="processingId() === refund.reservationId"
+                    (click)="processRefund(refund)">
+                    {{ 'Finance:Refunds:Process' | appLocalization }}
+                  </button>
+                </td>
+              }
+            </tr>
+          }
+        } @else {
+          <tr>
+            <td [attr.colspan]="canProcess ? 6 : 5" class="empty-state">
+              {{ 'Finance:Refunds:Empty' | appLocalization }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

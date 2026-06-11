@@ -52,6 +52,7 @@ export class Sidebar implements OnInit, OnDestroy {
     customers: 'BanquetHallManagement.Customers',
     services: 'BanquetHallManagement.Services',
     reservations: 'BanquetHallManagement.Reservations',
+    finance: 'BanquetHallManagement.Finance',
     reports: 'BanquetHallManagement.Reports',
     users: 'BanquetHallManagement.Users',
   };
@@ -159,6 +160,31 @@ export class Sidebar implements OnInit, OnDestroy {
       ],
     },
     {
+      sectionId: 'finance',
+      titleKey: 'Menu:Section:Finance',
+      icon: 'account_balance_wallet',
+      children: [
+        {
+          titleKey: 'Menu:Finance:Invoices',
+          icon: 'receipt_long',
+          route: '/finance/invoices',
+          exact: true,
+        },
+        {
+          titleKey: 'Menu:Finance:JournalEntries',
+          icon: 'menu_book',
+          route: '/finance/journal-entries',
+          exact: true,
+        },
+        {
+          titleKey: 'Menu:Finance:Refunds',
+          icon: 'currency_exchange',
+          route: '/finance/refunds',
+          exact: true,
+        },
+      ],
+    },
+    {
       sectionId: 'reports',
       titleKey: 'Menu:Section:Reports',
       icon: 'analytics',
@@ -261,6 +287,15 @@ export class Sidebar implements OnInit, OnDestroy {
         }
         if (child.route === '/bookings/create') {
           return can('BanquetHallManagement.Reservations.Create');
+        }
+        if (child.route === '/finance/invoices') {
+          return can('BanquetHallManagement.Finance.Invoices.View');
+        }
+        if (child.route === '/finance/journal-entries') {
+          return can('BanquetHallManagement.Finance.ViewJournalEntries');
+        }
+        if (child.route === '/finance/refunds') {
+          return can('BanquetHallManagement.Finance.Refunds.View');
         }
         return true;
       });

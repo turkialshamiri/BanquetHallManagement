@@ -1,0 +1,16 @@
+@use '../finance-table';
+
+.muted {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.refund-amount {
+  font-weight: 700;
+  color: #b45309;
+}
+
+.action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

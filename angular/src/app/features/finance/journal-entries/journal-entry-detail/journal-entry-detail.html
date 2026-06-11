@@ -1,0 +1,68 @@
+<div class="page-toolbar">
+  <a routerLink="/finance/journal-entries" class="back-link">
+    <mat-icon>arrow_back</mat-icon>
+    {{ 'Dialog:Back' | appLocalization }}
+  </a>
+</div>
+
+@if (loading()) {
+  <div class="loading-state">...</div>
+} @else if (entry(); as data) {
+  <div class="detail-card">
+    <header>
+      <h1>{{ 'Finance:JournalEntries:Detail:Title' | appLocalization }}</h1>
+      <p class="entry-number">{{ data.entryNumber }}</p>
+    </header>
+
+    <div class="meta-grid">
+      <div>
+        <span>{{ 'Finance:JournalEntries:Column:Date' | appLocalization }}</span>
+        <strong>{{ data.entryDate | date:'yyyy/MM/dd' }}</strong>
+      </div>
+      <div>
+        <span>{{ 'Finance:JournalEntries:Column:Source' | appLocalization }}</span>
+        <strong>{{ sourceTypeLabel(data.sourceType) }}</strong>
+      </div>
+      <div>
+        <span>{{ 'Finance:JournalEntries:Column:Debit' | appLocalization }}</span>
+        <strong>{{ data.totalDebit | number }}</strong>
+      </div>
+      <div>
+        <span>{{ 'Finance:JournalEntries:Column:Credit' | appLocalization }}</span>
+        <strong>{{ data.totalCredit | number }}</strong>
+      </div>
+    </div>
+
+    @if (data.description) {
+      <p class="description">{{ data.description }}</p>
+    }
+
+    <h2>{{ 'Finance:JournalEntries:Detail:Lines' | appLocalization }}</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'Finance:JournalEntries:Column:Account' | appLocalization }}</th>
+            <th>{{ 'Finance:JournalEntries:Column:Debit' | appLocalization }}</th>
+            <th>{{ 'Finance:JournalEntries:Column:Credit' | appLocalization }}</th>
+            <th>{{ 'Finance:JournalEntries:Column:Description' | appLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of data.lines; track line.id) {
+            <tr>
+              <td>
+                <strong>{{ line.accountCode }}</strong>
+                <div class="muted">{{ line.accountName }}</div>
+              </td>
+              <td>{{ line.debit | number }}</td>
+              <td>{{ line.credit | number }}</td>
+              <td>{{ line.description || '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
