@@ -40,6 +40,28 @@ public class PaymentAppService : BanquetHallManagementAppService, IPaymentAppSer
         });
     }
 
+    [Authorize(BanquetHallManagementPermissions.Finance.PaymentsCreate)]
+    [Authorize(BanquetHallManagementPermissions.Reservations.RecordPayment)]
+    public Task<InstallmentPaymentResultDto> RecordInstallmentAsync(RecordInstallmentDto input)
+    {
+        return ExecuteSchedulingOperationAsync(async () =>
+        {
+            var result = await _paymentManager.RecordInstallmentAsync(
+                input.ReservationId,
+                input.Amount);
+
+            await CurrentUnitOfWork.SaveChangesAsync();
+
+            var dto = ObjectMapper.Map<Payment, InstallmentPaymentResultDto>(result.Payment);
+            dto.PaymentType = result.Payment.PaymentType.ToString();
+            dto.RemainingAmount = result.RemainingAmount;
+            dto.IsFullyPaid = result.IsFullyPaid;
+            dto.HallAccessCardId = result.HallAccessCardId;
+
+            return dto;
+        });
+    }
+
     public async Task<ListResultDto<PaymentDto>> GetByReservationAsync(Guid reservationId)
     {
         var query = await _paymentRepository.GetQueryableAsync();

@@ -21,6 +21,8 @@ public class ReservationEventSnapshot
 
     public decimal TotalPrice { get; init; }
 
+    public decimal PaidAmount { get; init; }
+
     public ReservationStatus ReservationStatus { get; init; }
 
     public static ReservationEventSnapshot FromReservation(Reservation reservation)
@@ -33,6 +35,7 @@ public class ReservationEventSnapshot
             EventDate = reservation.EventDate,
             GuestsCount = reservation.GuestsCount,
             TotalPrice = reservation.TotalPrice,
+            PaidAmount = reservation.PaidAmount,
             ReservationStatus = reservation.Status,
         };
     }

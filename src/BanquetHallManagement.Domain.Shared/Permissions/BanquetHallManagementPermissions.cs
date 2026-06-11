@@ -116,6 +116,10 @@ public static class BanquetHallManagementPermissions
 
         public const string InvoicesPrint = Default + ".Invoices.Print";
 
+        public const string HallAccessCardsView = Default + ".HallAccessCards.View";
+
+        public const string HallAccessCardsPrint = Default + ".HallAccessCards.Print";
+
     }
 
 

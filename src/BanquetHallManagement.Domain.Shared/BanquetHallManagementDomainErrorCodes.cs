@@ -59,6 +59,9 @@ public static class BanquetHallManagementDomainErrorCodes
     public const string PaymentAmountInvalid =
         "BanquetHallManagement:Payment:AmountInvalid";
 
+    public const string PaymentAmountExceedsRemaining =
+        "BanquetHallManagement:Payment:AmountExceedsRemaining";
+
     public const string PaymentNotFound =
         "BanquetHallManagement:Payment:NotFound";
 

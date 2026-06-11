@@ -9,5 +9,7 @@ public interface IPaymentAppService : IApplicationService
 {
     Task<PaymentDto> RecordDepositAsync(RecordDepositDto input);
 
+    Task<InstallmentPaymentResultDto> RecordInstallmentAsync(RecordInstallmentDto input);
+
     Task<ListResultDto<PaymentDto>> GetByReservationAsync(Guid reservationId);
 }

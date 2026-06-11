@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Enums;
+using BanquetHallManagement.Finance.HallAccessCards;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Payments.Events;
 using BanquetHallManagement.Finance.Services;
@@ -205,11 +206,35 @@ public class PaymentManagerTests
             LazyServiceProvider = new AbpLazyServiceProvider(services.BuildServiceProvider()),
         };
 
+        var hallAccessCardRepository = Substitute.For<IHallAccessCardRepository>();
+        hallAccessCardRepository.FindByReservationIdAsync(
+                Arg.Any<Guid>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<HallAccessCard?>(null));
+
+        hallAccessCardRepository.InsertAsync(
+                Arg.Any<HallAccessCard>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.Arg<HallAccessCard>()));
+
+        var cardNumberGenerator = Substitute.For<ICardNumberGenerator>();
+        cardNumberGenerator.GenerateAsync(Arg.Any<CancellationToken>())
+            .Returns("HAC-2026-00001");
+
+        var hallAccessCardManager = new HallAccessCardManager(
+            hallAccessCardRepository,
+            cardNumberGenerator)
+        {
+            LazyServiceProvider = new AbpLazyServiceProvider(services.BuildServiceProvider()),
+        };
+
         var paymentManager = new PaymentManager(
             paymentRepository,
             reservationRepository,
             receiptNumberGenerator,
-            depositConfirmationService)
+            depositConfirmationService,
+            hallAccessCardManager)
         {
             LazyServiceProvider = new AbpLazyServiceProvider(services.BuildServiceProvider()),
         };

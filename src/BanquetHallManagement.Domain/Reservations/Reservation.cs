@@ -97,6 +97,38 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
 
     public void ApplyDeposit(decimal amount)
     {
+        ApplyPayment(amount);
+    }
+
+    public void ApplyInstallment(decimal amount)
+    {
+        if (Status != ReservationStatus.Confirmed)
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.PaymentInvalidReservationStatus);
+        }
+
+        ApplyPayment(amount);
+    }
+
+    public decimal GetRemainingAmount()
+    {
+        return Math.Max(0m, TotalPrice - PaidAmount);
+    }
+
+    public bool TryMarkFullyPaid()
+    {
+        if (Status != ReservationStatus.Confirmed || PaidAmount < TotalPrice)
+        {
+            return false;
+        }
+
+        MarkFullyPaid();
+        return true;
+    }
+
+    private void ApplyPayment(decimal amount)
+    {
         if (amount <= 0)
         {
             throw new BusinessException(
@@ -144,6 +176,8 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
         }
 
         Status = ReservationStatus.FullyPaid;
+        AddLocalEvent(new ReservationFullyPaidDomainEvent(
+            ReservationEventSnapshot.FromReservation(this)));
     }
 
     public void Complete()

@@ -386,6 +386,7 @@ public class ReservationAppService :
     {
         var dto = ObjectMapper.Map<Reservation, ReservationDto>(reservation);
         dto.Status = reservation.Status.ToString();
+        dto.RemainingAmount = reservation.GetRemainingAmount();
         dto.CancellationType = reservation.CancellationType?.ToString();
         dto.ServiceIds = serviceIds?.ToList()
             ?? reservation.Services?.Select(rs => rs.ServiceId).ToList()

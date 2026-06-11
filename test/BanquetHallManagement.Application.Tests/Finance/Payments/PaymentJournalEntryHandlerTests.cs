@@ -45,15 +45,16 @@ public class PaymentJournalEntryHandlerTests
     }
 
     [Fact]
-    public async Task HandleEventAsync_Should_Throw_For_Unsupported_Payment_Type()
+    public async Task HandleEventAsync_Should_Post_Final_Payment_As_Deferred_Revenue()
     {
         var payment = CreatePayment(PaymentType.Final);
-        var handler = CreateHandler(payment, out _);
+        var handler = CreateHandler(payment, out var postingService);
 
-        var exception = await Should.ThrowAsync<BusinessException>(() =>
-            handler.HandleEventAsync(CreateEvent(payment)));
+        await handler.HandleEventAsync(CreateEvent(payment));
 
-        exception.Code.ShouldBe(BanquetHallManagementDomainErrorCodes.PaymentJournalPostingNotSupported);
+        await postingService.Received(1).PostDeferredRevenueAsync(
+            payment,
+            Arg.Any<CancellationToken>());
     }
 
     private static PaymentJournalEntryHandler CreateHandler(

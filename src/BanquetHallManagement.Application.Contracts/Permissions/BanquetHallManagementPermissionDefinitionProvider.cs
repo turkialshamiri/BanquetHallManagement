@@ -47,6 +47,8 @@ public class BanquetHallManagementPermissionDefinitionProvider : PermissionDefin
         finance.AddChild(BanquetHallManagementPermissions.Finance.PaymentsView, L("Permission:Finance.Payments.View"));
         finance.AddChild(BanquetHallManagementPermissions.Finance.InvoicesView, L("Permission:Finance.Invoices.View"));
         finance.AddChild(BanquetHallManagementPermissions.Finance.InvoicesPrint, L("Permission:Finance.Invoices.Print"));
+        finance.AddChild(BanquetHallManagementPermissions.Finance.HallAccessCardsView, L("Permission:Finance.HallAccessCards.View"));
+        finance.AddChild(BanquetHallManagementPermissions.Finance.HallAccessCardsPrint, L("Permission:Finance.HallAccessCards.Print"));
 
         group.AddPermission(BanquetHallManagementPermissions.Reports.Default, L("Permission:Reports"));
 

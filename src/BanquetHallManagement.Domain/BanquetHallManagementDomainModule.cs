@@ -53,6 +53,7 @@ public class BanquetHallManagementDomainModule : AbpModule
         context.Services.AddTransient<IInvoiceManager, InvoiceManager>();
         context.Services.AddTransient<IReceiptNumberGenerator, ReceiptNumberGenerator>();
         context.Services.AddTransient<IInvoiceNumberGenerator, InvoiceNumberGenerator>();
+        context.Services.AddTransient<ICardNumberGenerator, CardNumberGenerator>();
 
 #if DEBUG
         context.Services.Replace(ServiceDescriptor.Singleton<IEmailSender, NullEmailSender>());

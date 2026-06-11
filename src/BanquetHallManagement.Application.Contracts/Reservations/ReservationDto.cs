@@ -18,6 +18,8 @@ namespace BanquetHallManagement.Reservations
         public decimal TotalPrice { get; set; }
         public decimal PaidAmount { get; set; }
 
+        public decimal RemainingAmount { get; set; }
+
         public string Status { get; set; }
 
         public string? CancellationReason { get; set; }

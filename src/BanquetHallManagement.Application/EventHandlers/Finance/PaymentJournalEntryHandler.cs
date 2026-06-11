@@ -38,6 +38,7 @@ public class PaymentJournalEntryHandler :
                 break;
 
             case PaymentType.Installment:
+            case PaymentType.Final:
                 await _journalPostingService.PostDeferredRevenueAsync(payment);
                 break;
 

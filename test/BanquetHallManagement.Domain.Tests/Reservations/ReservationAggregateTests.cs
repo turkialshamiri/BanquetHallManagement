@@ -133,6 +133,36 @@ public class ReservationAggregateTests
     }
 
     [Fact]
+    public void GetRemainingAmount_Should_Return_Outstanding_Balance()
+    {
+        var reservation = CreateReservation(ReservationStatus.Confirmed, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        reservation.TotalPrice = 100_000m;
+        reservation.PaidAmount = 30_000m;
+
+        reservation.GetRemainingAmount().ShouldBe(70_000m);
+    }
+
+    [Fact]
+    public void TryMarkFullyPaid_Should_Transition_Confirmed_To_FullyPaid()
+    {
+        var reservation = CreateReservation(ReservationStatus.Confirmed, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        reservation.TotalPrice = 100_000m;
+        reservation.PaidAmount = 100_000m;
+
+        reservation.TryMarkFullyPaid().ShouldBeTrue();
+        reservation.Status.ShouldBe(ReservationStatus.FullyPaid);
+    }
+
+    [Fact]
+    public void ApplyInstallment_Should_Reject_When_Not_Confirmed()
+    {
+        var reservation = CreateReservation(ReservationStatus.Pending, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+
+        Should.Throw<BusinessException>(() => reservation.ApplyInstallment(20_000m))
+            .Code.ShouldBe(BanquetHallManagementDomainErrorCodes.PaymentInvalidReservationStatus);
+    }
+
+    [Fact]
     public void Completed_Reservation_Should_Not_Block_Scheduling()
     {
         var reservation = CreateReservation(
