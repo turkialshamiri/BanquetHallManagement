@@ -50,6 +50,7 @@ public class BanquetHallManagementDomainModule : AbpModule
 
 
         context.Services.AddTransient<IJournalPostingService, JournalPostingService>();
+        context.Services.AddTransient<IRevenueRecognitionService, RevenueRecognitionService>();
         context.Services.AddTransient<IInvoiceManager, InvoiceManager>();
         context.Services.AddTransient<IReceiptNumberGenerator, ReceiptNumberGenerator>();
         context.Services.AddTransient<IInvoiceNumberGenerator, InvoiceNumberGenerator>();

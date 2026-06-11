@@ -180,17 +180,24 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
             ReservationEventSnapshot.FromReservation(this)));
     }
 
-    public void Complete()
+    public void ConfirmHallEntry()
     {
         if (Status != ReservationStatus.FullyPaid)
         {
             throw new BusinessException(
-                BanquetHallManagementDomainErrorCodes.ReservationCannotComplete);
+                BanquetHallManagementDomainErrorCodes.ReservationCannotConfirmHallEntry);
         }
 
         Status = ReservationStatus.Completed;
+        AddLocalEvent(new HallEntryConfirmedDomainEvent(
+            ReservationEventSnapshot.FromReservation(this)));
         AddLocalEvent(new ReservationCompletedDomainEvent(
             ReservationEventSnapshot.FromReservation(this)));
+    }
+
+    public void Complete()
+    {
+        ConfirmHallEntry();
     }
 
     public bool CanBeUpdated()

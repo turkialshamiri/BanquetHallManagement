@@ -26,4 +26,6 @@ public interface IReservationAppService : IApplicationService
     Task<ReservationDto> CancelAsync(Guid id);
 
     Task<ReservationDto> CompleteAsync(Guid id);
+
+    Task<ReservationDto> ConfirmHallEntryAsync(Guid id);
 }

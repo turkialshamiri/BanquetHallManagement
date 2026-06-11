@@ -125,16 +125,24 @@ public class ReservationAppService :
         return MapToDto(reservation);
     }
 
-    [Authorize(BanquetHallManagementPermissions.Reservations.Complete)]
-    public async Task<ReservationDto> CompleteAsync(Guid id)
+    [Authorize(BanquetHallManagementPermissions.Reservations.ConfirmHallEntry)]
+    public async Task<ReservationDto> ConfirmHallEntryAsync(Guid id)
     {
         var reservation = await _reservationRepository.GetAsync(id, includeDetails: true);
 
-        reservation.Complete();
+        reservation.ConfirmHallEntry();
 
-        await _reservationRepository.UpdateAsync(reservation);
+        await _reservationRepository.UpdateAsync(reservation, autoSave: false);
+        await CurrentUnitOfWork!.SaveChangesAsync();
 
         return MapToDto(reservation);
+    }
+
+    [Authorize(BanquetHallManagementPermissions.Reservations.Complete)]
+    [Obsolete("Use ConfirmHallEntryAsync instead.")]
+    public Task<ReservationDto> CompleteAsync(Guid id)
+    {
+        return ConfirmHallEntryAsync(id);
     }
 
     private async Task<ReservationDto> CreateAsyncCore(CreateUpdateReservationDto input)

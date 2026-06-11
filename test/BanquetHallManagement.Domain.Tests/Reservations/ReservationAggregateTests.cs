@@ -112,12 +112,24 @@ public class ReservationAggregateTests
     }
 
     [Fact]
-    public void Complete_Should_Require_FullyPaid_Status()
+    public void ConfirmHallEntry_Should_Require_FullyPaid_Status()
     {
         var reservation = CreateReservation(ReservationStatus.Confirmed, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
 
-        Should.Throw<BusinessException>(() => reservation.Complete())
-            .Code.ShouldBe(BanquetHallManagementDomainErrorCodes.ReservationCannotComplete);
+        Should.Throw<BusinessException>(() => reservation.ConfirmHallEntry())
+            .Code.ShouldBe(BanquetHallManagementDomainErrorCodes.ReservationCannotConfirmHallEntry);
+    }
+
+    [Fact]
+    public void ConfirmHallEntry_Should_Move_FullyPaid_Reservation_To_Completed()
+    {
+        var reservation = CreateReservation(ReservationStatus.FullyPaid, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        reservation.TotalPrice = 1000m;
+        reservation.PaidAmount = 1000m;
+
+        reservation.ConfirmHallEntry();
+
+        reservation.Status.ShouldBe(ReservationStatus.Completed);
     }
 
     [Fact]

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BanquetHallManagement.Enums;
 using BanquetHallManagement.Finance.JournalEntries;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.Domain.Repositories.EntityFrameworkCore;
@@ -43,6 +44,32 @@ public class EfCoreJournalEntryRepository :
 
         return await query.FirstOrDefaultAsync(
             entry => entry.PaymentId == paymentId,
+            cancellationToken);
+    }
+
+    public async Task<JournalEntry?> FindByReservationAndSourceTypeAsync(
+        Guid reservationId,
+        JournalEntrySourceType sourceType,
+        CancellationToken cancellationToken = default)
+    {
+        var dbContext = await GetDbContextAsync();
+
+        var trackedEntry = dbContext.ChangeTracker
+            .Entries<JournalEntry>()
+            .Select(entry => entry.Entity)
+            .FirstOrDefault(entry =>
+                entry.ReservationId == reservationId &&
+                entry.SourceType == sourceType);
+
+        if (trackedEntry != null)
+        {
+            return trackedEntry;
+        }
+
+        var query = await GetQueryableAsync();
+
+        return await query.FirstOrDefaultAsync(
+            entry => entry.ReservationId == reservationId && entry.SourceType == sourceType,
             cancellationToken);
     }
 }
