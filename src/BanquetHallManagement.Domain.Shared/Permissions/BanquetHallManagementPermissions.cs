@@ -120,6 +120,10 @@ public static class BanquetHallManagementPermissions
 
         public const string HallAccessCardsPrint = Default + ".HallAccessCards.Print";
 
+        public const string RefundsView = Default + ".Refunds.View";
+
+        public const string RefundsProcess = Default + ".Refunds.Process";
+
     }
 
 

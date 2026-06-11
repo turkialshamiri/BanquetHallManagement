@@ -1,4 +1,8 @@
-﻿using Volo.Abp.PermissionManagement;
+﻿using System.Threading.Tasks;
+using BanquetHallManagement.Finance.Jobs;
+using Volo.Abp;
+using Volo.Abp.BackgroundWorkers;
+using Volo.Abp.PermissionManagement;
 using Volo.Abp.SettingManagement;
 using Volo.Abp.Account;
 using Volo.Abp.Identity;
@@ -17,13 +21,15 @@ namespace BanquetHallManagement;
     typeof(AbpFeatureManagementApplicationModule),
     typeof(AbpIdentityApplicationModule),
     typeof(AbpAccountApplicationModule),
-
+    typeof(AbpBackgroundWorkersModule),
     typeof(AbpTenantManagementApplicationModule),
     typeof(AbpSettingManagementApplicationModule)
     )]
 public class BanquetHallManagementApplicationModule : AbpModule
 {
-    //context.Services.AddMapperly();
-
+    public override async Task OnApplicationInitializationAsync(ApplicationInitializationContext context)
+    {
+        await context.AddBackgroundWorkerAsync<ReservationPaymentMonitorJob>();
+    }
 }
 

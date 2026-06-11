@@ -407,6 +407,8 @@
     "Permission:Finance.Invoices.Print": "طباعة الفواتير",
     "Permission:Finance.HallAccessCards.View": "عرض بطاقات دخول القاعات",
     "Permission:Finance.HallAccessCards.Print": "طباعة بطاقات دخول القاعات",
+    "Permission:Finance.Refunds.View": "عرض مستحقات الاسترداد",
+    "Permission:Finance.Refunds.Process": "صرف استرداد العملاء",
     "Permission:Reports": "التقارير",
     "Permission:Users": "المستخدمون",
     "Permission:Users.Create": "إضافة مستخدمين",

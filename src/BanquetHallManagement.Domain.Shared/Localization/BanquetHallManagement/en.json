@@ -407,6 +407,8 @@
     "Permission:Finance.Invoices.Print": "Print invoices",
     "Permission:Finance.HallAccessCards.View": "View hall access cards",
     "Permission:Finance.HallAccessCards.Print": "Print hall access cards",
+    "Permission:Finance.Refunds.View": "View pending refunds",
+    "Permission:Finance.Refunds.Process": "Process customer refunds",
     "Permission:Reports": "Reports",
     "Permission:Users": "Users",
     "Permission:Users.Create": "Create users",

@@ -1,6 +1,8 @@
 using BanquetHallManagement.Finance.Invoices;
 using BanquetHallManagement.Finance.JournalEntries;
+using BanquetHallManagement.Finance.Refunds;
 using BanquetHallManagement.Finance.Services;
+using BanquetHallManagement.Reservations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using BanquetHallManagement.Localization;
@@ -51,6 +53,8 @@ public class BanquetHallManagementDomainModule : AbpModule
 
         context.Services.AddTransient<IJournalPostingService, JournalPostingService>();
         context.Services.AddTransient<IRevenueRecognitionService, RevenueRecognitionService>();
+        context.Services.AddTransient<IRefundLiabilityService, RefundLiabilityService>();
+        context.Services.AddTransient<IReservationPaymentMonitorService, ReservationPaymentMonitorService>();
         context.Services.AddTransient<IInvoiceManager, InvoiceManager>();
         context.Services.AddTransient<IReceiptNumberGenerator, ReceiptNumberGenerator>();
         context.Services.AddTransient<IInvoiceNumberGenerator, InvoiceNumberGenerator>();

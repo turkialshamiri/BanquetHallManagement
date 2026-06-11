@@ -165,6 +165,8 @@ public class BanquetHallManagementIdentityDataSeedContributor : IDataSeedContrib
         yield return BanquetHallManagementPermissions.Finance.InvoicesPrint;
         yield return BanquetHallManagementPermissions.Finance.HallAccessCardsView;
         yield return BanquetHallManagementPermissions.Finance.HallAccessCardsPrint;
+        yield return BanquetHallManagementPermissions.Finance.RefundsView;
+        yield return BanquetHallManagementPermissions.Finance.RefundsProcess;
 
         yield return BanquetHallManagementPermissions.Reports.Default;
 
