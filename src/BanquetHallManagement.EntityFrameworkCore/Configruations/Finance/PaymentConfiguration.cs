@@ -43,6 +43,9 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(x => x.JournalEntryId)
             .HasComment("معرف القيد المحاسبي المرتبط بالدفعة إن وجد.");
 
+        builder.Property(x => x.InvoiceId)
+            .HasComment("معرف الفاتورة المرتبطة بالدفعة إن وجد.");
+
         builder.HasOne<Reservation>()
             .WithMany()
             .HasForeignKey(x => x.ReservationId)

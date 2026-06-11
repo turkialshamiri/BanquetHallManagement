@@ -20,6 +20,8 @@ public class Payment : FullAuditedAggregateRoot<Guid>
 
     public Guid? JournalEntryId { get; private set; }
 
+    public Guid? InvoiceId { get; private set; }
+
     protected Payment()
     {
     }
@@ -68,5 +70,21 @@ public class Payment : FullAuditedAggregateRoot<Guid>
         }
 
         JournalEntryId = journalEntryId;
+    }
+
+    public void LinkInvoice(Guid invoiceId)
+    {
+        if (InvoiceId.HasValue)
+        {
+            if (InvoiceId.Value == invoiceId)
+            {
+                return;
+            }
+
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.InvoiceDuplicateCreation);
+        }
+
+        InvoiceId = invoiceId;
     }
 }

@@ -462,6 +462,8 @@
     "BanquetHallManagement:JournalEntry:DuplicatePosting": "A journal entry has already been posted for this payment.",
     "BanquetHallManagement:Payment:JournalPostingNotSupported": "Automatic journal posting is not supported for this payment type.",
     "BanquetHallManagement:Invoice:NotFound": "The invoice was not found.",
+    "BanquetHallManagement:Invoice:DuplicateCreation": "An invoice has already been created for this payment.",
+    "BanquetHallManagement:Invoice:CreationNotSupported": "Invoice creation is not supported for this payment type.",
     "BanquetHallManagement:Refund:NotAllowed": "A refund is not allowed for this reservation.",
     "BanquetHallManagement:Refund:AmountExceedsLiability": "The refund amount exceeds the outstanding customer liability.",
     "BanquetHallManagement:HallAccessCard:NotFound": "The hall access card was not found."

@@ -462,6 +462,8 @@
     "BanquetHallManagement:JournalEntry:DuplicatePosting": "تم ترحيل قيد محاسبي لهذه الدفعة مسبقاً.",
     "BanquetHallManagement:Payment:JournalPostingNotSupported": "الترحيل المحاسبي التلقائي غير مدعوم لهذا النوع من الدفعات.",
     "BanquetHallManagement:Invoice:NotFound": "الفاتورة غير موجودة.",
+    "BanquetHallManagement:Invoice:DuplicateCreation": "تم إنشاء فاتورة لهذه الدفعة مسبقاً.",
+    "BanquetHallManagement:Invoice:CreationNotSupported": "إنشاء الفاتورة غير مدعوم لهذا النوع من الدفعات.",
     "BanquetHallManagement:Refund:NotAllowed": "لا يُسمح بالاسترداد لهذا الحجز.",
     "BanquetHallManagement:Refund:AmountExceedsLiability": "مبلغ الاسترداد يتجاوز مستحقات العميل المستحقة.",
     "BanquetHallManagement:HallAccessCard:NotFound": "بطاقة دخول القاعة غير موجودة."

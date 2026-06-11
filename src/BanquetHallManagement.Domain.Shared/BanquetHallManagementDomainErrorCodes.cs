@@ -89,6 +89,12 @@ public static class BanquetHallManagementDomainErrorCodes
     public const string InvoiceNotFound =
         "BanquetHallManagement:Invoice:NotFound";
 
+    public const string InvoiceDuplicateCreation =
+        "BanquetHallManagement:Invoice:DuplicateCreation";
+
+    public const string InvoiceCreationNotSupported =
+        "BanquetHallManagement:Invoice:CreationNotSupported";
+
     public const string RefundNotAllowed =
         "BanquetHallManagement:Refund:NotAllowed";
 
