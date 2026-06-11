@@ -1,9 +1,13 @@
+using BanquetHallManagement.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace BanquetHallManagement.Migrations
 {
+    [DbContext(typeof(BanquetHallManagementDbContext))]
+    [Migration("20260609120000_AddReservationSchedulingIndex")]
     /// <inheritdoc />
     public partial class AddReservationSchedulingIndex : Migration
     {

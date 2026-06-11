@@ -1,3 +1,4 @@
+using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -47,7 +48,7 @@ public class BanquetHallManagementDomainModule : AbpModule
         });
 
 
-        context.Services.AddTransient<IEntryNumberGenerator, EntryNumberGenerator>();
+        context.Services.AddTransient<IJournalPostingService, JournalPostingService>();
         context.Services.AddTransient<IReceiptNumberGenerator, ReceiptNumberGenerator>();
         context.Services.AddTransient<IInvoiceNumberGenerator, InvoiceNumberGenerator>();
 

@@ -459,6 +459,8 @@
     "BanquetHallManagement:JournalEntryLine:AmountInvalid": "Each journal line must have either a debit or a credit amount, but not both.",
     "BanquetHallManagement:JournalEntry:AlreadyPosted": "This journal entry has already been posted and cannot be modified.",
     "BanquetHallManagement:JournalEntry:NotFound": "The journal entry was not found.",
+    "BanquetHallManagement:JournalEntry:DuplicatePosting": "A journal entry has already been posted for this payment.",
+    "BanquetHallManagement:Payment:JournalPostingNotSupported": "Automatic journal posting is not supported for this payment type.",
     "BanquetHallManagement:Invoice:NotFound": "The invoice was not found.",
     "BanquetHallManagement:Refund:NotAllowed": "A refund is not allowed for this reservation.",
     "BanquetHallManagement:Refund:AmountExceedsLiability": "The refund amount exceeds the outstanding customer liability.",

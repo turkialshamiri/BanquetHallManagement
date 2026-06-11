@@ -1,10 +1,14 @@
 using System;
+using BanquetHallManagement.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace BanquetHallManagement.Migrations
 {
+    [DbContext(typeof(BanquetHallManagementDbContext))]
+    [Migration("20260610160000_AddPaymentsTable")]
     /// <inheritdoc />
     public partial class AddPaymentsTable : Migration
     {

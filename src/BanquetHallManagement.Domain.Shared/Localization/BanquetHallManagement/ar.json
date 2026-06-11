@@ -459,6 +459,8 @@
     "BanquetHallManagement:JournalEntryLine:AmountInvalid": "يجب أن يحتوي كل بند على مبلغ مدين أو دائن فقط، وليس كلاهما.",
     "BanquetHallManagement:JournalEntry:AlreadyPosted": "تم ترحيل هذا القيد مسبقاً ولا يمكن تعديله.",
     "BanquetHallManagement:JournalEntry:NotFound": "القيد المحاسبي غير موجود.",
+    "BanquetHallManagement:JournalEntry:DuplicatePosting": "تم ترحيل قيد محاسبي لهذه الدفعة مسبقاً.",
+    "BanquetHallManagement:Payment:JournalPostingNotSupported": "الترحيل المحاسبي التلقائي غير مدعوم لهذا النوع من الدفعات.",
     "BanquetHallManagement:Invoice:NotFound": "الفاتورة غير موجودة.",
     "BanquetHallManagement:Refund:NotAllowed": "لا يُسمح بالاسترداد لهذا الحجز.",
     "BanquetHallManagement:Refund:AmountExceedsLiability": "مبلغ الاسترداد يتجاوز مستحقات العميل المستحقة.",

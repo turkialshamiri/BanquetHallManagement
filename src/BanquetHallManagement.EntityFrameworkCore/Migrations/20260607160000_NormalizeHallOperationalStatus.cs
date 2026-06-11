@@ -1,9 +1,13 @@
+using BanquetHallManagement.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace BanquetHallManagement.Migrations
 {
+    [DbContext(typeof(BanquetHallManagementDbContext))]
+    [Migration("20260607160000_NormalizeHallOperationalStatus")]
     /// <inheritdoc />
     public partial class NormalizeHallOperationalStatus : Migration
     {

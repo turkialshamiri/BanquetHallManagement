@@ -80,6 +80,12 @@ public static class BanquetHallManagementDomainErrorCodes
     public const string JournalEntryNotFound =
         "BanquetHallManagement:JournalEntry:NotFound";
 
+    public const string JournalEntryDuplicatePosting =
+        "BanquetHallManagement:JournalEntry:DuplicatePosting";
+
+    public const string PaymentJournalPostingNotSupported =
+        "BanquetHallManagement:Payment:JournalPostingNotSupported";
+
     public const string InvoiceNotFound =
         "BanquetHallManagement:Invoice:NotFound";
 

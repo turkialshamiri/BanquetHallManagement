@@ -1,5 +1,6 @@
 using BanquetHallManagement.EntityFrameworkCore.Repositories;
 using BanquetHallManagement.EntityFrameworkCore.Reports;
+using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Reports;
 using BanquetHallManagement.Reservations;
 using Microsoft.Extensions.Configuration;
@@ -51,6 +52,7 @@ public class BanquetHallManagementEntityFrameworkCoreModule : AbpModule
                  * default repositories only for aggregate roots */
             options.AddDefaultRepositories(includeAllEntities: true);
             options.AddRepository<Reservation, EfCoreReservationRepository>();
+            options.AddRepository<JournalEntry, EfCoreJournalEntryRepository>();
         });
 
         context.Services.AddTransient<IReportQueryExecutor, EfCoreReportQueryExecutor>();

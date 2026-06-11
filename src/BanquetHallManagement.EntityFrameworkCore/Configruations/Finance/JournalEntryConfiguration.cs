@@ -56,7 +56,9 @@ public class JournalEntryConfiguration : IEntityTypeConfiguration<JournalEntry>
         builder.HasIndex(x => x.EntryNumber).IsUnique();
         builder.HasIndex(x => x.EntryDate);
         builder.HasIndex(x => x.ReservationId);
-        builder.HasIndex(x => x.PaymentId);
+        builder.HasIndex(x => x.PaymentId)
+            .IsUnique()
+            .HasFilter("[PaymentId] IS NOT NULL");
 
         builder.ConfigureByConvention();
     }

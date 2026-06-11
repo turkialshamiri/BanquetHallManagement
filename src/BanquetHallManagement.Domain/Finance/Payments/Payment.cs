@@ -53,4 +53,20 @@ public class Payment : FullAuditedAggregateRoot<Guid>
             paymentDate,
             receiptNumber));
     }
+
+    public void LinkJournalEntry(Guid journalEntryId)
+    {
+        if (JournalEntryId.HasValue)
+        {
+            if (JournalEntryId.Value == journalEntryId)
+            {
+                return;
+            }
+
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.JournalEntryDuplicatePosting);
+        }
+
+        JournalEntryId = journalEntryId;
+    }
 }

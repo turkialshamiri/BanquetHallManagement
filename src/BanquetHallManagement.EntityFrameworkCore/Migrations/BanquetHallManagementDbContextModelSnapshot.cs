@@ -505,7 +505,9 @@ namespace BanquetHallManagement.Migrations
                     b.HasIndex("EntryNumber")
                         .IsUnique();
 
-                    b.HasIndex("PaymentId");
+                    b.HasIndex("PaymentId")
+                        .IsUnique()
+                        .HasFilter("[PaymentId] IS NOT NULL");
 
                     b.HasIndex("ReservationId");
 
