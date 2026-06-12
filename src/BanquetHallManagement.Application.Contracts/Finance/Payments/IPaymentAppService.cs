@@ -7,7 +7,7 @@ namespace BanquetHallManagement.Finance.Payments;
 
 public interface IPaymentAppService : IApplicationService
 {
-    Task<PaymentDto> RecordDepositAsync(RecordDepositDto input);
+    Task<DepositPaymentResultDto> RecordDepositAsync(RecordDepositDto input);
 
     Task<InstallmentPaymentResultDto> RecordInstallmentAsync(RecordInstallmentDto input);
 

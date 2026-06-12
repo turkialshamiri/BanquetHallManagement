@@ -54,4 +54,8 @@ export class JournalEntryDetail implements OnInit {
     const translated = this.l10n.instant(key);
     return translated === key ? sourceType : translated;
   }
+
+  print(): void {
+    window.print();
+  }
 }

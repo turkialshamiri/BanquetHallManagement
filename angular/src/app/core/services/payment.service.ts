@@ -3,11 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_APP_BASE } from '../constants/api.constants';
 import {
+  DepositPaymentResult,
   InstallmentPaymentResult,
   PaymentListResult,
   RecordDepositInput,
   RecordInstallmentInput,
-  Payment,
 } from '../models/payment.model';
 
 @Injectable({ providedIn: 'root' })
@@ -15,8 +15,8 @@ export class PaymentService {
   private http = inject(HttpClient);
   private apiUrl = `${API_APP_BASE}/payment`;
 
-  recordDeposit(input: RecordDepositInput): Observable<Payment> {
-    return this.http.post<Payment>(`${this.apiUrl}/record-deposit`, input);
+  recordDeposit(input: RecordDepositInput): Observable<DepositPaymentResult> {
+    return this.http.post<DepositPaymentResult>(`${this.apiUrl}/record-deposit`, input);
   }
 
   recordInstallment(input: RecordInstallmentInput): Observable<InstallmentPaymentResult> {

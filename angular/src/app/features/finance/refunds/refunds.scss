@@ -1,5 +1,106 @@
 @use '../finance-table';
 
+.toolbar,
+.lookup-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+
+  input {
+    min-width: 220px;
+    flex: 1;
+  }
+}
+
+.lookup-panel {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  background: #fff;
+
+  h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+  }
+}
+
+.lookup-loading {
+  margin-top: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.lookup-details {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.lookup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+
+  span {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+  }
+}
+
+.lookup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  span {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+}
+
+.process-btn {
+  margin-top: 0.25rem;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.refund-status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.refund-status-processed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.refund-status-none {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.link-btn {
+  border: none;
+  background: none;
+  color: var(--primary-600, #2563eb);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: underline;
+}
+
 .muted {
   font-size: 0.85rem;
   color: var(--text-secondary);

@@ -476,6 +476,11 @@ namespace BanquetHallManagement.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("CreatorId");
 
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasComment("اسم العميل المرتبط بالقيد.");
+
                     b.Property<Guid?>("DeleterId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("DeleterId");
@@ -488,6 +493,11 @@ namespace BanquetHallManagement.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
                         .HasComment("وصف القيد.");
+
+                    b.Property<string>("EmployeeName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasComment("اسم الموظف الذي أنشأ القيد.");
 
                     b.Property<DateTime>("EntryDate")
                         .HasColumnType("datetime2")
@@ -503,6 +513,11 @@ namespace BanquetHallManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("ExtraProperties");
+
+                    b.Property<string>("HallName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasComment("اسم القاعة المرتبطة بالقيد.");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -535,6 +550,11 @@ namespace BanquetHallManagement.Migrations
                     b.Property<Guid?>("ReservationId")
                         .HasColumnType("uniqueidentifier")
                         .HasComment("معرف الحجز المرتبط بالقيد إن وجد.");
+
+                    b.Property<string>("ReservationNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("رقم الحجز المرتبط بالقيد.");
 
                     b.Property<string>("SourceType")
                         .IsRequired()
@@ -833,6 +853,12 @@ namespace BanquetHallManagement.Migrations
                         .HasDefaultValue(0m)
                         .HasComment("إجمالي المبالغ المدفوعة على الحجز.");
 
+                    b.Property<string>("ReservationNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasComment("رقم الحجز التشغيلي مثل RES-2026-00001.");
+
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time")
                         .HasComment("وقت بداية الحجز.");
@@ -856,6 +882,9 @@ namespace BanquetHallManagement.Migrations
                     b.HasIndex("EventDate");
 
                     b.HasIndex("HallId");
+
+                    b.HasIndex("ReservationNumber")
+                        .IsUnique();
 
                     b.HasIndex("HallId", "EventDate");
 

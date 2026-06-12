@@ -15,4 +15,8 @@ public interface IReservationRepository : IRepository<Reservation, Guid>
         Guid hallId,
         DateTime eventDate,
         CancellationToken cancellationToken = default);
+
+    Task<Reservation?> FindByReservationNumberAsync(
+        string reservationNumber,
+        CancellationToken cancellationToken = default);
 }

@@ -72,4 +72,19 @@ export class ReservationService {
       {}
     );
   }
+
+  confirmHallEntryByReservationNumber(
+    reservationNumber: string
+  ): Observable<Reservation> {
+    return this.http.post<Reservation>(
+      `${this.apiUrl}/confirm-hall-entry-by-number`,
+      { reservationNumber }
+    );
+  }
+
+  getByReservationNumber(reservationNumber: string): Observable<Reservation> {
+    return this.http.get<Reservation>(
+      `${this.apiUrl}/by-reservation-number/${encodeURIComponent(reservationNumber)}`
+    );
+  }
 }

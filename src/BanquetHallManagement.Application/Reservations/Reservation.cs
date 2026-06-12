@@ -1,6 +1,8 @@
 ﻿using BanquetHallManagement.Customers;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Enums;
+using BanquetHallManagement.Finance.HallAccessCards;
+using BanquetHallManagement.Finance.Services;
 using BanquetHallManagement.Halls;
 using BanquetHallManagement.Permissions;
 using BanquetHallManagement.ReservationServices;
@@ -33,6 +35,8 @@ public class ReservationAppService :
     private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly HallAvailabilityManager _hallAvailabilityManager;
     private readonly ReservationSchedulingManager _reservationSchedulingManager;
+    private readonly IReservationNumberGenerator _reservationNumberGenerator;
+    private readonly IHallAccessCardRepository _hallAccessCardRepository;
 
     public ReservationAppService(
         IReservationRepository reservationRepository,
@@ -41,7 +45,9 @@ public class ReservationAppService :
         IRepository<ReservationService, Guid> reservationServiceRepository,
         IRepository<Customer, Guid> customerRepository,
         HallAvailabilityManager hallAvailabilityManager,
-        ReservationSchedulingManager reservationSchedulingManager)
+        ReservationSchedulingManager reservationSchedulingManager,
+        IReservationNumberGenerator reservationNumberGenerator,
+        IHallAccessCardRepository hallAccessCardRepository)
     {
         _reservationRepository = reservationRepository;
         _hallRepository = hallRepository;
@@ -50,6 +56,8 @@ public class ReservationAppService :
         _customerRepository = customerRepository;
         _hallAvailabilityManager = hallAvailabilityManager;
         _reservationSchedulingManager = reservationSchedulingManager;
+        _reservationNumberGenerator = reservationNumberGenerator;
+        _hallAccessCardRepository = hallAccessCardRepository;
     }
 
     public async Task<ReservationDto> GetAsync(Guid id)
@@ -130,11 +138,39 @@ public class ReservationAppService :
     {
         var reservation = await _reservationRepository.GetAsync(id, includeDetails: true);
 
+        await EnsureHallAccessCardExistsAsync(reservation.Id);
         reservation.ConfirmHallEntry();
 
         await _reservationRepository.UpdateAsync(reservation, autoSave: false);
         await CurrentUnitOfWork!.SaveChangesAsync();
 
+        return MapToDto(reservation);
+    }
+
+    [Authorize(BanquetHallManagementPermissions.Reservations.ConfirmHallEntry)]
+    public async Task<ReservationDto> ConfirmHallEntryByReservationNumberAsync(
+        ConfirmHallEntryByNumberDto input)
+    {
+        var reservation = await GetReservationByNumberOrThrowAsync(input.ReservationNumber);
+
+        if (reservation.Status != ReservationStatus.FullyPaid)
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.ReservationCannotConfirmHallEntry);
+        }
+
+        await EnsureHallAccessCardExistsAsync(reservation.Id);
+        reservation.ConfirmHallEntry();
+
+        await _reservationRepository.UpdateAsync(reservation, autoSave: false);
+        await CurrentUnitOfWork!.SaveChangesAsync();
+
+        return MapToDto(reservation);
+    }
+
+    public async Task<ReservationDto> GetByReservationNumberAsync(string reservationNumber)
+    {
+        var reservation = await GetReservationByNumberOrThrowAsync(reservationNumber);
         return MapToDto(reservation);
     }
 
@@ -181,6 +217,9 @@ public class ReservationAppService :
             Status = ReservationStatus.Pending,
             TotalPrice = 0
         };
+
+        reservation.AssignReservationNumber(
+            await _reservationNumberGenerator.GenerateAsync());
 
         await _reservationRepository.InsertAsync(reservation, autoSave: false);
 
@@ -386,6 +425,28 @@ public class ReservationAppService :
         {
             throw new UserFriendlyException(L["Validation:StartTimeBeforeEndTime"]);
         }
+    }
+
+    private async Task EnsureHallAccessCardExistsAsync(Guid reservationId)
+    {
+        var card = await _hallAccessCardRepository.FindByReservationIdAsync(reservationId);
+        if (card == null)
+        {
+            throw new BusinessException(BanquetHallManagementDomainErrorCodes.HallAccessCardNotFound)
+                .WithData("ReservationId", reservationId);
+        }
+    }
+
+    private async Task<Reservation> GetReservationByNumberOrThrowAsync(string reservationNumber)
+    {
+        var reservation = await _reservationRepository.FindByReservationNumberAsync(reservationNumber);
+        if (reservation == null)
+        {
+            throw new BusinessException(BanquetHallManagementDomainErrorCodes.ReservationNotFound)
+                .WithData("ReservationNumber", reservationNumber);
+        }
+
+        return reservation;
     }
 
     private ReservationDto MapToDto(

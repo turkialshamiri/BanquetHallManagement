@@ -42,6 +42,17 @@ IF @rc < 0
     THROW 55000, 'Failed to acquire reservation scheduling lock.', 1;", cancellationToken);
     }
 
+    public async Task<Reservation?> FindByReservationNumberAsync(
+        string reservationNumber,
+        CancellationToken cancellationToken = default)
+    {
+        var query = await GetQueryableAsync();
+
+        return await AsyncExecuter.FirstOrDefaultAsync(
+            query.Where(reservation => reservation.ReservationNumber == reservationNumber),
+            cancellationToken);
+    }
+
     internal static string BuildSchedulingLockResource(Guid hallId, DateTime eventDate)
     {
         return $"BHM_Reservation_{hallId:N}_{eventDate:yyyyMMdd}";

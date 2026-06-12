@@ -51,4 +51,8 @@ export class AccessCard implements OnInit {
   print(): void {
     window.print();
   }
+
+  encodeURIComponent(value: string): string {
+    return encodeURIComponent(value);
+  }
 }

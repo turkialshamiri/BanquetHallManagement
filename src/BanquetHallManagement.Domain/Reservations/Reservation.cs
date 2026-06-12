@@ -31,6 +31,8 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
     public decimal TotalPrice { get; set; }
     public decimal PaidAmount { get; set; }
 
+    public string ReservationNumber { get; private set; } = null!;
+
     public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
 
     public string? CancellationReason { get; private set; }
@@ -38,6 +40,14 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
     public CancellationType? CancellationType { get; private set; }
 
     public ICollection<ReservationService> Services { get; set; } = new List<ReservationService>();
+
+    public void AssignReservationNumber(string reservationNumber)
+    {
+        ReservationNumber = Check.NotNullOrWhiteSpace(
+            reservationNumber,
+            nameof(reservationNumber),
+            maxLength: 50);
+    }
 
     public void FinalizeCreation(decimal totalPrice)
     {

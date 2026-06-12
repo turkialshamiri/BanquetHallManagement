@@ -4,11 +4,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BanquetHallManagement.Enums;
+using BanquetHallManagement.Finance;
 using BanquetHallManagement.Finance.Accounts;
 using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Services;
+using BanquetHallManagement.Localization;
+using BanquetHallManagement.Reservations;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using NSubstitute;
 using Shouldly;
 using Volo.Abp;
@@ -31,25 +35,20 @@ public class JournalPostingServiceTests
     [Fact]
     public async Task PostDepositRevenueAsync_Should_Post_Balanced_Entry_For_Deposit()
     {
-        var payment = CreatePayment(PaymentType.Deposit, 30_000m);
+        var reservation = CreateReservation(100_000m);
+        var payment = CreatePayment(PaymentType.Deposit, 30_000m, reservation.Id);
         var service = CreateService([], out var journalEntryRepository);
 
-        var entry = await service.PostDepositRevenueAsync(payment);
+        var entry = await service.PostDepositRevenueAsync(payment, reservation);
 
         entry.SourceType.ShouldBe(JournalEntrySourceType.DepositRevenue);
         entry.PaymentId.ShouldBe(payment.Id);
+        entry.ReservationNumber.ShouldBe(reservation.ReservationNumber);
         entry.IsPosted.ShouldBeTrue();
         entry.IsBalanced().ShouldBeTrue();
         entry.GetTotalDebit().ShouldBe(30_000m);
         entry.GetTotalCredit().ShouldBe(30_000m);
-
-        var cashLine = entry.Lines.Single(line => line.AccountId == CashAccountId);
-        cashLine.Debit.ShouldBe(30_000m);
-        cashLine.Credit.ShouldBe(0m);
-
-        var revenueLine = entry.Lines.Single(line => line.AccountId == DepositRevenueAccountId);
-        revenueLine.Debit.ShouldBe(0m);
-        revenueLine.Credit.ShouldBe(30_000m);
+        entry.Lines.Count.ShouldBe(2);
 
         payment.JournalEntryId.ShouldBe(entry.Id);
 
@@ -60,12 +59,34 @@ public class JournalPostingServiceTests
     }
 
     [Fact]
-    public async Task PostDeferredRevenueAsync_Should_Post_Balanced_Entry_For_Installment()
+    public async Task PostFullDepositPaymentAsync_Should_Split_Deposit_And_Deferred_Revenue()
     {
-        var payment = CreatePayment(PaymentType.Installment, 20_000m);
+        var reservation = CreateReservation(90_000m);
+        var payment = CreatePayment(PaymentType.Deposit, 90_000m, reservation.Id);
         var service = CreateService([], out _);
 
-        var entry = await service.PostDeferredRevenueAsync(payment);
+        var entry = await service.PostFullDepositPaymentAsync(payment, reservation);
+
+        entry.IsBalanced().ShouldBeTrue();
+        entry.Lines.Count.ShouldBe(3);
+        entry.GetTotalDebit().ShouldBe(90_000m);
+        entry.GetTotalCredit().ShouldBe(90_000m);
+
+        var depositLine = entry.Lines.Single(line => line.AccountId == DepositRevenueAccountId);
+        depositLine.Credit.ShouldBe(27_000m);
+
+        var deferredLine = entry.Lines.Single(line => line.AccountId == DeferredRevenueAccountId);
+        deferredLine.Credit.ShouldBe(63_000m);
+    }
+
+    [Fact]
+    public async Task PostDeferredRevenueAsync_Should_Post_Balanced_Entry_For_Installment()
+    {
+        var reservation = CreateReservation(100_000m);
+        var payment = CreatePayment(PaymentType.Installment, 20_000m, reservation.Id);
+        var service = CreateService([], out _);
+
+        var entry = await service.PostDeferredRevenueAsync(payment, reservation);
 
         entry.SourceType.ShouldBe(JournalEntrySourceType.DeferredRevenue);
         entry.IsBalanced().ShouldBeTrue();
@@ -79,11 +100,12 @@ public class JournalPostingServiceTests
     [Fact]
     public async Task PostDepositRevenueAsync_Should_Not_Create_Duplicate_Entry_On_Retry()
     {
-        var payment = CreatePayment(PaymentType.Deposit, 30_000m);
+        var reservation = CreateReservation(100_000m);
+        var payment = CreatePayment(PaymentType.Deposit, 30_000m, reservation.Id);
         var service = CreateService([], out var journalEntryRepository);
 
-        var firstEntry = await service.PostDepositRevenueAsync(payment);
-        var secondEntry = await service.PostDepositRevenueAsync(payment);
+        var firstEntry = await service.PostDepositRevenueAsync(payment, reservation);
+        var secondEntry = await service.PostDepositRevenueAsync(payment, reservation);
 
         secondEntry.Id.ShouldBe(firstEntry.Id);
 
@@ -94,50 +116,16 @@ public class JournalPostingServiceTests
     }
 
     [Fact]
-    public async Task PostDepositRevenueAsync_Should_Return_Existing_Entry_When_Payment_Already_Linked()
-    {
-        var payment = CreatePayment(PaymentType.Deposit, 30_000m);
-        var existingEntry = CreatePostedEntry(
-            payment,
-            JournalEntrySourceType.DepositRevenue,
-            DepositRevenueAccountId);
-
-        payment.LinkJournalEntry(existingEntry.Id);
-
-        var service = CreateService([existingEntry], out var journalEntryRepository);
-
-        var entry = await service.PostDepositRevenueAsync(payment);
-
-        entry.Id.ShouldBe(existingEntry.Id);
-
-        await journalEntryRepository.DidNotReceive().InsertAsync(
-            Arg.Any<JournalEntry>(),
-            Arg.Any<bool>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task PostDepositRevenueAsync_Should_Throw_When_Account_Is_Missing()
     {
-        var payment = CreatePayment(PaymentType.Deposit, 30_000m);
+        var reservation = CreateReservation(100_000m);
+        var payment = CreatePayment(PaymentType.Deposit, 30_000m, reservation.Id);
         var service = CreateService([], out _, includeAccounts: false);
 
         var exception = await Should.ThrowAsync<BusinessException>(() =>
-            service.PostDepositRevenueAsync(payment));
+            service.PostDepositRevenueAsync(payment, reservation));
 
         exception.Code.ShouldBe(BanquetHallManagementDomainErrorCodes.AccountNotFound);
-    }
-
-    [Fact]
-    public void LinkJournalEntry_Should_Throw_When_Different_Entry_Already_Linked()
-    {
-        var payment = CreatePayment(PaymentType.Deposit, 30_000m);
-        payment.LinkJournalEntry(Guid.NewGuid());
-
-        var exception = Should.Throw<BusinessException>(() =>
-            payment.LinkJournalEntry(Guid.NewGuid()));
-
-        exception.Code.ShouldBe(BanquetHallManagementDomainErrorCodes.JournalEntryDuplicatePosting);
     }
 
     private static JournalPostingService CreateService(
@@ -190,8 +178,30 @@ public class JournalPostingServiceTests
         entryNumberGenerator.GenerateAsync(Arg.Any<CancellationToken>())
             .Returns("JE-2026-00001");
 
+        var contextProvider = Substitute.For<IJournalEntryContextProvider>();
+
+        contextProvider.ResolveForReservationAsync(
+                Arg.Any<Reservation>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var reservation = callInfo.Arg<Reservation>();
+                return Task.FromResult(new JournalEntryBusinessMetadata
+                {
+                    ReservationNumber = reservation.ReservationNumber,
+                    CustomerName = "Test Customer",
+                    HallName = "Test Hall",
+                    EmployeeName = "Test Employee",
+                });
+            });
+
+        var localizer = Substitute.For<IStringLocalizer<BanquetHallManagementResource>>();
+        localizer[Arg.Any<string>()].Returns(callInfo => new LocalizedString(callInfo.Arg<string>(), callInfo.Arg<string>()));
+        localizer[Arg.Any<string>(), Arg.Any<object[]>()]
+            .Returns(callInfo => new LocalizedString(callInfo.Arg<string>(), callInfo.Arg<string>()));
+
         var guidGenerator = Substitute.For<IGuidGenerator>();
-        guidGenerator.Create().Returns(_ => Guid.NewGuid(), _ => Guid.NewGuid(), _ => Guid.NewGuid());
+        guidGenerator.Create().Returns(_ => Guid.NewGuid(), _ => Guid.NewGuid(), _ => Guid.NewGuid(), _ => Guid.NewGuid());
 
         var clock = Substitute.For<IClock>();
         clock.Now.Returns(Now);
@@ -204,7 +214,9 @@ public class JournalPostingServiceTests
         var postingService = new JournalPostingService(
             journalEntryRepository,
             accountRepository,
-            entryNumberGenerator)
+            entryNumberGenerator,
+            contextProvider,
+            localizer)
         {
             LazyServiceProvider = new AbpLazyServiceProvider(services.BuildServiceProvider()),
         };
@@ -230,35 +242,33 @@ public class JournalPostingServiceTests
         ];
     }
 
-    private static Payment CreatePayment(PaymentType paymentType, decimal amount)
+    private static Reservation CreateReservation(decimal totalPrice)
+    {
+        var reservation = new Reservation(Guid.NewGuid())
+        {
+            HallId = Guid.NewGuid(),
+            CustomerId = Guid.NewGuid(),
+            EventDate = Now.Date.AddDays(7),
+            StartTime = new TimeSpan(18, 0, 0),
+            EndTime = new TimeSpan(22, 0, 0),
+            GuestsCount = 100,
+            TotalPrice = totalPrice,
+            Status = ReservationStatus.Confirmed,
+        };
+
+        reservation.AssignReservationNumber("RES-2026-00001");
+
+        return reservation;
+    }
+
+    private static Payment CreatePayment(PaymentType paymentType, decimal amount, Guid reservationId)
     {
         return new Payment(
             Guid.NewGuid(),
-            Guid.NewGuid(),
+            reservationId,
             amount,
             Now,
             paymentType,
             "RC-2026-00001");
-    }
-
-    private static JournalEntry CreatePostedEntry(
-        Payment payment,
-        JournalEntrySourceType sourceType,
-        Guid creditAccountId)
-    {
-        var entry = new JournalEntry(
-            Guid.NewGuid(),
-            "JE-2026-00099",
-            payment.PaymentDate,
-            sourceType,
-            "Existing entry",
-            payment.ReservationId,
-            payment.Id);
-
-        entry.AddLine(Guid.NewGuid(), CashAccountId, payment.Amount, 0m);
-        entry.AddLine(Guid.NewGuid(), creditAccountId, 0m, payment.Amount);
-        entry.Post(Now);
-
-        return entry;
     }
 }

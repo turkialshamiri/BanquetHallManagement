@@ -11,6 +11,8 @@ public class ReservationEventSnapshot
 {
     public Guid ReservationId { get; init; }
 
+    public string ReservationNumber { get; init; } = null!;
+
     public Guid HallId { get; init; }
 
     public Guid CustomerId { get; init; }
@@ -30,6 +32,7 @@ public class ReservationEventSnapshot
         return new ReservationEventSnapshot
         {
             ReservationId = reservation.Id,
+            ReservationNumber = reservation.ReservationNumber,
             HallId = reservation.HallId,
             CustomerId = reservation.CustomerId,
             EventDate = reservation.EventDate,

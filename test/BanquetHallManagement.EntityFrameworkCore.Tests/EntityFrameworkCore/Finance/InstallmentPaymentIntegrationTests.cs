@@ -96,6 +96,8 @@ public class InstallmentPaymentIntegrationTests : BanquetHallManagementEntityFra
             Status = ReservationStatus.Confirmed,
         };
 
+        reservation.AssignReservationNumber($"RES-2026-{Guid.NewGuid():N}"[..14]);
+
         await reservationRepository.InsertAsync(reservation, autoSave: true);
 
         return reservation.Id;

@@ -43,6 +43,34 @@ export class StatusLocalizationService {
     return this.l10n.instant(keyByStatus[status] ?? status);
   }
 
+  refundStatus(statusCode: string): string {
+    const keyByStatus: Record<string, string> = {
+      Pending: 'Finance:Refunds:Status:Pending',
+      Processed: 'Finance:Refunds:Status:Processed',
+      None: 'Finance:Refunds:Status:None',
+    };
+
+    if (!statusCode) {
+      return '—';
+    }
+
+    return this.l10n.instant(keyByStatus[statusCode] ?? statusCode);
+  }
+
+  paymentStatus(status: string): string {
+    const keyByStatus: Record<string, string> = {
+      FullyPaid: 'Enum:PaymentStatus:FullyPaid',
+      PartiallyPaid: 'Enum:PaymentStatus:PartiallyPaid',
+      Unpaid: 'Enum:PaymentStatus:Unpaid',
+    };
+
+    if (!status) {
+      return '—';
+    }
+
+    return this.l10n.instant(keyByStatus[status] ?? status);
+  }
+
   roleLabel(role: string): string {
     const normalized = role?.toLowerCase();
     if (normalized === 'admin') {

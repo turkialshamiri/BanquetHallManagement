@@ -8,8 +8,10 @@ using BanquetHallManagement.Finance.Accounts;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Services;
 using BanquetHallManagement.Halls;
+using BanquetHallManagement.Localization;
 using BanquetHallManagement.Reservations;
 using BanquetHallManagement.Services;
+using Microsoft.Extensions.Localization;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Services;
 
@@ -23,6 +25,8 @@ public class RevenueRecognitionService : DomainService, IRevenueRecognitionServi
     private readonly IRepository<Hall, Guid> _hallRepository;
     private readonly IRepository<Service, Guid> _serviceRepository;
     private readonly IEntryNumberGenerator _entryNumberGenerator;
+    private readonly IJournalEntryContextProvider _journalEntryContextProvider;
+    private readonly IStringLocalizer<BanquetHallManagementResource> _localizer;
 
     public RevenueRecognitionService(
         IJournalEntryRepository journalEntryRepository,
@@ -30,7 +34,9 @@ public class RevenueRecognitionService : DomainService, IRevenueRecognitionServi
         IRepository<Account, Guid> accountRepository,
         IRepository<Hall, Guid> hallRepository,
         IRepository<Service, Guid> serviceRepository,
-        IEntryNumberGenerator entryNumberGenerator)
+        IEntryNumberGenerator entryNumberGenerator,
+        IJournalEntryContextProvider journalEntryContextProvider,
+        IStringLocalizer<BanquetHallManagementResource> localizer)
     {
         _journalEntryRepository = journalEntryRepository;
         _paymentRepository = paymentRepository;
@@ -38,6 +44,8 @@ public class RevenueRecognitionService : DomainService, IRevenueRecognitionServi
         _hallRepository = hallRepository;
         _serviceRepository = serviceRepository;
         _entryNumberGenerator = entryNumberGenerator;
+        _journalEntryContextProvider = journalEntryContextProvider;
+        _localizer = localizer;
     }
 
     public async Task<JournalEntry?> RecognizeRevenueAsync(
@@ -55,7 +63,7 @@ public class RevenueRecognitionService : DomainService, IRevenueRecognitionServi
         }
 
         var deferredAmount = await CalculateDeferredPaymentTotalAsync(
-            reservation.Id,
+            reservation,
             cancellationToken);
 
         if (deferredAmount <= 0)
@@ -78,29 +86,34 @@ public class RevenueRecognitionService : DomainService, IRevenueRecognitionServi
             FinanceAccountCodes.ServiceRevenue,
             cancellationToken);
 
+        var metadata = await _journalEntryContextProvider.ResolveForReservationAsync(
+            reservation,
+            cancellationToken);
         var entryNumber = await _entryNumberGenerator.GenerateAsync(cancellationToken);
+        var reservationLabel = metadata.ReservationNumber ?? reservation.ReservationNumber;
 
         var entry = new JournalEntry(
             GuidGenerator.Create(),
             entryNumber,
             Clock.Now,
             JournalEntrySourceType.RevenueRecognition,
-            $"Revenue recognition for reservation {reservation.Id}",
-            reservation.Id);
+            _localizer["Journal:RevenueRecognized", reservationLabel],
+            reservation.Id,
+            metadata: metadata);
 
         entry.AddLine(
             GuidGenerator.Create(),
             deferredRevenueAccount.Id,
             deferredAmount,
             0m,
-            "Release deferred revenue");
+            _localizer["Journal:Line:ReleaseDeferredRevenue"]);
 
         entry.AddLine(
             GuidGenerator.Create(),
             hallRevenueAccount.Id,
             0m,
             hallRevenue,
-            "Hall revenue");
+            _localizer["Journal:Line:HallRevenue"]);
 
         if (serviceRevenue > 0)
         {
@@ -109,7 +122,7 @@ public class RevenueRecognitionService : DomainService, IRevenueRecognitionServi
                 serviceRevenueAccount.Id,
                 0m,
                 serviceRevenue,
-                "Service revenue");
+                _localizer["Journal:Line:ServiceRevenue"]);
         }
 
         entry.Post(Clock.Now);
@@ -120,19 +133,18 @@ public class RevenueRecognitionService : DomainService, IRevenueRecognitionServi
     }
 
     private async Task<decimal> CalculateDeferredPaymentTotalAsync(
-        Guid reservationId,
+        Reservation reservation,
         CancellationToken cancellationToken)
     {
         var query = await _paymentRepository.GetQueryableAsync();
 
         var payments = await AsyncExecuter.ToListAsync(
-            query.Where(payment =>
-                payment.ReservationId == reservationId &&
-                (payment.PaymentType == PaymentType.Installment ||
-                 payment.PaymentType == PaymentType.Final)),
+            query.Where(payment => payment.ReservationId == reservation.Id),
             cancellationToken);
 
-        return payments.Sum(payment => payment.Amount);
+        return DeferredRevenueCalculator.CalculateDeferredAmount(
+            reservation.TotalPrice,
+            payments);
     }
 
     private async Task<(decimal HallRevenue, decimal ServiceRevenue)> CalculateRevenueSplitAsync(

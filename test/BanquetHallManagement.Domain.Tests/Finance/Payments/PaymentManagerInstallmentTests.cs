@@ -31,6 +31,18 @@ public class PaymentManagerInstallmentTests
     private static readonly Guid HallId = Guid.NewGuid();
 
     [Fact]
+    public async Task RecordInstallmentAsync_Should_Reject_Overpayment()
+    {
+        var reservation = CreateConfirmedReservation(totalPrice: 90_000m, paidAmount: 80_000m);
+        var manager = CreatePaymentManager([reservation], out _, []);
+
+        var exception = await Should.ThrowAsync<BusinessException>(() =>
+            manager.RecordInstallmentAsync(reservation.Id, 20_000m));
+
+        exception.Code.ShouldBe(BanquetHallManagementDomainErrorCodes.PaymentAmountExceedsRemaining);
+    }
+
+    [Fact]
     public async Task RecordInstallmentAsync_Should_Reject_Installment_Below_20_Percent()
     {
         var reservation = CreateConfirmedReservation(totalPrice: 100_000m, paidAmount: 30_000m);
@@ -233,7 +245,7 @@ public class PaymentManagerInstallmentTests
 
     private static Reservation CreateConfirmedReservation(decimal totalPrice, decimal paidAmount)
     {
-        return new Reservation(Guid.NewGuid())
+        var reservation = new Reservation(Guid.NewGuid())
         {
             HallId = HallId,
             CustomerId = Guid.NewGuid(),
@@ -245,5 +257,9 @@ public class PaymentManagerInstallmentTests
             PaidAmount = paidAmount,
             Status = ReservationStatus.Confirmed,
         };
+
+        ReservationTestData.AssignReservationNumber(reservation);
+
+        return reservation;
     }
 }

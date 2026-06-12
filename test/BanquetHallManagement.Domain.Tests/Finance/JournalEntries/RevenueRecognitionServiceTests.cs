@@ -10,9 +10,11 @@ using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Services;
 using BanquetHallManagement.Halls;
+using BanquetHallManagement.Localization;
 using BanquetHallManagement.Reservations;
 using BanquetHallManagement.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using NSubstitute;
 using Shouldly;
 using Volo.Abp.DependencyInjection;
@@ -169,16 +171,46 @@ public class RevenueRecognitionServiceTests
         services.AddSingleton(clock);
         services.AddSingleton(guidGenerator);
 
+        var contextProvider = CreateContextProvider();
+        var localizer = CreateLocalizer();
+
         return new RevenueRecognitionService(
             journalEntryRepository,
             paymentRepository,
             accountRepository,
             hallRepository,
             serviceRepository,
-            entryNumberGenerator)
+            entryNumberGenerator,
+            contextProvider,
+            localizer)
         {
             LazyServiceProvider = new AbpLazyServiceProvider(services.BuildServiceProvider()),
         };
+    }
+
+    private static IJournalEntryContextProvider CreateContextProvider()
+    {
+        var provider = Substitute.For<IJournalEntryContextProvider>();
+
+        provider.ResolveForReservationAsync(Arg.Any<Reservation>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(new JournalEntryBusinessMetadata
+            {
+                ReservationNumber = callInfo.Arg<Reservation>().ReservationNumber,
+                CustomerName = "Test Customer",
+                HallName = "Main Hall",
+                EmployeeName = "Test Employee",
+            }));
+
+        return provider;
+    }
+
+    private static IStringLocalizer<BanquetHallManagementResource> CreateLocalizer()
+    {
+        var localizer = Substitute.For<IStringLocalizer<BanquetHallManagementResource>>();
+        localizer[Arg.Any<string>()].Returns(callInfo => new LocalizedString(callInfo.Arg<string>(), callInfo.Arg<string>()));
+        localizer[Arg.Any<string>(), Arg.Any<object[]>()]
+            .Returns(callInfo => new LocalizedString(callInfo.Arg<string>(), callInfo.Arg<string>()));
+        return localizer;
     }
 
     private static List<Account> CreateAccounts()
@@ -205,6 +237,8 @@ public class RevenueRecognitionServiceTests
             PaidAmount = 100_000m,
             Status = ReservationStatus.FullyPaid,
         };
+
+        ReservationTestData.AssignReservationNumber(reservation);
 
         return reservation;
     }

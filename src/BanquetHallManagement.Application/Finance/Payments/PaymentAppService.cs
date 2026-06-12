@@ -30,13 +30,19 @@ public class PaymentAppService : BanquetHallManagementAppService, IPaymentAppSer
 
     [Authorize(BanquetHallManagementPermissions.Finance.PaymentsCreate)]
     [Authorize(BanquetHallManagementPermissions.Reservations.RecordPayment)]
-    public Task<PaymentDto> RecordDepositAsync(RecordDepositDto input)
+    public Task<DepositPaymentResultDto> RecordDepositAsync(RecordDepositDto input)
     {
         return ExecuteSchedulingOperationAsync(async () =>
         {
-            var payment = await _paymentManager.RecordDepositAsync(input.ReservationId, input.Amount);
+            var result = await _paymentManager.RecordDepositAsync(input.ReservationId, input.Amount);
             await CurrentUnitOfWork.SaveChangesAsync();
-            return MapToDto(payment);
+
+            var dto = ObjectMapper.Map<Payment, DepositPaymentResultDto>(result.Payment);
+            dto.PaymentType = result.Payment.PaymentType.ToString();
+            dto.IsFullyPaid = result.IsFullyPaid;
+            dto.HallAccessCardId = result.HallAccessCardId;
+
+            return dto;
         });
     }
 

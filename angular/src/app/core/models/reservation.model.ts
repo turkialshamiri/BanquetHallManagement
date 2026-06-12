@@ -1,5 +1,6 @@
 export interface Reservation {
   id: string;
+  reservationNumber: string;
   hallId: string;
   customerId: string;
   eventDate: string;

@@ -251,6 +251,8 @@ public class AutoCancelRefundIntegrationTests : BanquetHallManagementEntityFrame
             Status = status,
         };
 
+        reservation.AssignReservationNumber($"RES-2026-{Guid.NewGuid():N}"[..14]);
+
         await reservationRepository.InsertAsync(reservation, autoSave: true);
 
         return reservation.Id;

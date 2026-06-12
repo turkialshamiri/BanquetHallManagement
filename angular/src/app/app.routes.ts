@@ -117,6 +117,16 @@ export const APP_ROUTES: Routes = [
         data: { openAddDialog: true },
       },
       {
+        path: 'bookings/access-cards',
+        canActivate: [
+          permissionGuard('BanquetHallManagement.Finance.HallAccessCards.View'),
+        ],
+        loadComponent: () =>
+          import('./features/bookings/access-cards/access-cards').then(
+            (m) => m.AccessCards
+          ),
+      },
+      {
         path: 'finance/invoices',
         canActivate: [
           permissionGuard('BanquetHallManagement.Finance.Invoices.View'),

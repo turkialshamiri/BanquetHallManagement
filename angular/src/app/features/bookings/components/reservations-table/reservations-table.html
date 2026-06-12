@@ -26,6 +26,7 @@
 
                 <tr>
 
+                    <th>{{ 'Reservations:Column:ReservationNumber' | appLocalization }}</th>
                     <th>{{ 'Reservations:Column:Customer' | appLocalization }}</th>
                     <th>{{ 'Reservations:Column:Hall' | appLocalization }}</th>
                     <th>{{ 'Reservations:Column:Date' | appLocalization }}</th>
@@ -50,6 +51,8 @@
                     @for (reservation of reservations(); track reservation.id) {
 
                         <tr>
+
+                            <td><strong>{{ reservation.reservationNumber }}</strong></td>
 
                             <td>
 
@@ -134,18 +137,6 @@
                                             [title]="'Reservations:Action:RecordPayment' | appLocalization"
                                             (click)="openRecordPaymentDialog(reservation)">
                                             <mat-icon>payments</mat-icon>
-                                        </button>
-                                    }
-
-                                    @if (
-                                        canConfirmHallEntryAction &&
-                                        canConfirmHallEntry(reservation.status)
-                                    ) {
-                                        <button
-                                            class="action-btn hall-entry-btn"
-                                            [title]="'Reservations:Action:ConfirmHallEntry' | appLocalization"
-                                            (click)="confirmHallEntry(reservation.id)">
-                                            <mat-icon>door_front</mat-icon>
                                         </button>
                                     }
 

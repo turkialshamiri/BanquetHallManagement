@@ -25,7 +25,7 @@ public class EntityFrameworkCoreBanquetHallManagementDbSchemaMigrator
          * current scope.
          */
 
-        await _serviceProvider
+       await _serviceProvider
             .GetRequiredService<BanquetHallManagementDbContext>()
             .Database
             .MigrateAsync();

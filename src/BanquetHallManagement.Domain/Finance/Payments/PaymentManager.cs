@@ -34,7 +34,7 @@ public class PaymentManager : DomainService
         _hallAccessCardManager = hallAccessCardManager;
     }
 
-    public async Task<Payment> RecordDepositAsync(
+    public async Task<DepositPaymentResult> RecordDepositAsync(
         Guid reservationId,
         decimal amount,
         CancellationToken cancellationToken = default)
@@ -60,9 +60,28 @@ public class PaymentManager : DomainService
             PaymentType.Deposit,
             receiptNumber);
 
+        HallAccessCard? hallAccessCard = null;
+        var isFullyPaid = false;
+
+        if (FinancePaymentRules.IsFullPayment(amount, reservation.TotalPrice))
+        {
+            isFullyPaid = reservation.TryMarkFullyPaid();
+            if (isFullyPaid)
+            {
+                hallAccessCard = await _hallAccessCardManager.CreateForReservationAsync(
+                    reservation,
+                    cancellationToken);
+            }
+
+            await _reservationRepository.UpdateAsync(reservation, autoSave: false, cancellationToken);
+        }
+
         await _paymentRepository.InsertAsync(payment, autoSave: false, cancellationToken);
 
-        return payment;
+        return new DepositPaymentResult(
+            payment,
+            isFullyPaid,
+            hallAccessCard?.Id);
     }
 
     public async Task<InstallmentPaymentResult> RecordInstallmentAsync(
@@ -127,14 +146,17 @@ public class PaymentManager : DomainService
                 BanquetHallManagementDomainErrorCodes.PaymentAmountInvalid);
         }
 
-        var remaining = reservation.GetRemainingAmount();
-        if (amount > remaining)
+        if (FinancePaymentRules.WouldExceedTotalPrice(
+                reservation.PaidAmount,
+                amount,
+                reservation.TotalPrice))
         {
             throw new BusinessException(
                 BanquetHallManagementDomainErrorCodes.PaymentAmountExceedsRemaining)
-                .WithData("RemainingAmount", remaining);
+                .WithData("RemainingAmount", reservation.GetRemainingAmount());
         }
 
+        var remaining = reservation.GetRemainingAmount();
         var minimumInstallment = FinancePaymentRules.CalculateMinimumInstallment(reservation.TotalPrice);
         if (amount < minimumInstallment && amount < remaining)
         {
@@ -155,6 +177,16 @@ public class PaymentManager : DomainService
         {
             throw new BusinessException(
                 BanquetHallManagementDomainErrorCodes.PaymentAmountInvalid);
+        }
+
+        if (FinancePaymentRules.WouldExceedTotalPrice(
+                reservation.PaidAmount,
+                amount,
+                reservation.TotalPrice))
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.PaymentAmountExceedsRemaining)
+                .WithData("RemainingAmount", reservation.GetRemainingAmount());
         }
 
         var minimumDeposit = FinancePaymentRules.CalculateMinimumDeposit(reservation.TotalPrice);

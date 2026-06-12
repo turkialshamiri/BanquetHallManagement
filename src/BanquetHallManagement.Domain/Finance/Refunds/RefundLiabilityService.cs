@@ -7,7 +7,9 @@ using BanquetHallManagement.Finance.Accounts;
 using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Services;
+using BanquetHallManagement.Localization;
 using BanquetHallManagement.Reservations;
+using Microsoft.Extensions.Localization;
 using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Services;
@@ -20,17 +22,23 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
     private readonly IRepository<Payment, Guid> _paymentRepository;
     private readonly IRepository<Account, Guid> _accountRepository;
     private readonly IEntryNumberGenerator _entryNumberGenerator;
+    private readonly IJournalEntryContextProvider _journalEntryContextProvider;
+    private readonly IStringLocalizer<BanquetHallManagementResource> _localizer;
 
     public RefundLiabilityService(
         IJournalEntryRepository journalEntryRepository,
         IRepository<Payment, Guid> paymentRepository,
         IRepository<Account, Guid> accountRepository,
-        IEntryNumberGenerator entryNumberGenerator)
+        IEntryNumberGenerator entryNumberGenerator,
+        IJournalEntryContextProvider journalEntryContextProvider,
+        IStringLocalizer<BanquetHallManagementResource> localizer)
     {
         _journalEntryRepository = journalEntryRepository;
         _paymentRepository = paymentRepository;
         _accountRepository = accountRepository;
         _entryNumberGenerator = entryNumberGenerator;
+        _journalEntryContextProvider = journalEntryContextProvider;
+        _localizer = localizer;
     }
 
     public async Task<JournalEntry?> TransferInstallmentsToLiabilityAsync(
@@ -47,8 +55,8 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
             return existingEntry;
         }
 
-        var installmentAmount = await CalculateInstallmentPaymentTotalAsync(
-            reservation.Id,
+        var installmentAmount = await CalculateRefundableDeferredAmountAsync(
+            reservation,
             cancellationToken);
 
         if (installmentAmount <= 0)
@@ -63,29 +71,34 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
             FinanceAccountCodes.CustomerRefundLiabilities,
             cancellationToken);
 
+        var metadata = await _journalEntryContextProvider.ResolveForReservationAsync(
+            reservation,
+            cancellationToken);
         var entryNumber = await _entryNumberGenerator.GenerateAsync(cancellationToken);
+        var reservationLabel = metadata.ReservationNumber ?? reservation.ReservationNumber;
 
         var entry = new JournalEntry(
             GuidGenerator.Create(),
             entryNumber,
             Clock.Now,
             JournalEntrySourceType.RefundLiability,
-            $"Refund liability for auto-cancelled reservation {reservation.Id}",
-            reservation.Id);
+            _localizer["Journal:RefundLiability", reservationLabel],
+            reservation.Id,
+            metadata: metadata);
 
         entry.AddLine(
             GuidGenerator.Create(),
             deferredRevenueAccount.Id,
             installmentAmount,
             0m,
-            "Release deferred revenue for refund");
+            _localizer["Journal:Line:ReleaseDeferredForRefund"]);
 
         entry.AddLine(
             GuidGenerator.Create(),
             refundLiabilityAccount.Id,
             0m,
             installmentAmount,
-            "Customer refund liability");
+            _localizer["Journal:Line:CustomerRefundLiability"]);
 
         entry.Post(Clock.Now);
 
@@ -139,29 +152,34 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
             FinanceAccountCodes.Cash,
             cancellationToken);
 
+        var metadata = await _journalEntryContextProvider.ResolveForReservationAsync(
+            reservation,
+            cancellationToken);
         var entryNumber = await _entryNumberGenerator.GenerateAsync(cancellationToken);
+        var reservationLabel = metadata.ReservationNumber ?? reservation.ReservationNumber;
 
         var entry = new JournalEntry(
             GuidGenerator.Create(),
             entryNumber,
             Clock.Now,
             JournalEntrySourceType.RefundPayment,
-            $"Refund payment for reservation {reservation.Id}",
-            reservation.Id);
+            _localizer["Journal:RefundPayment", reservationLabel],
+            reservation.Id,
+            metadata: metadata);
 
         entry.AddLine(
             GuidGenerator.Create(),
             refundLiabilityAccount.Id,
             refundAmount,
             0m,
-            "Settle customer refund liability");
+            _localizer["Journal:Line:SettleRefundLiability"]);
 
         entry.AddLine(
             GuidGenerator.Create(),
             cashAccount.Id,
             0m,
             refundAmount,
-            "Cash refund to customer");
+            _localizer["Journal:Line:CashRefund"]);
 
         entry.Post(Clock.Now);
 
@@ -180,20 +198,19 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
         }
     }
 
-    private async Task<decimal> CalculateInstallmentPaymentTotalAsync(
-        Guid reservationId,
+    private async Task<decimal> CalculateRefundableDeferredAmountAsync(
+        Reservation reservation,
         CancellationToken cancellationToken)
     {
         var query = await _paymentRepository.GetQueryableAsync();
 
         var payments = await AsyncExecuter.ToListAsync(
-            query.Where(payment =>
-                payment.ReservationId == reservationId &&
-                (payment.PaymentType == PaymentType.Installment ||
-                 payment.PaymentType == PaymentType.Final)),
+            query.Where(payment => payment.ReservationId == reservation.Id),
             cancellationToken);
 
-        return payments.Sum(payment => payment.Amount);
+        return DeferredRevenueCalculator.CalculateDeferredAmount(
+            reservation.TotalPrice,
+            payments);
     }
 
     private async Task<Account> GetRequiredAccountAsync(

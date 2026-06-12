@@ -19,6 +19,14 @@ public class JournalEntryDto
 
     public Guid? PaymentId { get; set; }
 
+    public string? ReservationNumber { get; set; }
+
+    public string? CustomerName { get; set; }
+
+    public string? HallName { get; set; }
+
+    public string? EmployeeName { get; set; }
+
     public bool IsPosted { get; set; }
 
     public DateTime? PostedTime { get; set; }

@@ -52,6 +52,7 @@ public class BanquetHallManagementDomainModule : AbpModule
 
 
         context.Services.AddTransient<IJournalPostingService, JournalPostingService>();
+        context.Services.AddTransient<IJournalEntryContextProvider, JournalEntryContextProvider>();
         context.Services.AddTransient<IRevenueRecognitionService, RevenueRecognitionService>();
         context.Services.AddTransient<IRefundLiabilityService, RefundLiabilityService>();
         context.Services.AddTransient<IReservationPaymentMonitorService, ReservationPaymentMonitorService>();
@@ -59,6 +60,9 @@ public class BanquetHallManagementDomainModule : AbpModule
         context.Services.AddTransient<IReceiptNumberGenerator, ReceiptNumberGenerator>();
         context.Services.AddTransient<IInvoiceNumberGenerator, InvoiceNumberGenerator>();
         context.Services.AddTransient<ICardNumberGenerator, CardNumberGenerator>();
+        context.Services.AddTransient<IReservationNumberGenerator, ReservationNumberGenerator>();
+        context.Services.AddTransient<IEntryNumberGenerator, EntryNumberGenerator>();
+        context.Services.AddTransient<FinanceNumberSequenceManager>();
 
 #if DEBUG
         context.Services.Replace(ServiceDescriptor.Singleton<IEmailSender, NullEmailSender>());

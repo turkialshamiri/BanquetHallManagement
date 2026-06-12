@@ -1,20 +1,50 @@
-<div class="page-toolbar">
+<div class="page-toolbar no-print">
   <a routerLink="/finance/journal-entries" class="back-link">
     <mat-icon>arrow_back</mat-icon>
     {{ 'Dialog:Back' | appLocalization }}
   </a>
+  @if (entry()) {
+    <button type="button" class="print-btn" (click)="print()">
+      <mat-icon>print</mat-icon>
+      {{ 'Finance:JournalEntries:Print' | appLocalization }}
+    </button>
+  }
 </div>
 
 @if (loading()) {
   <div class="loading-state">...</div>
 } @else if (entry(); as data) {
-  <div class="detail-card">
+  <article class="detail-card print-document">
     <header>
       <h1>{{ 'Finance:JournalEntries:Detail:Title' | appLocalization }}</h1>
       <p class="entry-number">{{ data.entryNumber }}</p>
     </header>
 
     <div class="meta-grid">
+      @if (data.reservationNumber) {
+        <div>
+          <span>{{ 'Finance:JournalEntries:Column:ReservationNumber' | appLocalization }}</span>
+          <strong>{{ data.reservationNumber }}</strong>
+        </div>
+      }
+      @if (data.customerName) {
+        <div>
+          <span>{{ 'Finance:JournalEntries:Column:Customer' | appLocalization }}</span>
+          <strong>{{ data.customerName }}</strong>
+        </div>
+      }
+      @if (data.hallName) {
+        <div>
+          <span>{{ 'Finance:JournalEntries:Column:Hall' | appLocalization }}</span>
+          <strong>{{ data.hallName }}</strong>
+        </div>
+      }
+      @if (data.employeeName) {
+        <div>
+          <span>{{ 'Finance:JournalEntries:Column:Employee' | appLocalization }}</span>
+          <strong>{{ data.employeeName }}</strong>
+        </div>
+      }
       <div>
         <span>{{ 'Finance:JournalEntries:Column:Date' | appLocalization }}</span>
         <strong>{{ data.entryDate | date:'yyyy/MM/dd' }}</strong>
@@ -64,5 +94,5 @@
         </tbody>
       </table>
     </div>
-  </div>
+  </article>
 }

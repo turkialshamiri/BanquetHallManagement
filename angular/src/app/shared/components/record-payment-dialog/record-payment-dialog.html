@@ -52,7 +52,19 @@
   <p class="hint">
     {{ 'Finance:Payment:MinimumHint' | appLocalization }}:
     <strong>{{ minimumAmount() | number }}</strong>
+    ·
+    {{ 'Finance:Payment:MaximumHint' | appLocalization }}:
+    <strong>{{ remainingAmount() | number }}</strong>
   </p>
+
+  <div class="quick-amounts">
+    <button type="button" class="btn-link" (click)="useMinimumAmount()">
+      {{ 'Finance:Payment:UseMinimum' | appLocalization }}
+    </button>
+    <button type="button" class="btn-link" (click)="useRemainingAmount()">
+      {{ 'Finance:Payment:PayRemaining' | appLocalization }}
+    </button>
+  </div>
 
   @if (amountError()) {
     <div class="field-error">{{ amountError() }}</div>

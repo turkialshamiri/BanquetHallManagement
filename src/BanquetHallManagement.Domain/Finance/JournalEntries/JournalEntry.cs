@@ -21,6 +21,14 @@ public class JournalEntry : FullAuditedAggregateRoot<Guid>
 
     public Guid? PaymentId { get; private set; }
 
+    public string? ReservationNumber { get; private set; }
+
+    public string? CustomerName { get; private set; }
+
+    public string? HallName { get; private set; }
+
+    public string? EmployeeName { get; private set; }
+
     public bool IsPosted { get; private set; }
 
     public DateTime? PostedTime { get; private set; }
@@ -38,7 +46,8 @@ public class JournalEntry : FullAuditedAggregateRoot<Guid>
         JournalEntrySourceType sourceType,
         string? description = null,
         Guid? reservationId = null,
-        Guid? paymentId = null)
+        Guid? paymentId = null,
+        JournalEntryBusinessMetadata? metadata = null)
     {
         Id = id;
         EntryNumber = Check.NotNullOrWhiteSpace(entryNumber, nameof(entryNumber), maxLength: 50);
@@ -47,6 +56,20 @@ public class JournalEntry : FullAuditedAggregateRoot<Guid>
         Description = description;
         ReservationId = reservationId;
         PaymentId = paymentId;
+        ApplyMetadata(metadata);
+    }
+
+    private void ApplyMetadata(JournalEntryBusinessMetadata? metadata)
+    {
+        if (metadata == null)
+        {
+            return;
+        }
+
+        ReservationNumber = metadata.ReservationNumber;
+        CustomerName = metadata.CustomerName;
+        HallName = metadata.HallName;
+        EmployeeName = metadata.EmployeeName;
     }
 
     public void AddLine(

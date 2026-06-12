@@ -7,7 +7,11 @@ namespace BanquetHallManagement.Finance.Refunds;
 
 public interface IRefundAppService : IApplicationService
 {
-    Task<ListResultDto<PendingRefundDto>> GetPendingAsync();
+    Task<ListResultDto<PendingRefundDto>> GetPendingAsync(RefundLiabilityGetListInput input);
+
+    Task<RefundLiabilityLookupDto> GetByReservationNumberAsync(string reservationNumber);
 
     Task<ProcessRefundResultDto> ProcessAsync(Guid reservationId);
+
+    Task<ProcessRefundResultDto> ProcessByReservationNumberAsync(string reservationNumber);
 }

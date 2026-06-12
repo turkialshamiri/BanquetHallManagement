@@ -12,6 +12,8 @@ public class HallAccessCardPrintDataDto
 
     public Guid ReservationId { get; set; }
 
+    public string ReservationNumber { get; set; } = null!;
+
     public DateTime EventDate { get; set; }
 
     public TimeSpan EntryTime { get; set; }
@@ -29,4 +31,6 @@ public class HallAccessCardPrintDataDto
     public string HallName { get; set; } = null!;
 
     public string HallLocation { get; set; } = null!;
+
+    public string EmployeeName { get; set; } = null!;
 }

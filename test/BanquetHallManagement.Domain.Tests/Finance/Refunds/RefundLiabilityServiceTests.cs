@@ -10,8 +10,10 @@ using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Refunds;
 using BanquetHallManagement.Finance.Services;
+using BanquetHallManagement.Localization;
 using BanquetHallManagement.Reservations;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using NSubstitute;
 using Shouldly;
 using Volo.Abp.DependencyInjection;
@@ -123,6 +125,8 @@ public class RefundLiabilityServiceTests
             Status = ReservationStatus.Confirmed,
         };
 
+        ReservationTestData.AssignReservationNumber(reservation);
+
         return reservation;
     }
 
@@ -209,11 +213,29 @@ public class RefundLiabilityServiceTests
         var clock = Substitute.For<IClock>();
         clock.Now.Returns(Now);
 
+        var contextProvider = Substitute.For<IJournalEntryContextProvider>();
+
+        contextProvider.ResolveForReservationAsync(Arg.Any<Reservation>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(new JournalEntryBusinessMetadata
+            {
+                ReservationNumber = "RES-2026-00001",
+                CustomerName = "Test Customer",
+                HallName = "Test Hall",
+                EmployeeName = "Test Employee",
+            }));
+
+        var localizer = Substitute.For<IStringLocalizer<BanquetHallManagementResource>>();
+        localizer[Arg.Any<string>()].Returns(callInfo => new LocalizedString(callInfo.Arg<string>(), callInfo.Arg<string>()));
+        localizer[Arg.Any<string>(), Arg.Any<object[]>()]
+            .Returns(callInfo => new LocalizedString(callInfo.Arg<string>(), callInfo.Arg<string>()));
+
         var service = new RefundLiabilityService(
             journalEntryRepository,
             paymentRepository,
             accountRepository,
-            entryNumberGenerator);
+            entryNumberGenerator,
+            contextProvider,
+            localizer);
 
         var services = new ServiceCollection();
         services.AddSingleton(asyncExecuter);

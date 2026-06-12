@@ -16,12 +16,16 @@ export function calculatePaymentPercentage(
   return Math.min(100, Math.round((paidAmount / totalPrice) * 100));
 }
 
+function roundCurrency(amount: number): number {
+  return Math.round(amount * 100) / 100;
+}
+
 export function calculateMinimumDeposit(totalPrice: number): number {
-  return totalPrice * PAYMENT_RULES.minimumDepositPercentage;
+  return roundCurrency(totalPrice * PAYMENT_RULES.minimumDepositPercentage);
 }
 
 export function calculateMinimumInstallment(totalPrice: number): number {
-  return totalPrice * PAYMENT_RULES.minimumInstallmentPercentage;
+  return roundCurrency(totalPrice * PAYMENT_RULES.minimumInstallmentPercentage);
 }
 
 export function canRecordPayment(status: string, paidAmount: number, totalPrice: number): boolean {

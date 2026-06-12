@@ -11,6 +11,10 @@
       <thead>
         <tr>
           <th>{{ 'Finance:JournalEntries:Column:Number' | appLocalization }}</th>
+          <th>{{ 'Finance:JournalEntries:Column:ReservationNumber' | appLocalization }}</th>
+          <th>{{ 'Finance:JournalEntries:Column:Customer' | appLocalization }}</th>
+          <th>{{ 'Finance:JournalEntries:Column:Hall' | appLocalization }}</th>
+          <th>{{ 'Finance:JournalEntries:Column:Employee' | appLocalization }}</th>
           <th>{{ 'Finance:JournalEntries:Column:Date' | appLocalization }}</th>
           <th>{{ 'Finance:JournalEntries:Column:Source' | appLocalization }}</th>
           <th>{{ 'Finance:JournalEntries:Column:Debit' | appLocalization }}</th>
@@ -22,12 +26,16 @@
       <tbody>
         @if (loading()) {
           <tr>
-            <td colspan="7" class="empty-state">...</td>
+            <td colspan="11" class="empty-state">...</td>
           </tr>
         } @else if (entries().length > 0) {
           @for (entry of entries(); track entry.id) {
             <tr>
               <td><strong>{{ entry.entryNumber }}</strong></td>
+              <td>{{ entry.reservationNumber || '—' }}</td>
+              <td>{{ entry.customerName || '—' }}</td>
+              <td>{{ entry.hallName || '—' }}</td>
+              <td>{{ entry.employeeName || '—' }}</td>
               <td>{{ entry.entryDate | date:'yyyy/MM/dd' }}</td>
               <td>{{ sourceTypeLabel(entry.sourceType) }}</td>
               <td>{{ entry.totalDebit | number }}</td>
@@ -49,7 +57,7 @@
           }
         } @else {
           <tr>
-            <td colspan="7" class="empty-state">
+            <td colspan="11" class="empty-state">
               {{ 'Finance:JournalEntries:Empty' | appLocalization }}
             </td>
           </tr>

@@ -117,6 +117,16 @@ export class RecordPaymentDialog {
     this.amountError.set(null);
   }
 
+  useMinimumAmount(): void {
+    this.amount.set(this.minimumAmount());
+    this.amountError.set(null);
+  }
+
+  useRemainingAmount(): void {
+    this.amount.set(this.remainingAmount());
+    this.amountError.set(null);
+  }
+
   private suggestInitialAmount(): number {
     const remaining = Math.max(
       0,

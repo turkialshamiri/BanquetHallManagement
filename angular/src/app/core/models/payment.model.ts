@@ -7,6 +7,11 @@ export interface Payment {
   receiptNumber: string;
 }
 
+export interface DepositPaymentResult extends Payment {
+  isFullyPaid: boolean;
+  hallAccessCardId?: string | null;
+}
+
 export interface InstallmentPaymentResult extends Payment {
   remainingAmount: number;
   isFullyPaid: boolean;

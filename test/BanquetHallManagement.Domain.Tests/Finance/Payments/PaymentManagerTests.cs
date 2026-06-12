@@ -48,9 +48,12 @@ public class PaymentManagerTests
         var reservation = CreatePendingReservation(totalPrice: 100_000m);
         var manager = CreatePaymentManager([reservation], out var paymentRepository);
 
-        var payment = await manager.RecordDepositAsync(reservation.Id, 30_000m);
+        var result = await manager.RecordDepositAsync(reservation.Id, 30_000m);
 
         reservation.Status.ShouldBe(ReservationStatus.Confirmed);
+        result.IsFullyPaid.ShouldBeFalse();
+        result.HallAccessCardId.ShouldBeNull();
+        var payment = result.Payment;
         reservation.PaidAmount.ShouldBe(30_000m);
         payment.Amount.ShouldBe(30_000m);
         payment.PaymentType.ShouldBe(PaymentType.Deposit);
@@ -112,7 +115,8 @@ public class PaymentManagerTests
         var reservation = CreatePendingReservation(totalPrice: 100_000m);
         var manager = CreatePaymentManager([reservation], out _);
 
-        var payment = await manager.RecordDepositAsync(reservation.Id, 30_000m);
+        var result = await manager.RecordDepositAsync(reservation.Id, 30_000m);
+        var payment = result.Payment;
 
         var domainEvent = payment.GetLocalEvents()
             .Select(record => record.EventData)
@@ -242,12 +246,66 @@ public class PaymentManagerTests
         return paymentManager;
     }
 
+    [Fact]
+    public async Task RecordDepositAsync_Should_Accept_40000_Deposit_On_90000_Reservation()
+    {
+        await AssertDepositAboveMinimumAcceptedAsync(40_000m);
+    }
+
+    [Fact]
+    public async Task RecordDepositAsync_Should_Accept_50000_Deposit_On_90000_Reservation()
+    {
+        await AssertDepositAboveMinimumAcceptedAsync(50_000m);
+    }
+
+    private static async Task AssertDepositAboveMinimumAcceptedAsync(decimal amount)
+    {
+        var reservation = CreatePendingReservation(totalPrice: 90_000m);
+        var manager = CreatePaymentManager([reservation], out _);
+
+        var result = await manager.RecordDepositAsync(reservation.Id, amount);
+
+        reservation.Status.ShouldBe(ReservationStatus.Confirmed);
+        reservation.PaidAmount.ShouldBe(amount);
+        result.IsFullyPaid.ShouldBeFalse();
+        result.HallAccessCardId.ShouldBeNull();
+        result.Payment.Amount.ShouldBe(amount);
+        result.Payment.PaymentType.ShouldBe(PaymentType.Deposit);
+    }
+
+    [Fact]
+    public async Task RecordDepositAsync_Should_Accept_Full_Payment_And_Create_Access_Card()
+    {
+        var reservation = CreatePendingReservation(totalPrice: 90_000m);
+        var manager = CreatePaymentManager([reservation], out _);
+
+        var result = await manager.RecordDepositAsync(reservation.Id, 90_000m);
+
+        reservation.Status.ShouldBe(ReservationStatus.FullyPaid);
+        reservation.PaidAmount.ShouldBe(90_000m);
+        result.IsFullyPaid.ShouldBeTrue();
+        result.HallAccessCardId.ShouldNotBeNull();
+        result.Payment.Amount.ShouldBe(90_000m);
+    }
+
+    [Fact]
+    public async Task RecordDepositAsync_Should_Reject_Overpayment()
+    {
+        var reservation = CreatePendingReservation(totalPrice: 90_000m);
+        var manager = CreatePaymentManager([reservation], out _);
+
+        var exception = await Should.ThrowAsync<BusinessException>(() =>
+            manager.RecordDepositAsync(reservation.Id, 100_000m));
+
+        exception.Code.ShouldBe(BanquetHallManagementDomainErrorCodes.PaymentAmountExceedsRemaining);
+    }
+
     private static Reservation CreatePendingReservation(
         decimal totalPrice,
         TimeSpan? startTime = null,
         TimeSpan? endTime = null)
     {
-        return new Reservation(Guid.NewGuid())
+        var reservation = new Reservation(Guid.NewGuid())
         {
             HallId = HallId,
             CustomerId = Guid.NewGuid(),
@@ -258,5 +316,9 @@ public class PaymentManagerTests
             TotalPrice = totalPrice,
             Status = ReservationStatus.Pending,
         };
+
+        ReservationTestData.AssignReservationNumber(reservation);
+
+        return reservation;
     }
 }

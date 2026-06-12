@@ -54,6 +54,11 @@ namespace BanquetHallManagement.Configurations.ReservationConfigurations
                 .HasDefaultValue(0m)
                 .HasComment("إجمالي المبالغ المدفوعة على الحجز.");
 
+            builder.Property(x => x.ReservationNumber)
+                .IsRequired()
+                .HasMaxLength(50)
+                .HasComment("رقم الحجز التشغيلي مثل RES-2026-00001.");
+
             builder.Property(x => x.CancellationReason)
                 .HasMaxLength(500)
                 .HasComment("سبب إلغاء الحجز عند توفره.");
@@ -91,6 +96,7 @@ namespace BanquetHallManagement.Configurations.ReservationConfigurations
             builder.HasIndex(x => x.CustomerId);
             builder.HasIndex(x => x.EventDate);
             builder.HasIndex(x => new { x.HallId, x.EventDate });
+            builder.HasIndex(x => x.ReservationNumber).IsUnique();
 
             builder.ConfigureByConvention();
         }

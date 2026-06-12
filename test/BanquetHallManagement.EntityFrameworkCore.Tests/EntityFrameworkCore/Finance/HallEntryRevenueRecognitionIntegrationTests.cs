@@ -130,6 +130,8 @@ public class HallEntryRevenueRecognitionIntegrationTests : BanquetHallManagement
             Status = ReservationStatus.FullyPaid,
         };
 
+        reservation.AssignReservationNumber($"RES-2026-{Guid.NewGuid():N}"[..14]);
+
         await reservationRepository.InsertAsync(reservation, autoSave: true);
 
         await GetRequiredService<IRepository<ReservationService, Guid>>().InsertAsync(

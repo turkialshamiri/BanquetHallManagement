@@ -3,12 +3,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using BanquetHallManagement.Enums;
 using BanquetHallManagement.EventHandlers.Finance;
+using BanquetHallManagement.Finance;
 using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Payments.Events;
+using BanquetHallManagement.Reservations;
 using NSubstitute;
 using Shouldly;
-using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
 using Xunit;
 
@@ -21,44 +22,66 @@ public class PaymentJournalEntryHandlerTests
     [Fact]
     public async Task HandleEventAsync_Should_Post_Deposit_Journal_Entry()
     {
-        var payment = CreatePayment(PaymentType.Deposit);
-        var handler = CreateHandler(payment, out var postingService);
+        var reservation = CreateReservation(100_000m);
+        var payment = CreatePayment(PaymentType.Deposit, 30_000m, reservation.Id);
+        var handler = CreateHandler(payment, reservation, out var postingService);
 
         await handler.HandleEventAsync(CreateEvent(payment));
 
         await postingService.Received(1).PostDepositRevenueAsync(
             payment,
+            reservation,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleEventAsync_Should_Post_Full_Deposit_Journal_Entry()
+    {
+        var reservation = CreateReservation(90_000m);
+        var payment = CreatePayment(PaymentType.Deposit, 90_000m, reservation.Id);
+        var handler = CreateHandler(payment, reservation, out var postingService);
+
+        await handler.HandleEventAsync(CreateEvent(payment));
+
+        await postingService.Received(1).PostFullDepositPaymentAsync(
+            payment,
+            reservation,
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task HandleEventAsync_Should_Post_Installment_Journal_Entry()
     {
-        var payment = CreatePayment(PaymentType.Installment);
-        var handler = CreateHandler(payment, out var postingService);
+        var reservation = CreateReservation(100_000m);
+        var payment = CreatePayment(PaymentType.Installment, 20_000m, reservation.Id);
+        var handler = CreateHandler(payment, reservation, out var postingService);
 
         await handler.HandleEventAsync(CreateEvent(payment));
 
         await postingService.Received(1).PostDeferredRevenueAsync(
             payment,
+            reservation,
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task HandleEventAsync_Should_Post_Final_Payment_As_Deferred_Revenue()
     {
-        var payment = CreatePayment(PaymentType.Final);
-        var handler = CreateHandler(payment, out var postingService);
+        var reservation = CreateReservation(100_000m);
+        var payment = CreatePayment(PaymentType.Final, 20_000m, reservation.Id);
+        var handler = CreateHandler(payment, reservation, out var postingService);
 
         await handler.HandleEventAsync(CreateEvent(payment));
 
         await postingService.Received(1).PostDeferredRevenueAsync(
             payment,
+            reservation,
             Arg.Any<CancellationToken>());
     }
 
     private static PaymentJournalEntryHandler CreateHandler(
         Payment payment,
+        Reservation reservation,
         out IJournalPostingService postingService)
     {
         var paymentRepository = Substitute.For<IRepository<Payment, Guid>>();
@@ -68,15 +91,30 @@ public class PaymentJournalEntryHandlerTests
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(payment));
 
+        var reservationRepository = Substitute.For<IReservationRepository>();
+        reservationRepository.GetAsync(
+                Arg.Any<Guid>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(reservation));
+
         postingService = Substitute.For<IJournalPostingService>();
 
         postingService.PostDepositRevenueAsync(
                 Arg.Any<Payment>(),
+                Arg.Any<Reservation>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(CreatePostedEntry(callInfo.Arg<Payment>())));
+
+        postingService.PostFullDepositPaymentAsync(
+                Arg.Any<Payment>(),
+                Arg.Any<Reservation>(),
                 Arg.Any<CancellationToken>())
             .Returns(callInfo => Task.FromResult(CreatePostedEntry(callInfo.Arg<Payment>())));
 
         postingService.PostDeferredRevenueAsync(
                 Arg.Any<Payment>(),
+                Arg.Any<Reservation>(),
                 Arg.Any<CancellationToken>())
             .Returns(callInfo => Task.FromResult(CreatePostedEntry(callInfo.Arg<Payment>())));
 
@@ -86,15 +124,40 @@ public class PaymentJournalEntryHandlerTests
                 Arg.Any<CancellationToken>())
             .Returns(callInfo => Task.FromResult(callInfo.Arg<Payment>()));
 
-        return new PaymentJournalEntryHandler(paymentRepository, postingService);
+        return new PaymentJournalEntryHandler(
+            paymentRepository,
+            reservationRepository,
+            postingService);
     }
 
-    private static Payment CreatePayment(PaymentType paymentType)
+    private static Reservation CreateReservation(decimal totalPrice)
+    {
+        var reservation = new Reservation(Guid.NewGuid())
+        {
+            HallId = Guid.NewGuid(),
+            CustomerId = Guid.NewGuid(),
+            EventDate = Now.Date.AddDays(7),
+            StartTime = new TimeSpan(18, 0, 0),
+            EndTime = new TimeSpan(22, 0, 0),
+            GuestsCount = 100,
+            TotalPrice = totalPrice,
+            Status = ReservationStatus.Confirmed,
+        };
+
+        reservation.AssignReservationNumber("RES-2026-00001");
+
+        return reservation;
+    }
+
+    private static Payment CreatePayment(
+        PaymentType paymentType,
+        decimal amount,
+        Guid reservationId)
     {
         return new Payment(
             Guid.NewGuid(),
-            Guid.NewGuid(),
-            30_000m,
+            reservationId,
+            amount,
             Now,
             paymentType,
             "RC-2026-00001");

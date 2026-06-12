@@ -1,0 +1,171 @@
+<div class="page-header">
+  <div>
+    <h1>{{ 'Finance:AccessCards:Title' | appLocalization }}</h1>
+    <p>{{ 'Finance:AccessCards:Subtitle' | appLocalization }}</p>
+  </div>
+</div>
+
+@if (canConfirmEntry) {
+  <section class="entry-panel">
+    <h2>{{ 'Finance:AccessCards:ConfirmEntry:Title' | appLocalization }}</h2>
+    <div class="entry-form">
+      <input
+        type="text"
+        [placeholder]="'Finance:AccessCards:ConfirmEntry:Placeholder' | appLocalization"
+        [ngModel]="entryReservationNumber()"
+        (ngModelChange)="entryReservationNumber.set($event)"
+        (keyup)="onEntryNumberKeyup($event)"
+      />
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="loadingPreview()"
+        (click)="loadEntryPreview()"
+      >
+        <mat-icon>search</mat-icon>
+        {{ 'Finance:AccessCards:ConfirmEntry:Load' | appLocalization }}
+      </button>
+    </div>
+
+    @if (loadingPreview()) {
+      <div class="preview-loading">...</div>
+    } @else if (entryPreview(); as preview) {
+      <div class="entry-preview">
+        <div class="entry-preview-header">
+          <h3>{{ 'Finance:AccessCards:ConfirmEntry:PreviewTitle' | appLocalization }}</h3>
+          <img [src]="qrCodeUrl(preview)" alt="QR" width="96" height="96" />
+        </div>
+
+        <div class="entry-preview-grid">
+          <div>
+            <span>{{ 'Finance:AccessCards:Column:ReservationNumber' | appLocalization }}</span>
+            <strong>{{ preview.reservationNumber }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCard:CardNumber' | appLocalization }}</span>
+            <strong>{{ preview.cardNumber }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCards:Column:Customer' | appLocalization }}</span>
+            <strong>{{ preview.customerName }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCards:Column:Hall' | appLocalization }}</span>
+            <strong>{{ preview.hallName }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCards:Column:Employee' | appLocalization }}</span>
+            <strong>{{ preview.employeeName || '—' }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCard:EventDate' | appLocalization }}</span>
+            <strong>{{ preview.eventDate | date:'yyyy/MM/dd' }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCards:Column:EventTime' | appLocalization }}</span>
+            <strong>{{ formatTime(preview.entryTime) }} - {{ formatTime(preview.exitTime) }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCards:Column:PaymentStatus' | appLocalization }}</span>
+            <strong class="payment-badge">{{ paymentStatusLabel(preview.paymentStatus) }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCards:Column:ReservationStatus' | appLocalization }}</span>
+            <strong>{{ reservationStatusLabel(preview.reservationStatus) }}</strong>
+          </div>
+        </div>
+
+        @if (preview.canConfirmEntry) {
+          <button
+            type="button"
+            class="btn-primary confirm-btn"
+            [disabled]="confirming()"
+            (click)="confirmEntry()"
+          >
+            <mat-icon>how_to_reg</mat-icon>
+            {{ 'Finance:AccessCards:ConfirmEntry' | appLocalization }}
+          </button>
+        } @else if (isCompleted(preview.reservationStatus)) {
+          <p class="entry-hint completed">
+            {{ 'Finance:AccessCards:ConfirmEntry:AlreadyCompleted' | appLocalization }}
+          </p>
+        } @else {
+          <p class="entry-hint warning">
+            {{ 'Finance:AccessCards:ConfirmEntry:CannotConfirm' | appLocalization }}
+          </p>
+        }
+      </div>
+    }
+  </section>
+}
+
+<div class="toolbar">
+  <input
+    type="search"
+    [placeholder]="'Finance:AccessCards:Search:ReservationNumber' | appLocalization"
+    [ngModel]="searchTerm()"
+    (ngModelChange)="searchTerm.set($event)"
+    (keyup.enter)="onSearch()"
+  />
+  <button type="button" class="btn-secondary" (click)="onSearch()">
+    <mat-icon>search</mat-icon>
+  </button>
+</div>
+
+@if (loading()) {
+  <div class="loading-state">...</div>
+} @else if (cards().length === 0) {
+  <div class="empty-state">{{ 'Finance:AccessCards:Empty' | appLocalization }}</div>
+} @else {
+  <div class="cards-grid">
+    @for (card of cards(); track card.id) {
+      <article class="access-card-preview" [class.is-completed]="isCompleted(card.reservationStatus)">
+        <div class="card-accent"></div>
+        <header>
+          <div class="card-heading">
+            <span class="brand">{{ 'Finance:AccessCards:Title' | appLocalization }}</span>
+            <span class="label">{{ 'Finance:AccessCards:Column:ReservationNumber' | appLocalization }}</span>
+            <strong class="reservation-no">{{ card.reservationNumber }}</strong>
+            <span class="card-no">{{ card.cardNumber }}</span>
+          </div>
+          <img class="qr" [src]="qrCodeUrl(card)" alt="QR" width="96" height="96" />
+        </header>
+
+        <div class="status-row">
+          <span class="status-pill payment">{{ paymentStatusLabel(card.paymentStatus) }}</span>
+          <span class="status-pill reservation">{{ reservationStatusLabel(card.reservationStatus) }}</span>
+        </div>
+
+        <div class="details">
+          <div>
+            <span>{{ 'Finance:AccessCards:Column:Customer' | appLocalization }}</span>
+            <strong>{{ card.customerName }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCards:Column:Hall' | appLocalization }}</span>
+            <strong>{{ card.hallName }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCards:Column:Employee' | appLocalization }}</span>
+            <strong>{{ card.employeeName || '—' }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCard:EventDate' | appLocalization }}</span>
+            <strong>{{ card.eventDate | date:'yyyy/MM/dd' }}</strong>
+          </div>
+          <div>
+            <span>{{ 'Finance:AccessCards:Column:EventTime' | appLocalization }}</span>
+            <strong>{{ formatTime(card.entryTime) }} - {{ formatTime(card.exitTime) }}</strong>
+          </div>
+        </div>
+
+        @if (canPrint) {
+          <button type="button" class="btn-primary card-action" (click)="openPrint(card.id)">
+            <mat-icon>print</mat-icon>
+            {{ 'Finance:AccessCard:Print' | appLocalization }}
+          </button>
+        }
+      </article>
+    }
+  </div>
+}

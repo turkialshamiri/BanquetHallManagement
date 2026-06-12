@@ -53,6 +53,35 @@ public class DepositInvoiceIntegrationTests : BanquetHallManagementEntityFramewo
     }
 
     [Fact]
+    public async Task Full_Deposit_Payment_Should_Create_Single_Invoice_For_Full_Amount()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var reservationId = await CreateReservationAsync(totalPrice: 90_000m);
+            var paymentRepository = GetRequiredService<IRepository<Payment, Guid>>();
+            var invoiceRepository = GetRequiredService<IRepository<Invoice, Guid>>();
+            var invoiceHandler = GetRequiredService<CreateDepositInvoiceHandler>();
+
+            var payment = new Payment(
+                Guid.NewGuid(),
+                reservationId,
+                90_000m,
+                new DateTime(2026, 6, 11, 12, 0, 0),
+                PaymentType.Deposit,
+                "RC-FULL-90000");
+
+            await paymentRepository.InsertAsync(payment, autoSave: true);
+            await PublishPaymentReceivedEventAsync(invoiceHandler, payment);
+            await GetRequiredService<IUnitOfWorkManager>().Current!.SaveChangesAsync();
+
+            var invoices = await invoiceRepository.GetListAsync(invoice => invoice.PaymentId == payment.Id);
+            invoices.Count.ShouldBe(1);
+            invoices.Single().Amount.ShouldBe(90_000m);
+            invoices.Single().InvoiceType.ShouldBe(InvoiceType.Deposit);
+        });
+    }
+
+    [Fact]
     public async Task CreateDepositInvoiceHandler_Should_Be_Idempotent_On_Retry()
     {
         await WithUnitOfWorkAsync(async () =>
@@ -96,7 +125,12 @@ public class DepositInvoiceIntegrationTests : BanquetHallManagementEntityFramewo
         await handler.HandleEventAsync(domainEvent);
     }
 
-    private async Task<Guid> CreateReservationAsync()
+    private Task<Guid> CreateReservationAsync()
+    {
+        return CreateReservationAsync(100_000m);
+    }
+
+    private async Task<Guid> CreateReservationAsync(decimal totalPrice)
     {
         var hallRepository = GetRequiredService<IRepository<Hall, Guid>>();
         var customerRepository = GetRequiredService<IRepository<Customer, Guid>>();
@@ -131,10 +165,12 @@ public class DepositInvoiceIntegrationTests : BanquetHallManagementEntityFramewo
             StartTime = new TimeSpan(18, 0, 0),
             EndTime = new TimeSpan(22, 0, 0),
             GuestsCount = 100,
-            TotalPrice = 100_000m,
+            TotalPrice = totalPrice,
             Status = ReservationStatus.Confirmed,
-            PaidAmount = 30_000m,
+            PaidAmount = totalPrice == 90_000m ? 0m : 30_000m,
         };
+
+        reservation.AssignReservationNumber($"RES-2026-{Guid.NewGuid():N}"[..14]);
 
         await reservationRepository.InsertAsync(reservation, autoSave: true);
 

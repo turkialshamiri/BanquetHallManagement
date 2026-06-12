@@ -16,6 +16,10 @@ export interface JournalEntry {
   description?: string | null;
   reservationId?: string | null;
   paymentId?: string | null;
+  reservationNumber?: string | null;
+  customerName?: string | null;
+  hallName?: string | null;
+  employeeName?: string | null;
   isPosted: boolean;
   postedTime?: string | null;
   totalDebit: number;

@@ -8,6 +8,8 @@ public class HallAccessCardDto
 
     public Guid ReservationId { get; set; }
 
+    public string ReservationNumber { get; set; } = null!;
+
     public string CardNumber { get; set; } = null!;
 
     public DateTime IssuedAt { get; set; }

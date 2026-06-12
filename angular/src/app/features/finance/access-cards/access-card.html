@@ -1,5 +1,5 @@
 <div class="page-toolbar no-print">
-  <a routerLink="/bookings" class="back-link">
+  <a routerLink="/bookings/access-cards" class="back-link">
     <mat-icon>arrow_back</mat-icon>
     {{ 'Dialog:Back' | appLocalization }}
   </a>
@@ -15,9 +15,24 @@
   <div class="loading-state">...</div>
 } @else if (card(); as data) {
   <article class="access-card">
-    <div class="card-brand">Banquet Hall</div>
-    <h1>{{ 'Finance:AccessCard:Title' | appLocalization }}</h1>
-    <p class="card-number">{{ data.cardNumber }}</p>
+    <div class="card-top">
+      <div>
+        <div class="card-brand">Banquet Hall</div>
+        <h1>{{ 'Finance:AccessCard:Title' | appLocalization }}</h1>
+        <p class="card-number">{{ data.cardNumber }}</p>
+        <p class="reservation-number">
+          {{ 'Finance:AccessCard:ReservationNumber' | appLocalization }}:
+          <strong>{{ data.reservationNumber }}</strong>
+        </p>
+      </div>
+      <img
+        class="qr-code"
+        [src]="'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(data.reservationNumber + '|' + data.cardNumber)"
+        alt="QR"
+        width="160"
+        height="160"
+      />
+    </div>
 
     <div class="card-grid">
       <div>
@@ -49,6 +64,10 @@
       <div>
         <span>{{ 'Finance:AccessCard:IssuedAt' | appLocalization }}</span>
         <strong>{{ data.issuedAt | date:'yyyy/MM/dd HH:mm' }}</strong>
+      </div>
+      <div>
+        <span>{{ 'Finance:AccessCard:Employee' | appLocalization }}</span>
+        <strong>{{ data.employeeName || '—' }}</strong>
       </div>
     </div>
   </article>

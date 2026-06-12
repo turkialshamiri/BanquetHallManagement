@@ -27,7 +27,6 @@ import { HallService } from 'src/app/core/services/hall.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 import {
   canCancelReservation,
-  canConfirmHallEntry,
   canDeleteReservation,
   canEditReservation,
   getReservationStatusClass,
@@ -80,7 +79,6 @@ export class ReservationsTableComponent implements OnInit {
 
   getReservationStatusClass = getReservationStatusClass;
   canCancelReservation = canCancelReservation;
-  canConfirmHallEntry = canConfirmHallEntry;
   canEditReservation = canEditReservation;
   canDeleteReservation = canDeleteReservation;
   canRecordPayment = canRecordPayment;
@@ -94,9 +92,6 @@ export class ReservationsTableComponent implements OnInit {
   canCancel = this.policy.hasSnapshot('BanquetHallManagement.Reservations.Cancel');
   canRecordPaymentAction = this.policy.hasSnapshot(
     'BanquetHallManagement.Reservations.RecordPayment'
-  );
-  canConfirmHallEntryAction = this.policy.hasSnapshot(
-    'BanquetHallManagement.Reservations.ConfirmHallEntry'
   );
 
   ngOnInit(): void {
@@ -211,10 +206,7 @@ export class ReservationsTableComponent implements OnInit {
             );
             this.loadData();
 
-            const hallAccessCardId =
-              'hallAccessCardId' in paymentResult
-                ? paymentResult.hallAccessCardId
-                : null;
+            const hallAccessCardId = paymentResult.hallAccessCardId ?? null;
 
             if (hallAccessCardId) {
               void this.router.navigate([
@@ -225,32 +217,6 @@ export class ReservationsTableComponent implements OnInit {
           },
           error: (error) => {
             this.openRecordPaymentDialog(reservation, getAbpErrorMessage(error));
-          },
-        });
-      });
-  }
-
-  confirmHallEntry(id: string): void {
-    this.dialogService
-      .confirm({
-        type: 'confirm',
-        title: this.l10n.instant('Reservations:ConfirmHallEntry:Title'),
-        message: this.l10n.instant('Reservations:ConfirmHallEntry:Message'),
-      })
-      .subscribe((confirmed) => {
-        if (!confirmed) {
-          return;
-        }
-
-        this.reservationService.confirmHallEntry(id).subscribe({
-          next: () => {
-            this.notification.showSuccess(
-              this.l10n.instant('Reservations:ConfirmHallEntry:Success')
-            );
-            this.loadData();
-          },
-          error: (error) => {
-            this.notification.showError(getAbpErrorMessage(error));
           },
         });
       });

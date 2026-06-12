@@ -3,9 +3,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BanquetHallManagement.Enums;
+using BanquetHallManagement.Finance;
 using BanquetHallManagement.Finance.Accounts;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Services;
+using BanquetHallManagement.Localization;
+using BanquetHallManagement.Reservations;
+using Microsoft.Extensions.Localization;
 using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Services;
@@ -17,43 +21,127 @@ public class JournalPostingService : DomainService, IJournalPostingService
     private readonly IJournalEntryRepository _journalEntryRepository;
     private readonly IRepository<Account, Guid> _accountRepository;
     private readonly IEntryNumberGenerator _entryNumberGenerator;
+    private readonly IJournalEntryContextProvider _journalEntryContextProvider;
+    private readonly IStringLocalizer<BanquetHallManagementResource> _localizer;
 
     public JournalPostingService(
         IJournalEntryRepository journalEntryRepository,
         IRepository<Account, Guid> accountRepository,
-        IEntryNumberGenerator entryNumberGenerator)
+        IEntryNumberGenerator entryNumberGenerator,
+        IJournalEntryContextProvider journalEntryContextProvider,
+        IStringLocalizer<BanquetHallManagementResource> localizer)
     {
         _journalEntryRepository = journalEntryRepository;
         _accountRepository = accountRepository;
         _entryNumberGenerator = entryNumberGenerator;
+        _journalEntryContextProvider = journalEntryContextProvider;
+        _localizer = localizer;
     }
 
     public Task<JournalEntry> PostDepositRevenueAsync(
         Payment payment,
+        Reservation reservation,
         CancellationToken cancellationToken = default)
     {
         return PostPaymentAsync(
             payment,
+            reservation,
             JournalEntrySourceType.DepositRevenue,
             FinanceAccountCodes.NonRefundableDepositRevenue,
+            payment.Amount,
             cancellationToken);
+    }
+
+    public async Task<JournalEntry> PostFullDepositPaymentAsync(
+        Payment payment,
+        Reservation reservation,
+        CancellationToken cancellationToken = default)
+    {
+        var existingEntry = await FindExistingEntryAsync(payment, cancellationToken);
+        if (existingEntry != null)
+        {
+            payment.LinkJournalEntry(existingEntry.Id);
+            return existingEntry;
+        }
+
+        var metadata = await _journalEntryContextProvider.ResolveForReservationAsync(
+            reservation,
+            cancellationToken);
+
+        var cashAccount = await GetRequiredAccountAsync(FinanceAccountCodes.Cash, cancellationToken);
+        var depositRevenueAccount = await GetRequiredAccountAsync(
+            FinanceAccountCodes.NonRefundableDepositRevenue,
+            cancellationToken);
+        var deferredRevenueAccount = await GetRequiredAccountAsync(
+            FinanceAccountCodes.DeferredRevenue,
+            cancellationToken);
+
+        var depositPortion = FinancePaymentRules.CalculateDepositRevenuePortion(reservation.TotalPrice);
+        var deferredPortion = FinancePaymentRules.CalculateDeferredPortionForFullPayment(reservation.TotalPrice);
+
+        var entryNumber = await _entryNumberGenerator.GenerateAsync(cancellationToken);
+        var reservationLabel = metadata.ReservationNumber ?? reservation.ReservationNumber;
+
+        var entry = new JournalEntry(
+            GuidGenerator.Create(),
+            entryNumber,
+            payment.PaymentDate,
+            JournalEntrySourceType.DepositRevenue,
+            _localizer["Journal:FullDepositReceived", reservationLabel],
+            payment.ReservationId,
+            payment.Id,
+            metadata);
+
+        entry.AddLine(
+            GuidGenerator.Create(),
+            cashAccount.Id,
+            payment.Amount,
+            0m,
+            _localizer["Journal:Line:CashReceipt"]);
+
+        entry.AddLine(
+            GuidGenerator.Create(),
+            depositRevenueAccount.Id,
+            0m,
+            depositPortion,
+            _localizer["Journal:Line:DepositRevenue"]);
+
+        entry.AddLine(
+            GuidGenerator.Create(),
+            deferredRevenueAccount.Id,
+            0m,
+            deferredPortion,
+            _localizer["Journal:Line:DeferredRevenue"]);
+
+        entry.Post(Clock.Now);
+
+        await _journalEntryRepository.InsertAsync(entry, autoSave: false, cancellationToken);
+
+        payment.LinkJournalEntry(entry.Id);
+
+        return entry;
     }
 
     public Task<JournalEntry> PostDeferredRevenueAsync(
         Payment payment,
+        Reservation reservation,
         CancellationToken cancellationToken = default)
     {
         return PostPaymentAsync(
             payment,
+            reservation,
             JournalEntrySourceType.DeferredRevenue,
             FinanceAccountCodes.DeferredRevenue,
+            payment.Amount,
             cancellationToken);
     }
 
     private async Task<JournalEntry> PostPaymentAsync(
         Payment payment,
+        Reservation reservation,
         JournalEntrySourceType sourceType,
         string creditAccountCode,
+        decimal creditAmount,
         CancellationToken cancellationToken)
     {
         var existingEntry = await FindExistingEntryAsync(payment, cancellationToken);
@@ -63,32 +151,38 @@ public class JournalPostingService : DomainService, IJournalPostingService
             return existingEntry;
         }
 
+        var metadata = await _journalEntryContextProvider.ResolveForReservationAsync(
+            reservation,
+            cancellationToken);
+
         var cashAccount = await GetRequiredAccountAsync(FinanceAccountCodes.Cash, cancellationToken);
         var creditAccount = await GetRequiredAccountAsync(creditAccountCode, cancellationToken);
 
         var entryNumber = await _entryNumberGenerator.GenerateAsync(cancellationToken);
+        var reservationLabel = metadata.ReservationNumber ?? reservation.ReservationNumber;
 
         var entry = new JournalEntry(
             GuidGenerator.Create(),
             entryNumber,
             payment.PaymentDate,
             sourceType,
-            BuildDescription(payment, sourceType),
+            BuildDescription(sourceType, reservationLabel),
             payment.ReservationId,
-            payment.Id);
+            payment.Id,
+            metadata);
 
         entry.AddLine(
             GuidGenerator.Create(),
             cashAccount.Id,
             payment.Amount,
             0m,
-            "Cash receipt");
+            _localizer["Journal:Line:CashReceipt"]);
 
         entry.AddLine(
             GuidGenerator.Create(),
             creditAccount.Id,
             0m,
-            payment.Amount,
+            creditAmount,
             BuildCreditLineDescription(sourceType));
 
         entry.Post(Clock.Now);
@@ -140,25 +234,25 @@ public class JournalPostingService : DomainService, IJournalPostingService
         return account;
     }
 
-    private static string BuildDescription(Payment payment, JournalEntrySourceType sourceType)
+    private string BuildDescription(JournalEntrySourceType sourceType, string reservationNumber)
     {
         return sourceType switch
         {
             JournalEntrySourceType.DepositRevenue =>
-                $"Deposit payment {payment.ReceiptNumber}",
+                _localizer["Journal:DepositReceived", reservationNumber],
             JournalEntrySourceType.DeferredRevenue =>
-                $"Installment payment {payment.ReceiptNumber}",
-            _ => $"Payment {payment.ReceiptNumber}",
+                _localizer["Journal:InstallmentReceived", reservationNumber],
+            _ => _localizer["Journal:PaymentReceived", reservationNumber],
         };
     }
 
-    private static string BuildCreditLineDescription(JournalEntrySourceType sourceType)
+    private string BuildCreditLineDescription(JournalEntrySourceType sourceType)
     {
         return sourceType switch
         {
-            JournalEntrySourceType.DepositRevenue => "Non-refundable deposit revenue",
-            JournalEntrySourceType.DeferredRevenue => "Deferred revenue",
-            _ => "Payment revenue",
+            JournalEntrySourceType.DepositRevenue => _localizer["Journal:Line:DepositRevenue"],
+            JournalEntrySourceType.DeferredRevenue => _localizer["Journal:Line:DeferredRevenue"],
+            _ => _localizer["Journal:Line:PaymentRevenue"],
         };
     }
 }

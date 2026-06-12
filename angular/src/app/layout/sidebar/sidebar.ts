@@ -157,6 +157,12 @@ export class Sidebar implements OnInit, OnDestroy {
           route: '/bookings/create',
           exact: true,
         },
+        {
+          titleKey: 'Menu:Reservations:AccessCards',
+          icon: 'badge',
+          route: '/bookings/access-cards',
+          exact: true,
+        },
       ],
     },
     {
@@ -287,6 +293,9 @@ export class Sidebar implements OnInit, OnDestroy {
         }
         if (child.route === '/bookings/create') {
           return can('BanquetHallManagement.Reservations.Create');
+        }
+        if (child.route === '/bookings/access-cards') {
+          return can('BanquetHallManagement.Finance.HallAccessCards.View');
         }
         if (child.route === '/finance/invoices') {
           return can('BanquetHallManagement.Finance.Invoices.View');

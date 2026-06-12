@@ -44,6 +44,9 @@ public static class BanquetHallManagementDomainErrorCodes
     public const string ReservationCannotConfirmHallEntry =
         "BanquetHallManagement:Reservation:CannotConfirmHallEntry";
 
+    public const string ReservationNotFound =
+        "BanquetHallManagement:Reservation:NotFound";
+
     public const string PaymentDepositBelowMinimum =
         "BanquetHallManagement:Payment:DepositBelowMinimum";
 

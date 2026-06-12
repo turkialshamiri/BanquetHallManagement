@@ -40,6 +40,22 @@ public class JournalEntryConfiguration : IEntityTypeConfiguration<JournalEntry>
         builder.Property(x => x.PaymentId)
             .HasComment("معرف الدفعة المرتبطة بالقيد إن وجد.");
 
+        builder.Property(x => x.ReservationNumber)
+            .HasMaxLength(50)
+            .HasComment("رقم الحجز المرتبط بالقيد.");
+
+        builder.Property(x => x.CustomerName)
+            .HasMaxLength(200)
+            .HasComment("اسم العميل المرتبط بالقيد.");
+
+        builder.Property(x => x.HallName)
+            .HasMaxLength(200)
+            .HasComment("اسم القاعة المرتبطة بالقيد.");
+
+        builder.Property(x => x.EmployeeName)
+            .HasMaxLength(200)
+            .HasComment("اسم الموظف الذي أنشأ القيد.");
+
         builder.Property(x => x.IsPosted)
             .IsRequired()
             .HasDefaultValue(false)

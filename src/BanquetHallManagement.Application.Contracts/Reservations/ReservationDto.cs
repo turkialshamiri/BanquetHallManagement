@@ -7,6 +7,7 @@ namespace BanquetHallManagement.Reservations
     public class ReservationDto
     {
         public Guid Id { get; set; }
+        public string ReservationNumber { get; set; } = null!;
         public Guid HallId { get; set; }
         public Guid CustomerId { get; set; }
 
