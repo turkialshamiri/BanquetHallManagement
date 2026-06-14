@@ -18,5 +18,7 @@ public interface IHallAccessCardAppService : IApplicationService
     Task<HallAccessCardEntryPreviewDto> GetEntryPreviewByReservationNumberAsync(
         string reservationNumber);
 
+    Task<HallAccessCardEntryPreviewDto> GetEntryPreviewBySearchAsync(string search);
+
     Task<HallAccessCardPrintDataDto> GetPrintDataAsync(Guid id);
 }

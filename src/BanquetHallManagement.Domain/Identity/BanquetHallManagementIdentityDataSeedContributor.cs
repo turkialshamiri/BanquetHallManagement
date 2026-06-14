@@ -101,6 +101,10 @@ public class BanquetHallManagementIdentityDataSeedContributor : IDataSeedContrib
             BanquetHallManagementPermissions.Reservations.Cancel,
             BanquetHallManagementPermissions.Reservations.Complete,
             BanquetHallManagementPermissions.Reservations.RecordPayment,
+            BanquetHallManagementPermissions.Reservations.ConfirmHallEntry,
+
+            BanquetHallManagementPermissions.Finance.HallAccessCardsView,
+            BanquetHallManagementPermissions.Finance.HallAccessCardsPrint,
 
             BanquetHallManagementPermissions.Finance.PaymentsCreate,
             BanquetHallManagementPermissions.Finance.PaymentsView,

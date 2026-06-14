@@ -222,6 +222,12 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
                 BanquetHallManagementDomainErrorCodes.ReservationCannotConfirmHallEntry);
         }
 
+        if (EventDate.Date != completedAt.Date)
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.ReservationHallEntryEventDateMismatch);
+        }
+
         AddLocalEvent(new HallEntryConfirmedDomainEvent(
             ReservationEventSnapshot.FromReservation(this)));
 

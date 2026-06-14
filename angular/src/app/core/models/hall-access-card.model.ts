@@ -86,6 +86,7 @@ export interface HallAccessCardEntryPreview {
 
   canConfirmEntry: boolean;
 
+  eventDateIsToday: boolean;
 }
 
 

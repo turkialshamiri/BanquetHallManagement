@@ -40,4 +40,27 @@ public class EfCoreHallAccessCardRepository :
             card => card.ReservationId == reservationId,
             cancellationToken);
     }
+
+    public async Task<HallAccessCard?> FindByCardNumberAsync(
+        string cardNumber,
+        CancellationToken cancellationToken = default)
+    {
+        var dbContext = await GetDbContextAsync();
+
+        var trackedCard = dbContext.ChangeTracker
+            .Entries<HallAccessCard>()
+            .Select(entry => entry.Entity)
+            .FirstOrDefault(card => card.CardNumber == cardNumber);
+
+        if (trackedCard != null)
+        {
+            return trackedCard;
+        }
+
+        var query = await GetQueryableAsync();
+
+        return await query.FirstOrDefaultAsync(
+            card => card.CardNumber == cardNumber,
+            cancellationToken);
+    }
 }

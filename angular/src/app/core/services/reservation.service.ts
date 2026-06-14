@@ -78,7 +78,7 @@ export class ReservationService {
     reservationNumber: string
   ): Observable<Reservation> {
     return this.http.post<Reservation>(
-      `${this.apiUrl}/confirm-hall-entry-by-number`,
+      `${this.apiUrl}/confirm-hall-entry-by-reservation-number`,
       { reservationNumber }
     );
   }

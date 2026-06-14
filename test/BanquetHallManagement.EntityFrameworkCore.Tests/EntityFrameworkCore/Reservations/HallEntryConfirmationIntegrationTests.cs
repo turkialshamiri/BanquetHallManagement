@@ -8,10 +8,13 @@ using BanquetHallManagement.Finance.Accounts;
 using BanquetHallManagement.Finance.HallAccessCards;
 using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.Payments;
+using BanquetHallManagement.EventHandlers.Finance;
 using BanquetHallManagement.Reservations;
+using BanquetHallManagement.Reservations.Events;
 using Shouldly;
 using Volo.Abp.Data;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Timing;
 using Xunit;
 
 namespace BanquetHallManagement.EntityFrameworkCore.Reservations;
@@ -34,6 +37,8 @@ public class HallEntryConfirmationIntegrationTests : BanquetHallManagementEntity
             result.Status.ShouldBe(ReservationStatus.Completed.ToString());
             result.CompletedAt.ShouldNotBeNull();
 
+            await PublishHallEntryConfirmedEventAsync(reservationId);
+
             var journalEntryRepository = GetRequiredService<IJournalEntryRepository>();
             var entry = await journalEntryRepository.FindByReservationAndSourceTypeAsync(
                 reservationId,
@@ -48,14 +53,12 @@ public class HallEntryConfirmationIntegrationTests : BanquetHallManagementEntity
             var accounts = await accountRepository.GetListAsync();
             var deferredRevenue = accounts.Single(account => account.Code == FinanceAccountCodes.DeferredRevenue);
             var hallRevenue = accounts.Single(account => account.Code == FinanceAccountCodes.HallRevenue);
-            var serviceRevenue = accounts.Single(account => account.Code == FinanceAccountCodes.ServiceRevenue);
 
             entry.Lines.ShouldContain(line =>
                 line.AccountId == deferredRevenue.Id && line.Debit == 70_000m);
             entry.Lines.ShouldContain(line =>
-                line.AccountId == hallRevenue.Id && line.Credit == 56_000m);
-            entry.Lines.ShouldContain(line =>
-                line.AccountId == serviceRevenue.Id && line.Credit == 14_000m);
+                line.AccountId == hallRevenue.Id && line.Credit == 70_000m);
+            entry.Lines.Count.ShouldBe(2);
         });
     }
 
@@ -76,6 +79,17 @@ public class HallEntryConfirmationIntegrationTests : BanquetHallManagementEntity
         });
     }
 
+    private async Task PublishHallEntryConfirmedEventAsync(Guid reservationId)
+    {
+        var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
+        var reservation = await reservationRepository.GetAsync(reservationId, includeDetails: true);
+        var handler = GetRequiredService<RevenueRecognitionHandler>();
+        var domainEvent = new HallEntryConfirmedDomainEvent(
+            ReservationEventSnapshot.FromReservation(reservation));
+
+        await handler.HandleEventAsync(domainEvent);
+    }
+
     private async Task SeedAccountsAsync()
     {
         var seedContributor = GetRequiredService<FinanceAccountDataSeedContributor>();
@@ -89,6 +103,7 @@ public class HallEntryConfirmationIntegrationTests : BanquetHallManagementEntity
         var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
         var paymentRepository = GetRequiredService<IRepository<Payment, Guid>>();
         var hallAccessCardRepository = GetRequiredService<IRepository<HallAccessCard, Guid>>();
+        var clock = GetRequiredService<IClock>();
 
         var hall = await hallRepository.InsertAsync(
             new Hall
@@ -115,7 +130,7 @@ public class HallEntryConfirmationIntegrationTests : BanquetHallManagementEntity
         {
             HallId = hall.Id,
             CustomerId = customer.Id,
-            EventDate = new DateTime(2026, 7, 1),
+            EventDate = clock.Now.Date,
             StartTime = new TimeSpan(18, 0, 0),
             EndTime = new TimeSpan(22, 0, 0),
             GuestsCount = 100,

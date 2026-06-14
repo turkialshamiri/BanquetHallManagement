@@ -33,4 +33,6 @@ public class HallAccessCardEntryPreviewDto
     public string EmployeeName { get; set; } = null!;
 
     public bool CanConfirmEntry { get; set; }
+
+    public bool EventDateIsToday { get; set; }
 }

@@ -95,8 +95,23 @@ export class HallAccessCardService {
   getEntryPreviewByReservationNumber(
     reservationNumber: string
   ): Observable<HallAccessCardEntryPreview> {
+    const params = new HttpParams().set(
+      'reservationNumber',
+      reservationNumber.trim()
+    );
+
     return this.http.get<HallAccessCardEntryPreview>(
-      `${this.apiUrl}/entry-preview/by-reservation-number/${encodeURIComponent(reservationNumber)}`
+      `${this.apiUrl}/entry-preview-by-reservation-number`,
+      { params }
+    );
+  }
+
+  getEntryPreviewBySearch(search: string): Observable<HallAccessCardEntryPreview> {
+    const params = new HttpParams().set('search', search.trim());
+
+    return this.http.get<HallAccessCardEntryPreview>(
+      `${this.apiUrl}/entry-preview-by-search`,
+      { params }
     );
   }
 

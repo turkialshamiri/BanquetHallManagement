@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
 import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import { HallAccessCardService } from 'src/app/core/services/hall-access-card.service';
@@ -45,8 +46,8 @@ export class AccessCards implements OnInit {
   readonly confirming = signal(false);
   readonly loadingPreview = signal(false);
   readonly searchTerm = signal('');
-  readonly entryReservationNumber = signal('');
   readonly entryPreview = signal<HallAccessCardEntryPreview | null>(null);
+  readonly confirmationSucceeded = signal(false);
   readonly formatTime = toTimeInputValue;
 
   readonly canConfirmEntry = this.policy.hasSnapshot(
@@ -58,6 +59,19 @@ export class AccessCards implements OnInit {
   );
 
   ngOnInit(): void {
+    this.loadCards();
+  }
+
+  onSearch(): void {
+    this.confirmationSucceeded.set(false);
+    this.loadCards();
+    this.loadEntryPreview();
+  }
+
+  clearSearch(): void {
+    this.searchTerm.set('');
+    this.entryPreview.set(null);
+    this.confirmationSucceeded.set(false);
     this.loadCards();
   }
 
@@ -81,67 +95,61 @@ export class AccessCards implements OnInit {
     });
   }
 
-  onSearch(): void {
-    this.loadCards();
-  }
-
   openPrint(cardId: string): void {
     void this.router.navigate(['/finance/access-cards', cardId]);
   }
 
   loadEntryPreview(): void {
-    const reservationNumber = this.entryReservationNumber().trim();
-    if (!reservationNumber || !this.canConfirmEntry) {
+    const search = this.searchTerm().trim();
+    if (!search) {
+      this.entryPreview.set(null);
       return;
     }
 
     this.loadingPreview.set(true);
     this.entryPreview.set(null);
 
-    this.accessCardService
-      .getEntryPreviewByReservationNumber(reservationNumber)
-      .subscribe({
-        next: (preview) => {
-          this.entryPreview.set(preview);
-          this.loadingPreview.set(false);
-        },
-        error: (error) => {
-          this.loadingPreview.set(false);
-          this.notification.showError(
-            getAbpErrorMessage(
-              error,
-              this.l10n.instant('Finance:AccessCards:ConfirmEntry:LoadFailed')
-            )
-          );
-        },
-      });
-  }
+    this.accessCardService.getEntryPreviewBySearch(search).subscribe({
+      next: (preview) => {
+        this.entryPreview.set(preview);
+        this.loadingPreview.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.loadingPreview.set(false);
+        if (error.status === 404 || this.isNotFoundError(error)) {
+          return;
+        }
 
-  onEntryNumberKeyup(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
-      this.loadEntryPreview();
-    }
+        this.notification.showError(
+          getAbpErrorMessage(
+            error,
+            this.l10n.instant('Finance:AccessCards:ConfirmEntry:LoadFailed')
+          )
+        );
+      },
+    });
   }
 
   confirmEntry(): void {
     const preview = this.entryPreview();
-    if (!preview?.canConfirmEntry || this.confirming()) {
+    if (!preview?.canConfirmEntry || this.confirming() || !this.canConfirmEntry) {
       return;
     }
 
     this.confirming.set(true);
+    this.confirmationSucceeded.set(false);
 
     this.reservationService
-      .confirmHallEntryByReservationNumber(preview.reservationNumber)
+      .confirmHallEntry(preview.reservationId)
       .subscribe({
         next: () => {
           this.confirming.set(false);
-          this.entryReservationNumber.set('');
-          this.entryPreview.set(null);
+          this.confirmationSucceeded.set(true);
           this.notification.showSuccess(
             this.l10n.instant('Finance:AccessCards:ConfirmEntry:Success')
           );
           this.loadCards();
+          this.loadEntryPreview();
         },
         error: (error) => {
           this.confirming.set(false);
@@ -165,5 +173,14 @@ export class AccessCards implements OnInit {
   qrCodeUrl(card: HallAccessCardListItem | HallAccessCardEntryPreview): string {
     const payload = `${card.reservationNumber}|${card.cardNumber}`;
     return `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(payload)}`;
+  }
+
+  private isNotFoundError(error: HttpErrorResponse): boolean {
+    const message = getAbpErrorMessage(error, '');
+    return (
+      message.includes('HallAccessCard:NotFound') ||
+      message.includes('Hall access card not found') ||
+      message.includes('بطاقة الدخول')
+    );
   }
 }

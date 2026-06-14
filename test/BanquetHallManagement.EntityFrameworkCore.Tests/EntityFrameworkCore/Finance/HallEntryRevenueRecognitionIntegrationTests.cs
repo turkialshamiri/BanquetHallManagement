@@ -15,6 +15,7 @@ using BanquetHallManagement.Services;
 using Shouldly;
 using Volo.Abp.Data;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Timing;
 using Xunit;
 using ServiceEntity = BanquetHallManagement.Services.Service;
 
@@ -32,9 +33,10 @@ public class HallEntryRevenueRecognitionIntegrationTests : BanquetHallManagement
 
             var reservationId = await CreateFullyPaidReservationWithDeferredPaymentAsync();
             var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
+            var clock = GetRequiredService<IClock>();
             var reservation = await reservationRepository.GetAsync(reservationId, includeDetails: true);
 
-            reservation.ConfirmHallEntry(new DateTime(2026, 6, 12, 18, 0, 0));
+            reservation.ConfirmHallEntry(clock.Now);
             await reservationRepository.UpdateAsync(reservation, autoSave: true);
 
             await PublishHallEntryConfirmedEventAsync(reservation);
@@ -87,6 +89,7 @@ public class HallEntryRevenueRecognitionIntegrationTests : BanquetHallManagement
         var serviceRepository = GetRequiredService<IRepository<ServiceEntity, Guid>>();
         var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
         var paymentRepository = GetRequiredService<IRepository<Payment, Guid>>();
+        var clock = GetRequiredService<IClock>();
 
         var hall = await hallRepository.InsertAsync(
             new Hall
@@ -121,7 +124,7 @@ public class HallEntryRevenueRecognitionIntegrationTests : BanquetHallManagement
         {
             HallId = hall.Id,
             CustomerId = customer.Id,
-            EventDate = new DateTime(2026, 7, 1),
+            EventDate = clock.Now.Date,
             StartTime = new TimeSpan(18, 0, 0),
             EndTime = new TimeSpan(22, 0, 0),
             GuestsCount = 100,

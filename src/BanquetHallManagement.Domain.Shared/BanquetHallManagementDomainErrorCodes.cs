@@ -50,6 +50,9 @@ public static class BanquetHallManagementDomainErrorCodes
     public const string ReservationCannotConfirmHallEntry =
         "BanquetHallManagement:Reservation:CannotConfirmHallEntry";
 
+    public const string ReservationHallEntryEventDateMismatch =
+        "BanquetHallManagement:Reservation:HallEntryEventDateMismatch";
+
     public const string ReservationNotFound =
         "BanquetHallManagement:Reservation:NotFound";
 

@@ -10,4 +10,8 @@ public interface IHallAccessCardRepository : IRepository<HallAccessCard, Guid>
     Task<HallAccessCard?> FindByReservationIdAsync(
         Guid reservationId,
         CancellationToken cancellationToken = default);
+
+    Task<HallAccessCard?> FindByCardNumberAsync(
+        string cardNumber,
+        CancellationToken cancellationToken = default);
 }

@@ -54,8 +54,10 @@ public class HallAccessCardAppService : BanquetHallManagementAppService, IHallAc
 
         if (!string.IsNullOrWhiteSpace(input.ReservationNumber))
         {
+            var searchTerm = input.ReservationNumber.Trim();
             query = query.Where(item =>
-                item.reservation.ReservationNumber == input.ReservationNumber);
+                item.reservation.ReservationNumber == searchTerm ||
+                item.card.CardNumber == searchTerm);
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query);
@@ -134,28 +136,61 @@ public class HallAccessCardAppService : BanquetHallManagementAppService, IHallAc
         return await GetByReservationAsync(reservation.Id);
     }
 
-    [Authorize(BanquetHallManagementPermissions.Reservations.ConfirmHallEntry)]
+    [Authorize(BanquetHallManagementPermissions.Finance.HallAccessCardsView)]
     public async Task<HallAccessCardEntryPreviewDto> GetEntryPreviewByReservationNumberAsync(
         string reservationNumber)
     {
-        var reservation = await _reservationRepository.FindByReservationNumberAsync(reservationNumber);
-        if (reservation == null)
-        {
-            throw new Volo.Abp.BusinessException(
-                BanquetHallManagementDomainErrorCodes.ReservationNotFound)
-                .WithData("ReservationNumber", reservationNumber);
-        }
+        return await GetEntryPreviewBySearchAsync(reservationNumber);
+    }
 
-        var card = await _hallAccessCardRepository.FindByReservationIdAsync(reservation.Id);
-        if (card == null)
+    [Authorize(BanquetHallManagementPermissions.Finance.HallAccessCardsView)]
+    public async Task<HallAccessCardEntryPreviewDto> GetEntryPreviewBySearchAsync(string search)
+    {
+        var searchTerm = search?.Trim();
+        if (string.IsNullOrWhiteSpace(searchTerm))
         {
             throw new Volo.Abp.BusinessException(
                 BanquetHallManagementDomainErrorCodes.HallAccessCardNotFound)
-                .WithData("ReservationNumber", reservationNumber);
+                .WithData("Search", search);
         }
 
+        var reservation = await _reservationRepository.FindByReservationNumberAsync(searchTerm);
+        HallAccessCard? card = null;
+
+        if (reservation != null)
+        {
+            card = await _hallAccessCardRepository.FindByReservationIdAsync(reservation.Id);
+        }
+        else
+        {
+            card = await _hallAccessCardRepository.FindByCardNumberAsync(searchTerm);
+            if (card != null)
+            {
+                reservation = await _reservationRepository.GetAsync(card.ReservationId);
+            }
+        }
+
+        if (reservation == null || card == null)
+        {
+            throw new Volo.Abp.BusinessException(
+                BanquetHallManagementDomainErrorCodes.HallAccessCardNotFound)
+                .WithData("Search", searchTerm);
+        }
+
+        return await BuildEntryPreviewAsync(reservation, card);
+    }
+
+    private async Task<HallAccessCardEntryPreviewDto> BuildEntryPreviewAsync(
+        Reservation reservation,
+        HallAccessCard card)
+    {
         var customer = await _customerRepository.GetAsync(reservation.CustomerId);
         var hall = await _hallRepository.GetAsync(reservation.HallId);
+        var eventDateIsToday = reservation.EventDate.Date == Clock.Now.Date;
+        var canConfirmEntry = reservation.Status == ReservationStatus.FullyPaid
+            && eventDateIsToday
+            && await AuthorizationService.IsGrantedAsync(
+                BanquetHallManagementPermissions.Reservations.ConfirmHallEntry);
 
         return new HallAccessCardEntryPreviewDto
         {
@@ -173,7 +208,8 @@ public class HallAccessCardAppService : BanquetHallManagementAppService, IHallAc
             EntryTime = card.EntryTime,
             ExitTime = card.ExitTime,
             EmployeeName = await ResolveEmployeeNameAsync(card.CreatorId),
-            CanConfirmEntry = reservation.Status == ReservationStatus.FullyPaid,
+            EventDateIsToday = eventDateIsToday,
+            CanConfirmEntry = canConfirmEntry,
         };
     }
 

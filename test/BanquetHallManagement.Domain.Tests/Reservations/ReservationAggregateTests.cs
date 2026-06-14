@@ -136,7 +136,11 @@ public class ReservationAggregateTests
     [Fact]
     public void ConfirmHallEntry_Should_Move_FullyPaid_Reservation_To_Completed()
     {
-        var reservation = CreateReservation(ReservationStatus.FullyPaid, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        var reservation = CreateReservation(
+            ReservationStatus.FullyPaid,
+            new TimeSpan(18, 0, 0),
+            new TimeSpan(22, 0, 0),
+            eventDate: CompletedAt.Date);
         reservation.TotalPrice = 1000m;
         reservation.PaidAmount = 1000m;
 
@@ -144,6 +148,17 @@ public class ReservationAggregateTests
 
         reservation.Status.ShouldBe(ReservationStatus.Completed);
         reservation.CompletedAt.ShouldBe(CompletedAt);
+    }
+
+    [Fact]
+    public void ConfirmHallEntry_Should_Require_Event_Date_To_Match_Confirmation_Date()
+    {
+        var reservation = CreateReservation(ReservationStatus.FullyPaid, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        reservation.TotalPrice = 1000m;
+        reservation.PaidAmount = 1000m;
+
+        Should.Throw<BusinessException>(() => reservation.ConfirmHallEntry(CompletedAt))
+            .Code.ShouldBe(BanquetHallManagementDomainErrorCodes.ReservationHallEntryEventDateMismatch);
     }
 
     [Fact]

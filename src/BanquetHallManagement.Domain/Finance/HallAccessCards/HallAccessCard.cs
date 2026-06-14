@@ -50,4 +50,9 @@ public class HallAccessCard : FullAuditedAggregateRoot<Guid>
             entryTime,
             exitTime));
     }
+
+    public void MarkAsUsed()
+    {
+        IsUsed = true;
+    }
 }

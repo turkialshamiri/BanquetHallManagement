@@ -16,6 +16,7 @@ using BanquetHallManagement.Services;
 using Shouldly;
 using Volo.Abp.Data;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Timing;
 using Xunit;
 using ServiceEntity = BanquetHallManagement.Services.Service;
 
@@ -41,6 +42,26 @@ public class HallAccessCardEntryWorkflowIntegrationTests : BanquetHallManagement
             preview.HallName.ShouldBe("Access Card Entry Hall");
             preview.CardNumber.ShouldStartWith("HAC-");
             preview.PaymentStatus.ShouldBe(nameof(ReservationStatus.FullyPaid));
+            preview.CanConfirmEntry.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public async Task GetEntryPreviewBySearch_Should_Find_By_Card_Number()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var context = await CreateFullyPaidReservationWithAccessCardAsync();
+            var card = await GetRequiredService<IHallAccessCardRepository>()
+                .FindByReservationIdAsync(context.ReservationId);
+
+            card.ShouldNotBeNull();
+
+            var appService = GetRequiredService<IHallAccessCardAppService>();
+            var preview = await appService.GetEntryPreviewBySearchAsync(card!.CardNumber);
+
+            preview.ReservationId.ShouldBe(context.ReservationId);
+            preview.CardNumber.ShouldBe(card.CardNumber);
             preview.CanConfirmEntry.ShouldBeTrue();
         });
     }
@@ -96,7 +117,8 @@ public class HallAccessCardEntryWorkflowIntegrationTests : BanquetHallManagement
     }
 
     private async Task<ReservationAccessCardContext> CreateFullyPaidReservationWithAccessCardAsync(
-        bool includeDeferredPayment = false)
+        bool includeDeferredPayment = false,
+        DateTime? eventDate = null)
     {
         var hallRepository = GetRequiredService<IRepository<Hall, Guid>>();
         var customerRepository = GetRequiredService<IRepository<Customer, Guid>>();
@@ -104,6 +126,7 @@ public class HallAccessCardEntryWorkflowIntegrationTests : BanquetHallManagement
         var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
         var paymentRepository = GetRequiredService<IRepository<Payment, Guid>>();
         var hallAccessCardManager = GetRequiredService<HallAccessCardManager>();
+        var clock = GetRequiredService<IClock>();
 
         var hall = await hallRepository.InsertAsync(
             new Hall
@@ -138,7 +161,7 @@ public class HallAccessCardEntryWorkflowIntegrationTests : BanquetHallManagement
         {
             HallId = hall.Id,
             CustomerId = customer.Id,
-            EventDate = new DateTime(2026, 7, 1),
+            EventDate = eventDate ?? clock.Now.Date,
             StartTime = new TimeSpan(18, 0, 0),
             EndTime = new TimeSpan(22, 0, 0),
             GuestsCount = 100,
@@ -186,6 +209,29 @@ public class HallAccessCardEntryWorkflowIntegrationTests : BanquetHallManagement
         await GetRequiredService<Volo.Abp.Uow.IUnitOfWorkManager>().Current!.SaveChangesAsync();
 
         return new ReservationAccessCardContext(reservation.Id, reservation.ReservationNumber);
+    }
+
+    [Fact]
+    public async Task ConfirmHallEntryByReservationNumber_Should_Reject_When_Event_Date_Is_Not_Today()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var context = await CreateFullyPaidReservationWithAccessCardAsync(
+                includeDeferredPayment: false,
+                eventDate: new DateTime(2099, 1, 1));
+
+            var reservationAppService = GetRequiredService<IReservationAppService>();
+
+            var exception = await Should.ThrowAsync<Volo.Abp.BusinessException>(() =>
+                reservationAppService.ConfirmHallEntryByReservationNumberAsync(
+                    new ConfirmHallEntryByNumberDto
+                    {
+                        ReservationNumber = context.ReservationNumber,
+                    }));
+
+            exception.Code.ShouldBe(
+                BanquetHallManagementDomainErrorCodes.ReservationHallEntryEventDateMismatch);
+        });
     }
 
     private sealed record ReservationAccessCardContext(Guid ReservationId, string ReservationNumber);
