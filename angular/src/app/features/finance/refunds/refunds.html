@@ -6,97 +6,27 @@
     </div>
   </div>
 
-  <div class="toolbar">
-    <input
-      type="search"
-      [placeholder]="'Finance:Refunds:Search:ReservationNumber' | appLocalization"
-      [ngModel]="searchTerm()"
-      (ngModelChange)="searchTerm.set($event)"
-      (keyup.enter)="onSearch()"
-    />
-    <button type="button" class="action-btn" (click)="onSearch()">
+  <div class="search-panel">
+    <div class="search-field">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input
+        type="search"
+        [placeholder]="'Finance:Refunds:Search:Placeholder' | appLocalization"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+        (keyup)="onSearchKeyup($event)"
+      />
+      @if (searchTerm()) {
+        <button type="button" class="clear-btn" (click)="clearSearch()" [attr.aria-label]="'Clear' | appLocalization">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
+    <button type="button" class="search-btn" (click)="onSearch()" [disabled]="loading()">
       <mat-icon>search</mat-icon>
+      {{ 'Finance:Refunds:Search:Action' | appLocalization }}
     </button>
   </div>
-
-  @if (canProcess) {
-    <section class="lookup-panel">
-      <h3>{{ 'Finance:Refunds:Lookup:Title' | appLocalization }}</h3>
-      <div class="lookup-form">
-        <input
-          type="text"
-          [placeholder]="'Finance:Refunds:Search:ReservationNumber' | appLocalization"
-          [ngModel]="processReservationNumber()"
-          (ngModelChange)="processReservationNumber.set($event)"
-          (keyup)="onLookupKeyup($event)"
-        />
-        <button type="button" class="action-btn" [disabled]="lookupLoading()" (click)="lookupRefund()">
-          <mat-icon>search</mat-icon>
-          {{ 'Finance:Refunds:Lookup:Load' | appLocalization }}
-        </button>
-      </div>
-
-      @if (lookupLoading()) {
-        <div class="lookup-loading">...</div>
-      } @else if (lookup(); as details) {
-        <div class="lookup-details">
-          <div class="lookup-header">
-            <div>
-              <strong>{{ details.reservationNumber }}</strong>
-              <span>{{ details.customerName }} — {{ details.hallName }}</span>
-            </div>
-            <span class="status-pill" [class]="statusClass(details.statusCode)">
-              {{ refundStatusLabel(details) }}
-            </span>
-          </div>
-
-          <div class="lookup-grid">
-            <div>
-              <span>{{ 'Finance:Refunds:Column:Deposit' | appLocalization }}</span>
-              <strong>{{ details.depositAmount | number }}</strong>
-            </div>
-            <div>
-              <span>{{ 'Finance:Refunds:Column:Installments' | appLocalization }}</span>
-              <strong>{{ details.installmentsPaid | number }}</strong>
-            </div>
-            <div>
-              <span>{{ 'Finance:Refunds:Column:RefundableAmount' | appLocalization }}</span>
-              <strong>{{ details.refundableAmount | number }}</strong>
-            </div>
-            <div>
-              <span>{{ 'Finance:Refunds:Column:LiabilityAmount' | appLocalization }}</span>
-              <strong>{{ details.liabilityAmount | number }}</strong>
-            </div>
-            <div>
-              <span>{{ 'Finance:Refunds:Lookup:LiabilityJournal' | appLocalization }}</span>
-              @if (details.liabilityJournalEntryId) {
-                <button
-                  type="button"
-                  class="link-btn"
-                  (click)="openJournalEntry(details.liabilityJournalEntryId)"
-                >
-                  {{ details.liabilityJournalEntryNumber }}
-                </button>
-              } @else {
-                <strong>—</strong>
-              }
-            </div>
-          </div>
-
-          @if (canProcessLookup(details)) {
-            <button
-              type="button"
-              class="action-btn process-btn"
-              [disabled]="processingByNumber()"
-              (click)="processByNumber()"
-            >
-              {{ 'Finance:Refunds:Process' | appLocalization }}
-            </button>
-          }
-        </div>
-      }
-    </section>
-  }
 
   <div class="table-wrapper">
     <table>
@@ -105,21 +35,18 @@
           <th>{{ 'Finance:Refunds:Column:ReservationNumber' | appLocalization }}</th>
           <th>{{ 'Finance:Refunds:Column:Customer' | appLocalization }}</th>
           <th>{{ 'Finance:Refunds:Column:Hall' | appLocalization }}</th>
+          <th>{{ 'Finance:Refunds:Column:Paid' | appLocalization }}</th>
           <th>{{ 'Finance:Refunds:Column:Deposit' | appLocalization }}</th>
-          <th>{{ 'Finance:Refunds:Column:Installments' | appLocalization }}</th>
-          <th>{{ 'Finance:Refunds:Column:RefundableAmount' | appLocalization }}</th>
           <th>{{ 'Finance:Refunds:Column:LiabilityAmount' | appLocalization }}</th>
           <th>{{ 'Finance:Refunds:Column:LiabilityJournal' | appLocalization }}</th>
           <th>{{ 'Finance:Refunds:Column:Status' | appLocalization }}</th>
-          @if (canProcess) {
-            <th>{{ 'Actions' | appLocalization }}</th>
-          }
+          <th>{{ 'Actions' | appLocalization }}</th>
         </tr>
       </thead>
       <tbody>
         @if (loading()) {
           <tr>
-            <td [attr.colspan]="canProcess ? 10 : 9" class="empty-state">...</td>
+            <td colspan="9" class="empty-state">...</td>
           </tr>
         } @else if (refunds().length > 0) {
           @for (refund of refunds(); track refund.reservationId) {
@@ -127,9 +54,8 @@
               <td><strong>{{ refund.reservationNumber }}</strong></td>
               <td>{{ refund.customerName }}</td>
               <td>{{ refund.hallName }}</td>
+              <td>{{ refund.paidAmount | number }}</td>
               <td>{{ refund.depositAmount | number }}</td>
-              <td>{{ refund.installmentsPaid | number }}</td>
-              <td>{{ refund.refundableAmount | number }}</td>
               <td class="refund-amount">{{ refund.liabilityAmount | number }}</td>
               <td>
                 @if (refund.liabilityJournalEntryId) {
@@ -149,23 +75,35 @@
                   {{ refundStatusLabel(refund) }}
                 </span>
               </td>
-              @if (canProcess) {
-                <td>
+              <td>
+                <div class="action-group">
                   <button
                     type="button"
-                    class="action-btn"
-                    [disabled]="processingId() === refund.reservationId"
-                    (click)="processRefund(refund)"
+                    class="action-btn secondary"
+                    [disabled]="detailsLoadingId() === refund.reservationId"
+                    (click)="viewDetails(refund)"
                   >
-                    {{ 'Finance:Refunds:Process' | appLocalization }}
+                    <mat-icon>visibility</mat-icon>
+                    {{ 'Finance:Refunds:ViewDetails' | appLocalization }}
                   </button>
-                </td>
-              }
+                  @if (canProcess) {
+                    <button
+                      type="button"
+                      class="action-btn"
+                      [disabled]="processingId() === refund.reservationId"
+                      (click)="processRefund(refund)"
+                    >
+                      <mat-icon>payments</mat-icon>
+                      {{ 'Finance:Refunds:Process' | appLocalization }}
+                    </button>
+                  }
+                </div>
+              </td>
             </tr>
           }
         } @else {
           <tr>
-            <td [attr.colspan]="canProcess ? 10 : 9" class="empty-state">
+            <td colspan="9" class="empty-state">
               {{ 'Finance:Refunds:Empty' | appLocalization }}
             </td>
           </tr>

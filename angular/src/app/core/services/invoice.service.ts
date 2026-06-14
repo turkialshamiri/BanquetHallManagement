@@ -35,7 +35,13 @@ export class InvoiceService {
     );
   }
 
+  getSettlementByReservation(reservationId: string): Observable<Invoice> {
+    return this.http.get<Invoice>(
+      `${this.apiUrl}/settlement-by-reservation/${reservationId}`
+    );
+  }
+
   getPrintData(id: string): Observable<InvoicePrintData> {
-    return this.http.get<InvoicePrintData>(`${this.apiUrl}/print-data/${id}`);
+    return this.http.get<InvoicePrintData>(`${this.apiUrl}/${id}/print-data`);
   }
 }

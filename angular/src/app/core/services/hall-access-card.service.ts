@@ -103,9 +103,7 @@ export class HallAccessCardService {
   getPrintData(id: string): Observable<HallAccessCardPrintData> {
 
     return this.http.get<HallAccessCardPrintData>(
-
-      `${this.apiUrl}/print-data/${id}`
-
+      `${this.apiUrl}/${id}/print-data`
     );
 
   }

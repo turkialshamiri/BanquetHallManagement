@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,6 +46,11 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
         Reservation reservation,
         CancellationToken cancellationToken = default)
     {
+        if (reservation.Status != ReservationStatus.Cancelled)
+        {
+            return null;
+        }
+
         var existingEntry = await _journalEntryRepository.FindByReservationAndSourceTypeAsync(
             reservation.Id,
             JournalEntrySourceType.RefundLiability,
@@ -55,11 +61,11 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
             return existingEntry;
         }
 
-        var installmentAmount = await CalculateRefundableDeferredAmountAsync(
+        var refundableAmount = await CalculateRefundableAmountAsync(
             reservation,
             cancellationToken);
 
-        if (installmentAmount <= 0)
+        if (refundableAmount <= 0)
         {
             return null;
         }
@@ -89,7 +95,7 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
         entry.AddLine(
             GuidGenerator.Create(),
             deferredRevenueAccount.Id,
-            installmentAmount,
+            refundableAmount,
             0m,
             _localizer["Journal:Line:ReleaseDeferredForRefund"]);
 
@@ -97,7 +103,7 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
             GuidGenerator.Create(),
             refundLiabilityAccount.Id,
             0m,
-            installmentAmount,
+            refundableAmount,
             _localizer["Journal:Line:CustomerRefundLiability"]);
 
         entry.Post(Clock.Now);
@@ -130,6 +136,11 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
 
         if (liabilityEntry == null)
         {
+            liabilityEntry = await TransferInstallmentsToLiabilityAsync(reservation, cancellationToken);
+        }
+
+        if (liabilityEntry == null)
+        {
             throw new BusinessException(BanquetHallManagementDomainErrorCodes.RefundNotAllowed)
                 .WithData("ReservationId", reservation.Id);
         }
@@ -146,6 +157,18 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
         {
             throw new BusinessException(BanquetHallManagementDomainErrorCodes.RefundNotAllowed)
                 .WithData("ReservationId", reservation.Id);
+        }
+
+        var refundableAmount = await CalculateRefundableAmountAsync(
+            reservation,
+            cancellationToken);
+
+        if (refundAmount > refundableAmount)
+        {
+            throw new BusinessException(BanquetHallManagementDomainErrorCodes.RefundAmountExceedsLiability)
+                .WithData("ReservationId", reservation.Id)
+                .WithData("RefundAmount", refundAmount)
+                .WithData("RefundableAmount", refundableAmount);
         }
 
         var cashAccount = await GetRequiredAccountAsync(
@@ -190,15 +213,14 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
 
     private static void EnsureRefundAllowed(Reservation reservation)
     {
-        if (reservation.Status != ReservationStatus.Cancelled ||
-            reservation.CancellationType != CancellationType.NonPaymentAutoCancel)
+        if (!RefundEligibility.IsEligibleForRefundProcessing(reservation))
         {
             throw new BusinessException(BanquetHallManagementDomainErrorCodes.RefundNotAllowed)
                 .WithData("ReservationId", reservation.Id);
         }
     }
 
-    private async Task<decimal> CalculateRefundableDeferredAmountAsync(
+    private async Task<decimal> CalculateRefundableAmountAsync(
         Reservation reservation,
         CancellationToken cancellationToken)
     {
@@ -208,9 +230,11 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
             query.Where(payment => payment.ReservationId == reservation.Id),
             cancellationToken);
 
-        return DeferredRevenueCalculator.CalculateDeferredAmount(
-            reservation.TotalPrice,
-            payments);
+        var totalPaid = reservation.PaidAmount > 0
+            ? reservation.PaidAmount
+            : payments.Sum(payment => payment.Amount);
+
+        return RefundEligibility.CalculateRefundableAmount(reservation.TotalPrice, totalPaid);
     }
 
     private async Task<Account> GetRequiredAccountAsync(

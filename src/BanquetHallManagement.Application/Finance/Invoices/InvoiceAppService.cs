@@ -5,35 +5,41 @@ using BanquetHallManagement.Customers;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Halls;
+using BanquetHallManagement.Enums;
 using BanquetHallManagement.Permissions;
 using BanquetHallManagement.Reservations;
 using Microsoft.AspNetCore.Authorization;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Identity;
 
 namespace BanquetHallManagement.Finance.Invoices;
 
 [Authorize(BanquetHallManagementPermissions.Finance.InvoicesView)]
 public class InvoiceAppService : BanquetHallManagementAppService, IInvoiceAppService
 {
-    private readonly IRepository<Invoice, Guid> _invoiceRepository;
+    private readonly IInvoiceRepository _invoiceRepository;
     private readonly IRepository<Payment, Guid> _paymentRepository;
     private readonly IRepository<Reservation, Guid> _reservationRepository;
     private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly IRepository<Hall, Guid> _hallRepository;
+    private readonly IIdentityUserRepository _identityUserRepository;
 
     public InvoiceAppService(
-        IRepository<Invoice, Guid> invoiceRepository,
+        IInvoiceRepository invoiceRepository,
         IRepository<Payment, Guid> paymentRepository,
         IRepository<Reservation, Guid> reservationRepository,
         IRepository<Customer, Guid> customerRepository,
-        IRepository<Hall, Guid> hallRepository)
+        IRepository<Hall, Guid> hallRepository,
+        IIdentityUserRepository identityUserRepository)
     {
         _invoiceRepository = invoiceRepository;
         _paymentRepository = paymentRepository;
         _reservationRepository = reservationRepository;
         _customerRepository = customerRepository;
         _hallRepository = hallRepository;
+        _identityUserRepository = identityUserRepository;
     }
 
     public async Task<PagedResultDto<InvoiceDto>> GetListAsync(
@@ -71,6 +77,33 @@ public class InvoiceAppService : BanquetHallManagementAppService, IInvoiceAppSer
         return new ListResultDto<InvoiceDto>(invoices.Select(MapToDto).ToList());
     }
 
+    public async Task<InvoiceDto> GetSettlementByReservationAsync(Guid reservationId)
+    {
+        var reservation = await _reservationRepository.GetAsync(reservationId);
+
+        var finalInvoice = await _invoiceRepository.FindByReservationIdAndTypeAsync(
+            reservationId,
+            InvoiceType.Final);
+
+        if (finalInvoice != null)
+        {
+            return MapToDto(finalInvoice);
+        }
+
+        var settlementInvoice = await _invoiceRepository.FindSettlementInvoiceByReservationAsync(
+            reservationId,
+            reservation.TotalPrice);
+
+
+        if (settlementInvoice != null)
+        {
+            return MapToDto(settlementInvoice);
+        }
+
+        throw new BusinessException(BanquetHallManagementDomainErrorCodes.InvoiceNotFound)
+            .WithData("ReservationId", reservationId);
+    }
+
     [Authorize(BanquetHallManagementPermissions.Finance.InvoicesPrint)]
     public async Task<InvoicePrintDataDto> GetPrintDataAsync(Guid id)
     {
@@ -90,6 +123,8 @@ public class InvoiceAppService : BanquetHallManagementAppService, IInvoiceAppSer
             ReceiptNumber = payment.ReceiptNumber,
             PaymentDate = payment.PaymentDate,
             ReservationId = reservation.Id,
+            ReservationNumber = reservation.ReservationNumber,
+            ReservationCreatedAt = reservation.CreationTime,
             EventDate = reservation.EventDate,
             StartTime = reservation.StartTime,
             EndTime = reservation.EndTime,
@@ -102,7 +137,25 @@ public class InvoiceAppService : BanquetHallManagementAppService, IInvoiceAppSer
             CustomerCompany = customer.Company,
             HallName = hall.Name,
             HallLocation = hall.Location,
+            EmployeeName = await ResolveEmployeeNameAsync(invoice.CreatorId),
+            CompanyName = L["AppName"],
         };
+    }
+
+    private async Task<string> ResolveEmployeeNameAsync(Guid? userId)
+    {
+        if (!userId.HasValue)
+        {
+            return string.Empty;
+        }
+
+        var user = await _identityUserRepository.FindAsync(userId.Value);
+        if (user == null)
+        {
+            return string.Empty;
+        }
+
+        return string.IsNullOrWhiteSpace(user.Name) ? user.UserName ?? string.Empty : user.Name;
     }
 
     private InvoiceDto MapToDto(Invoice invoice)

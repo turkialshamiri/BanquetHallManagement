@@ -11,7 +11,20 @@ public class ReservationPaymentMonitorServiceTests
     private static readonly DateTime Now = new(2026, 6, 12, 17, 30, 0);
 
     [Fact]
-    public void IsEligibleForAutoCancel_Should_Return_True_When_Confirmed_And_Within_Two_Hours()
+    public void IsEligibleForAutoCancel_Should_Return_True_When_Confirmed_Unpaid_And_Within_Two_Hours()
+    {
+        var service = new ReservationPaymentMonitorService(null!, null!);
+        var reservation = CreateReservation(
+            ReservationStatus.Confirmed,
+            paidAmount: 0m,
+            eventDate: Now.Date,
+            startTime: new TimeSpan(19, 0, 0));
+
+        service.IsEligibleForAutoCancel(reservation, Now).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsEligibleForAutoCancel_Should_Return_False_When_Deposit_Recorded()
     {
         var service = new ReservationPaymentMonitorService(null!, null!);
         var reservation = CreateReservation(
@@ -20,7 +33,7 @@ public class ReservationPaymentMonitorServiceTests
             eventDate: Now.Date,
             startTime: new TimeSpan(19, 0, 0));
 
-        service.IsEligibleForAutoCancel(reservation, Now).ShouldBeTrue();
+        service.IsEligibleForAutoCancel(reservation, Now).ShouldBeFalse();
     }
 
     [Fact]
@@ -28,7 +41,7 @@ public class ReservationPaymentMonitorServiceTests
     {
         var service = new ReservationPaymentMonitorService(null!, null!);
         var reservation = CreateReservation(
-            ReservationStatus.Confirmed,
+            ReservationStatus.FullyPaid,
             paidAmount: 100_000m,
             eventDate: Now.Date,
             startTime: new TimeSpan(19, 0, 0));
@@ -42,7 +55,7 @@ public class ReservationPaymentMonitorServiceTests
         var service = new ReservationPaymentMonitorService(null!, null!);
         var reservation = CreateReservation(
             ReservationStatus.Confirmed,
-            paidAmount: 30_000m,
+            paidAmount: 0m,
             eventDate: Now.Date,
             startTime: new TimeSpan(22, 0, 0));
 
@@ -55,7 +68,7 @@ public class ReservationPaymentMonitorServiceTests
         var service = new ReservationPaymentMonitorService(null!, null!);
         var reservation = CreateReservation(
             ReservationStatus.Confirmed,
-            paidAmount: 30_000m,
+            paidAmount: 0m,
             eventDate: Now.Date,
             startTime: new TimeSpan(16, 0, 0));
 

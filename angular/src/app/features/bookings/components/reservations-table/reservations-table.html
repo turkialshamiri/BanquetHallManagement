@@ -30,9 +30,6 @@
                     <th>{{ 'Reservations:Column:Customer' | appLocalization }}</th>
                     <th>{{ 'Reservations:Column:Hall' | appLocalization }}</th>
                     <th>{{ 'Reservations:Column:Date' | appLocalization }}</th>
-                    <th>{{ 'Reservations:Column:StartTime' | appLocalization }}</th>
-                    <th>{{ 'Reservations:Column:EndTime' | appLocalization }}</th>
-                    <th>{{ 'Reservations:Column:Guests' | appLocalization }}</th>
                     <th>{{ 'Reservations:Column:TotalPrice' | appLocalization }}</th>
                     <th>{{ 'Reservations:Column:PaidAmount' | appLocalization }}</th>
                     <th>{{ 'Reservations:Column:RemainingAmount' | appLocalization }}</th>
@@ -73,12 +70,6 @@
                             <td>{{ getHallName(reservation.hallId) }}</td>
 
                             <td>{{ reservation.eventDate | date:'yyyy/MM/dd' }}</td>
-
-                            <td>{{ formatTime(reservation.startTime) }}</td>
-
-                            <td>{{ formatTime(reservation.endTime) }}</td>
-
-                            <td>{{ reservation.guestsCount }}</td>
 
                             <td>{{ reservation.totalPrice | number }}</td>
 
@@ -124,6 +115,14 @@
 
                                 <div class="actions">
 
+                                    <button
+                                        class="action-btn details-btn"
+                                        [title]="'Reservations:Action:ViewDetails' | appLocalization"
+                                        [disabled]="detailsLoadingId() === reservation.id"
+                                        (click)="viewDetails(reservation)">
+                                        <mat-icon>visibility</mat-icon>
+                                    </button>
+
                                     @if (
                                         canRecordPaymentAction &&
                                         canRecordPayment(
@@ -137,6 +136,22 @@
                                             [title]="'Reservations:Action:RecordPayment' | appLocalization"
                                             (click)="openRecordPaymentDialog(reservation)">
                                             <mat-icon>payments</mat-icon>
+                                        </button>
+                                    }
+
+                                    @if (
+                                        canViewInvoiceAction &&
+                                        canViewSettlementInvoice(
+                                            reservation.status,
+                                            reservation.paidAmount ?? 0,
+                                            reservation.totalPrice
+                                        )
+                                    ) {
+                                        <button
+                                            class="action-btn invoice-btn"
+                                            [title]="'Finance:Invoices:View' | appLocalization"
+                                            (click)="viewSettlementInvoice(reservation)">
+                                            <mat-icon>receipt_long</mat-icon>
                                         </button>
                                     }
 
@@ -178,7 +193,7 @@
                 } @else {
 
                     <tr>
-                        <td colspan="12" class="empty-state">
+                        <td colspan="10" class="empty-state">
                             {{ 'Reservations:Empty' | appLocalization }}
                         </td>
                     </tr>

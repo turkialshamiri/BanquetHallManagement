@@ -23,9 +23,19 @@ namespace BanquetHallManagement.Reservations
 
         public string Status { get; set; }
 
+        public DateTime? CompletedAt { get; set; }
+
         public string? CancellationReason { get; set; }
         public string? CancellationType { get; set; }
 
         public List<Guid> ServiceIds { get; set; }
+
+        public DateTime CreationTime { get; set; }
+
+        public DateTime? LastModificationTime { get; set; }
+
+        public string? CreatedBy { get; set; }
+
+        public string? LastModifiedBy { get; set; }
     }
 }

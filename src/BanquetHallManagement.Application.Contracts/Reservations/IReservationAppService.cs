@@ -21,6 +21,8 @@ public interface IReservationAppService : IApplicationService
 
     Task DeleteAsync(Guid id);
 
+    Task<ReservationDto> ArchiveAsync(Guid id);
+
     Task<ReservationDto> ConfirmAsync(Guid id);
 
     Task<ReservationDto> CancelAsync(Guid id);

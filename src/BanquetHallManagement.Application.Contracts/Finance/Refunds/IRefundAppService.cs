@@ -9,6 +9,8 @@ public interface IRefundAppService : IApplicationService
 {
     Task<ListResultDto<PendingRefundDto>> GetPendingAsync(RefundLiabilityGetListInput input);
 
+    Task<RefundDetailsDto> GetDetailsAsync(Guid reservationId);
+
     Task<RefundLiabilityLookupDto> GetByReservationNumberAsync(string reservationNumber);
 
     Task<ProcessRefundResultDto> ProcessAsync(Guid reservationId);

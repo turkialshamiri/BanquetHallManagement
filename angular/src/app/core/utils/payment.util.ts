@@ -44,6 +44,23 @@ export function isDepositPayment(status: string, paidAmount: number): boolean {
   return status === RESERVATION_STATUS.Pending || paidAmount === 0;
 }
 
+export function canViewSettlementInvoice(
+  status: string,
+  paidAmount: number,
+  totalPrice: number
+): boolean {
+  const remaining = getRemainingAmount({
+    paidAmount,
+    totalPrice,
+  } as { paidAmount?: number; totalPrice: number });
+
+  return (
+    remaining <= 0 &&
+    (status === RESERVATION_STATUS.FullyPaid ||
+      status === RESERVATION_STATUS.Completed)
+  );
+}
+
 export function getRemainingAmount(reservation: {
   totalPrice: number;
   paidAmount?: number;

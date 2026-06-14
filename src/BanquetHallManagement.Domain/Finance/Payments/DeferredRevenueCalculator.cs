@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BanquetHallManagement.Enums;
 using BanquetHallManagement.Finance;
+using BanquetHallManagement.Finance.Payments;
 
 namespace BanquetHallManagement.Finance.Payments;
 
@@ -11,20 +12,16 @@ public static class DeferredRevenueCalculator
         decimal totalPrice,
         IEnumerable<Payment> payments)
     {
-        var paymentList = payments.ToList();
+        return payments.Sum(payment => CalculateDeferredPortion(payment, totalPrice));
+    }
 
-        var installmentTotal = paymentList
-            .Where(payment =>
-                payment.PaymentType == PaymentType.Installment ||
-                payment.PaymentType == PaymentType.Final)
-            .Sum(payment => payment.Amount);
-
-        var fullDepositDeferred = paymentList
-            .Where(payment =>
-                payment.PaymentType == PaymentType.Deposit &&
-                FinancePaymentRules.IsFullPayment(payment.Amount, totalPrice))
-            .Sum(_ => FinancePaymentRules.CalculateDeferredPortionForFullPayment(totalPrice));
-
-        return installmentTotal + fullDepositDeferred;
+    private static decimal CalculateDeferredPortion(Payment payment, decimal totalPrice)
+    {
+        return payment.PaymentType switch
+        {
+            PaymentType.Installment or PaymentType.Final => payment.Amount,
+            PaymentType.Deposit => payment.Amount - FinancePaymentRules.CalculateDepositRevenuePortion(totalPrice),
+            _ => 0m,
+        };
     }
 }

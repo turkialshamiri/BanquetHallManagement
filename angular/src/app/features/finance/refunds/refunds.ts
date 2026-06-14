@@ -2,21 +2,26 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
 import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
 import { RefundService } from 'src/app/core/services/refund.service';
-import { PendingRefund, RefundLiabilityLookup } from 'src/app/core/models/refund.model';
+import { PendingRefund } from 'src/app/core/models/refund.model';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { DialogService } from 'src/app/shared/services/dialog.service';
 import { PolicyService } from 'src/app/core/services/policy.service';
 import { StatusLocalizationService } from 'src/app/core/services/status-localization.service';
+import {
+  REFUND_DETAILS_DIALOG_CONFIG,
+  RefundDetailsDialog,
+} from 'src/app/shared/components/refund-details-dialog/refund-details-dialog';
 
 @Component({
   selector: 'app-refunds',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MatIconModule, AppLocalizationPipe],
+  imports: [CommonModule, FormsModule, RouterModule, MatIconModule, MatDialogModule, AppLocalizationPipe],
   templateUrl: './refunds.html',
   styleUrl: './refunds.scss',
 })
@@ -24,6 +29,7 @@ export class Refunds implements OnInit {
   private refundService = inject(RefundService);
   private notification = inject(NotificationService);
   private dialogService = inject(DialogService);
+  private dialog = inject(MatDialog);
   private l10n = inject(AppLocalizationService);
   private policy = inject(PolicyService);
   private statusL10n = inject(StatusLocalizationService);
@@ -32,11 +38,8 @@ export class Refunds implements OnInit {
   readonly refunds = signal<PendingRefund[]>([]);
   readonly loading = signal(false);
   readonly processingId = signal<string | null>(null);
+  readonly detailsLoadingId = signal<string | null>(null);
   readonly searchTerm = signal('');
-  readonly processReservationNumber = signal('');
-  readonly lookup = signal<RefundLiabilityLookup | null>(null);
-  readonly lookupLoading = signal(false);
-  readonly processingByNumber = signal(false);
 
   readonly canProcess = this.policy.hasSnapshot(
     'BanquetHallManagement.Finance.Refunds.Process'
@@ -67,72 +70,19 @@ export class Refunds implements OnInit {
     this.loadRefunds();
   }
 
-  lookupRefund(): void {
-    const reservationNumber = this.processReservationNumber().trim();
-    if (!reservationNumber) {
+  clearSearch(): void {
+    if (!this.searchTerm()) {
       return;
     }
 
-    this.lookupLoading.set(true);
-    this.lookup.set(null);
-
-    this.refundService.getByReservationNumber(reservationNumber).subscribe({
-      next: (details) => {
-        this.lookup.set(details);
-        this.lookupLoading.set(false);
-      },
-      error: (error) => {
-        this.lookupLoading.set(false);
-        this.notification.showError(getAbpErrorMessage(error));
-      },
-    });
+    this.searchTerm.set('');
+    this.loadRefunds();
   }
 
-  onLookupKeyup(event: KeyboardEvent): void {
+  onSearchKeyup(event: KeyboardEvent): void {
     if (event.key === 'Enter') {
-      this.lookupRefund();
+      this.onSearch();
     }
-  }
-
-  canProcessLookup(details: RefundLiabilityLookup): boolean {
-    return details.statusCode === 'Pending' && details.liabilityAmount > 0;
-  }
-
-  processByNumber(): void {
-    const details = this.lookup();
-    if (!details || !this.canProcess || !this.canProcessLookup(details)) {
-      return;
-    }
-
-    this.dialogService
-      .confirm({
-        type: 'confirm',
-        title: this.l10n.instant('Finance:Refunds:Process:Title'),
-        message: this.l10n.instant('Finance:Refunds:Process:Message'),
-      })
-      .subscribe((confirmed) => {
-        if (!confirmed) {
-          return;
-        }
-
-        this.processingByNumber.set(true);
-
-        this.refundService.processByReservationNumber(details.reservationNumber).subscribe({
-          next: () => {
-            this.processingByNumber.set(false);
-            this.lookup.set(null);
-            this.processReservationNumber.set('');
-            this.notification.showSuccess(
-              this.l10n.instant('Finance:Refunds:Process:Success')
-            );
-            this.loadRefunds();
-          },
-          error: (error) => {
-            this.processingByNumber.set(false);
-            this.notification.showError(getAbpErrorMessage(error));
-          },
-        });
-      });
   }
 
   processRefund(refund: PendingRefund): void {
@@ -169,7 +119,25 @@ export class Refunds implements OnInit {
       });
   }
 
-  refundStatusLabel(refund: PendingRefund | RefundLiabilityLookup): string {
+  viewDetails(refund: PendingRefund): void {
+    this.detailsLoadingId.set(refund.reservationId);
+
+    this.refundService.getDetails(refund.reservationId).subscribe({
+      next: (details) => {
+        this.detailsLoadingId.set(null);
+        this.dialog.open(RefundDetailsDialog, {
+          ...REFUND_DETAILS_DIALOG_CONFIG,
+          data: { details },
+        });
+      },
+      error: (error) => {
+        this.detailsLoadingId.set(null);
+        this.notification.showError(getAbpErrorMessage(error));
+      },
+    });
+  }
+
+  refundStatusLabel(refund: PendingRefund): string {
     return this.statusL10n.refundStatus(refund.statusCode);
   }
 

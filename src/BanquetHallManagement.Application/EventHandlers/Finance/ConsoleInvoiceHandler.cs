@@ -8,6 +8,7 @@ namespace BanquetHallManagement.EventHandlers.Finance;
 
 public class ConsoleInvoiceHandler :
     ILocalEventHandler<DepositInvoiceCreatedEvent>,
+    ILocalEventHandler<FinalInvoiceCreatedEvent>,
     ITransientDependency
 {
     private readonly ILogger<ConsoleInvoiceHandler> _logger;
@@ -21,6 +22,21 @@ public class ConsoleInvoiceHandler :
     {
         _logger.LogInformation(
             "Deposit invoice created | Invoice: {InvoiceNumber} ({InvoiceId}) | Reservation: {ReservationId} | Payment: {PaymentId} | Amount: {Amount} | Type: {InvoiceType} | IssuedAt: {IssuedAt}",
+            eventData.InvoiceNumber,
+            eventData.InvoiceId,
+            eventData.ReservationId,
+            eventData.PaymentId,
+            eventData.Amount,
+            eventData.InvoiceType,
+            eventData.IssuedAt);
+
+        return Task.CompletedTask;
+    }
+
+    public Task HandleEventAsync(FinalInvoiceCreatedEvent eventData)
+    {
+        _logger.LogInformation(
+            "Final invoice created | Invoice: {InvoiceNumber} ({InvoiceId}) | Reservation: {ReservationId} | Payment: {PaymentId} | Amount: {Amount} | Type: {InvoiceType} | IssuedAt: {IssuedAt}",
             eventData.InvoiceNumber,
             eventData.InvoiceId,
             eventData.ReservationId,

@@ -34,6 +34,7 @@ export class StatusLocalizationService {
       [RESERVATION_STATUS.Cancelled]: 'Enum:ReservationStatus:Cancelled',
       [RESERVATION_STATUS.Completed]: 'Enum:ReservationStatus:Completed',
       [RESERVATION_STATUS.FullyPaid]: 'Enum:ReservationStatus:FullyPaid',
+      [RESERVATION_STATUS.Archived]: 'Enum:ReservationStatus:Archived',
     };
 
     if (!status) {

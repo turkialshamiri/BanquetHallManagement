@@ -8,6 +8,9 @@ public static class BanquetHallManagementDomainErrorCodes
     public const string ReservationCannotCancel =
         "BanquetHallManagement:Reservation:CannotCancel";
 
+    public const string ReservationCannotAutoCancelWithPayments =
+        "BanquetHallManagement:Reservation:CannotAutoCancelWithPayments";
+
     public const string ReservationCannotComplete =
         "BanquetHallManagement:Reservation:CannotComplete";
 
@@ -16,6 +19,9 @@ public static class BanquetHallManagementDomainErrorCodes
 
     public const string ReservationCannotDelete =
         "BanquetHallManagement:Reservation:CannotDelete";
+
+    public const string ReservationCannotArchive =
+        "BanquetHallManagement:Reservation:CannotArchive";
 
     public const string HallUnderMaintenance =
         "BanquetHallManagement:Hall:UnderMaintenance";

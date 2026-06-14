@@ -16,61 +16,130 @@
 } @else if (invoice(); as data) {
   <article class="print-document">
     <header class="doc-header">
-      <h1>{{ 'Finance:Invoices:Detail:Title' | appLocalization }}</h1>
-      <p class="doc-number">{{ data.invoiceNumber }}</p>
-    </header>
-
-    <section class="doc-grid">
-      <div>
-        <h3>{{ 'Finance:Invoices:Column:Type' | appLocalization }}</h3>
-        <p>{{ invoiceTypeLabel(data.invoiceType) }}</p>
+      <div class="company-block">
+        <h2 class="company-name">{{ data.companyName }}</h2>
       </div>
-      <div>
-        <h3>{{ 'Finance:Invoices:Column:Amount' | appLocalization }}</h3>
-        <p class="amount">{{ data.amount | number }}</p>
-      </div>
-      <div>
-        <h3>{{ 'Finance:Invoices:Column:IssuedAt' | appLocalization }}</h3>
-        <p>{{ data.issuedAt | date:'yyyy/MM/dd HH:mm' }}</p>
-      </div>
-      <div>
-        <h3>{{ 'Reservations:Column:Customer' | appLocalization }}</h3>
-        <p>{{ data.customerName }}</p>
-        <p class="muted">{{ data.customerPhone }}</p>
-      </div>
-      <div>
-        <h3>{{ 'Reservations:Column:Hall' | appLocalization }}</h3>
-        <p>{{ data.hallName }}</p>
-        <p class="muted">{{ data.hallLocation }}</p>
-      </div>
-      <div>
-        <h3>{{ 'Reservations:Column:Date' | appLocalization }}</h3>
-        <p>{{ data.eventDate | date:'yyyy/MM/dd' }}</p>
-        <p class="muted">
-          {{ formatTime(data.startTime) }} – {{ formatTime(data.endTime) }}
+      <div class="invoice-title-block">
+        <h1>{{ 'Finance:Invoices:Detail:Title' | appLocalization }}</h1>
+        <p class="doc-number">{{ data.invoiceNumber }}</p>
+        <p class="issued-at">
+          {{ 'Finance:Invoices:Field:IssuedAt' | appLocalization }}:
+          {{ data.issuedAt | date:'yyyy/MM/dd HH:mm' }}
         </p>
       </div>
-      <div>
-        <h3>{{ 'Reservations:Column:Guests' | appLocalization }}</h3>
-        <p>{{ data.guestsCount }}</p>
+    </header>
+
+    <section class="doc-section">
+      <h3>{{ 'Finance:Invoices:Section:Reservation' | appLocalization }}</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">{{ 'Finance:Invoices:Field:ReservationNumber' | appLocalization }}</span>
+          <span class="value">{{ data.reservationNumber }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">{{ 'Finance:Invoices:Field:ReservationDate' | appLocalization }}</span>
+          <span class="value">{{ data.reservationCreatedAt | date:'yyyy/MM/dd' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">{{ 'Finance:Invoices:Field:EventDate' | appLocalization }}</span>
+          <span class="value">
+            {{ data.eventDate | date:'yyyy/MM/dd' }}
+            <span class="muted">
+              {{ formatTime(data.startTime) }} – {{ formatTime(data.endTime) }}
+            </span>
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="label">{{ 'Finance:Invoices:Field:Guests' | appLocalization }}</span>
+          <span class="value">{{ data.guestsCount }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">{{ 'Finance:Invoices:Field:Employee' | appLocalization }}</span>
+          <span class="value">{{ data.employeeName || '—' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">{{ 'Finance:Invoices:Field:Status' | appLocalization }}</span>
+          <span class="value">{{ statusL10n.reservationStatus(data.reservationStatus) }}</span>
+        </div>
       </div>
-      <div>
-        <h3>{{ 'Reservations:Column:Status' | appLocalization }}</h3>
-        <p>{{ statusL10n.reservationStatus(data.reservationStatus) }}</p>
+    </section>
+
+    <div class="two-column">
+      <section class="doc-section">
+        <h3>{{ 'Finance:Invoices:Section:Customer' | appLocalization }}</h3>
+        <div class="info-stack">
+          <p class="primary">{{ data.customerName }}</p>
+          @if (data.customerCompany) {
+            <p>
+              <span class="label">{{ 'Finance:Invoices:Field:Company' | appLocalization }}:</span>
+              {{ data.customerCompany }}
+            </p>
+          }
+          <p>
+            <span class="label">{{ 'Finance:Invoices:Field:Phone' | appLocalization }}:</span>
+            {{ data.customerPhone }}
+          </p>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h3>{{ 'Finance:Invoices:Section:Hall' | appLocalization }}</h3>
+        <div class="info-stack">
+          <p class="primary">{{ data.hallName }}</p>
+          <p>
+            <span class="label">{{ 'Finance:Invoices:Field:Location' | appLocalization }}:</span>
+            {{ data.hallLocation }}
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <section class="doc-section payment-summary">
+      <h3>{{ 'Finance:Invoices:Section:Payment' | appLocalization }}</h3>
+      <div class="summary-table">
+        <div class="summary-row">
+          <span>{{ 'Finance:Invoices:Field:Total' | appLocalization }}</span>
+          <span>{{ data.totalPrice | number:'1.2-2' }}</span>
+        </div>
+        <div class="summary-row">
+          <span>{{ 'Finance:Invoices:Field:Paid' | appLocalization }}</span>
+          <span>{{ data.paidAmount | number:'1.2-2' }}</span>
+        </div>
+        <div class="summary-row highlight">
+          <span>{{ 'Finance:Invoices:Field:Remaining' | appLocalization }}</span>
+          <span>{{ remainingAmount(data) | number:'1.2-2' }}</span>
+        </div>
+        <div class="summary-row total">
+          <span>{{ 'Finance:Invoices:Column:Amount' | appLocalization }}</span>
+          <span>{{ data.amount | number:'1.2-2' }}</span>
+        </div>
       </div>
-      <div>
-        <h3>{{ 'Reservations:Column:TotalPrice' | appLocalization }}</h3>
-        <p>{{ data.totalPrice | number }}</p>
-      </div>
-      <div>
-        <h3>{{ 'Reservations:Column:PaidAmount' | appLocalization }}</h3>
-        <p>{{ data.paidAmount | number }}</p>
+      <div class="payment-meta">
+        <span>
+          {{ 'Finance:Invoices:Field:Receipt' | appLocalization }}: {{ data.receiptNumber }}
+        </span>
+        <span>
+          {{ 'Finance:Invoices:Field:PaymentDate' | appLocalization }}:
+          {{ data.paymentDate | date:'yyyy/MM/dd' }}
+        </span>
+        <span>
+          {{ 'Finance:Invoices:Column:Type' | appLocalization }}:
+          {{ invoiceTypeLabel(data.invoiceType) }}
+        </span>
+        @if (remainingAmount(data) <= 0) {
+          <span class="paid-badge">{{ 'Finance:Invoices:FullyPaid' | appLocalization }}</span>
+        }
       </div>
     </section>
 
     <footer class="doc-footer">
-      <span>{{ 'Finance:Invoices:Column:Number' | appLocalization }}: {{ data.receiptNumber }}</span>
-      <span>{{ data.paymentDate | date:'yyyy/MM/dd' }}</span>
+      <div class="company-footer">
+        <h4>{{ 'Finance:Invoices:Section:Company' | appLocalization }}</h4>
+        <p>{{ data.companyName }}</p>
+      </div>
+      <p class="footer-note">
+        {{ 'Finance:Invoices:Column:Number' | appLocalization }}: {{ data.invoiceNumber }}
+      </p>
     </footer>
   </article>
 }

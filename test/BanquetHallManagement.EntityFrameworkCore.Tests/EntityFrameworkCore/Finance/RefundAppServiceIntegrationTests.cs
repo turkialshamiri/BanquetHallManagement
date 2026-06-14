@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using BanquetHallManagement.Customers;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
@@ -74,6 +75,100 @@ public class RefundAppServiceIntegrationTests : BanquetHallManagementEntityFrame
     }
 
     [Fact]
+    public async Task GetDetails_Should_Return_Refund_Details_For_Pending_Reservation()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            await SeedAccountsAsync();
+
+            var reservationNumber = await CreateCancelledReservationWithLiabilityAsync();
+            var appService = GetRequiredService<IRefundAppService>();
+            var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
+
+            var reservation = await reservationRepository.GetAsync(
+                reservation => reservation.ReservationNumber == reservationNumber);
+
+            var details = await appService.GetDetailsAsync(reservation.Id);
+
+            details.ReservationNumber.ShouldBe(reservationNumber);
+            details.InstallmentsPaid.ShouldBe(20_000m);
+            details.LiabilityAmount.ShouldBe(20_000m);
+            details.RefundStatusCode.ShouldBe("Pending");
+            details.IsRefundEligible.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public async Task GetPending_Should_Include_Legacy_Cancelled_Reservation_With_Null_CancellationType()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            await SeedAccountsAsync();
+
+            var reservationNumber = await CreateCancelledReservationWithLiabilityAsync(
+                cancellationType: null);
+
+            var appService = GetRequiredService<IRefundAppService>();
+
+            var pending = await appService.GetPendingAsync(new RefundLiabilityGetListInput
+            {
+                ReservationNumber = reservationNumber,
+            });
+
+            pending.Items.Count.ShouldBe(1);
+            pending.Items.Single().RefundableAmount.ShouldBe(20_000m);
+        });
+    }
+
+    [Fact]
+    public async Task GetPending_Should_Exclude_Deposit_Only_Cancelled_Reservation()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            await SeedAccountsAsync();
+
+            var reservationNumber = await CreateCancelledReservationWithLiabilityAsync(
+                includeInstallment: false);
+
+            var appService = GetRequiredService<IRefundAppService>();
+
+            var pending = await appService.GetPendingAsync(new RefundLiabilityGetListInput
+            {
+                ReservationNumber = reservationNumber,
+            });
+
+            pending.Items.ShouldBeEmpty();
+        });
+    }
+
+    [Fact]
+    public async Task ProcessAsync_Should_Create_Idempotent_Refund_Payment_Entry()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            await SeedAccountsAsync();
+
+            var reservationNumber = await CreateCancelledReservationWithLiabilityAsync();
+            var appService = GetRequiredService<IRefundAppService>();
+            var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
+
+            var reservation = await reservationRepository.GetAsync(
+                reservation => reservation.ReservationNumber == reservationNumber);
+
+            var result = await appService.ProcessAsync(reservation.Id);
+            await GetRequiredService<IUnitOfWorkManager>().Current!.SaveChangesAsync();
+
+            result.RefundAmount.ShouldBe(20_000m);
+
+            var details = await appService.GetDetailsAsync(reservation.Id);
+            details.RefundStatusCode.ShouldBe("Processed");
+
+            var duplicate = await appService.ProcessAsync(reservation.Id);
+            duplicate.JournalEntryId.ShouldBe(result.JournalEntryId);
+        });
+    }
+
+    [Fact]
     public async Task ProcessByReservationNumber_Should_Create_Idempotent_Refund_Payment_Entry()
     {
         await WithUnitOfWorkAsync(async () =>
@@ -104,7 +199,66 @@ public class RefundAppServiceIntegrationTests : BanquetHallManagementEntityFrame
         });
     }
 
-    private async Task<string> CreateCancelledReservationWithLiabilityAsync()
+    [Fact]
+    public async Task Manual_Cancellation_Should_Create_Refund_Liability_On_Cancel()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            await SeedAccountsAsync();
+
+            var reservationNumber = await CreateCancelledReservationWithLiabilityAsync();
+            var journalEntryRepository = GetRequiredService<IJournalEntryRepository>();
+            var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
+
+            var reservation = await reservationRepository.GetAsync(
+                reservation => reservation.ReservationNumber == reservationNumber);
+
+            var liabilityEntry = await journalEntryRepository.FindByReservationAndSourceTypeAsync(
+                reservation.Id,
+                JournalEntrySourceType.RefundLiability);
+
+            liabilityEntry.ShouldNotBeNull();
+            liabilityEntry!.GetTotalCredit().ShouldBe(20_000m);
+
+            var appService = GetRequiredService<IRefundAppService>();
+            await appService.ProcessAsync(reservation.Id);
+            await GetRequiredService<IUnitOfWorkManager>().Current!.SaveChangesAsync();
+
+            var refundEntry = await journalEntryRepository.FindByReservationAndSourceTypeAsync(
+                reservation.Id,
+                JournalEntrySourceType.RefundPayment);
+
+            refundEntry.ShouldNotBeNull();
+        });
+    }
+
+    [Fact]
+    public async Task GetPending_Should_Include_Deposit_Excess_As_Refundable()
+    {
+        await WithUnitOfWorkAsync(async () =>
+        {
+            await SeedAccountsAsync();
+
+            var reservationNumber = await CreateCancelledReservationWithLiabilityAsync(
+                includeInstallment: false,
+                depositAmount: 50_000m);
+
+            var appService = GetRequiredService<IRefundAppService>();
+
+            var pending = await appService.GetPendingAsync(new RefundLiabilityGetListInput
+            {
+                ReservationNumber = reservationNumber,
+            });
+
+            pending.Items.Count.ShouldBe(1);
+            pending.Items.Single().RefundableAmount.ShouldBe(20_000m);
+        });
+    }
+
+    private async Task<string> CreateCancelledReservationWithLiabilityAsync(
+        CancellationType? cancellationType = CancellationType.Manual,
+        bool includeInstallment = true,
+        decimal depositAmount = 30_000m)
     {
         var hallRepository = GetRequiredService<IRepository<Hall, Guid>>();
         var customerRepository = GetRequiredService<IRepository<Customer, Guid>>();
@@ -132,6 +286,9 @@ public class RefundAppServiceIntegrationTests : BanquetHallManagementEntityFrame
             },
             autoSave: true);
 
+        var installmentAmount = includeInstallment ? 20_000m : 0m;
+        var paidAmount = depositAmount + installmentAmount;
+
         var reservation = new Reservation(Guid.NewGuid())
         {
             HallId = hall.Id,
@@ -141,7 +298,7 @@ public class RefundAppServiceIntegrationTests : BanquetHallManagementEntityFrame
             EndTime = new TimeSpan(22, 0, 0),
             GuestsCount = 100,
             TotalPrice = 100_000m,
-            PaidAmount = 50_000m,
+            PaidAmount = paidAmount,
             Status = ReservationStatus.Confirmed,
         };
 
@@ -153,7 +310,7 @@ public class RefundAppServiceIntegrationTests : BanquetHallManagementEntityFrame
         var deposit = new Payment(
             Guid.NewGuid(),
             reservation.Id,
-            30_000m,
+            depositAmount,
             new DateTime(2026, 6, 10, 12, 0, 0),
             PaymentType.Deposit,
             "RC-APP-DEP");
@@ -175,22 +332,37 @@ public class RefundAppServiceIntegrationTests : BanquetHallManagementEntityFrame
             PaymentType.Installment,
             "RC-APP-INST");
 
-        await paymentRepository.InsertAsync(installment, autoSave: true);
-        await paymentHandler.HandleEventAsync(new PaymentReceivedDomainEvent(
-            installment.Id,
-            installment.ReservationId,
-            installment.Amount,
-            installment.PaymentType,
-            installment.PaymentDate,
-            installment.ReceiptNumber));
+        if (includeInstallment)
+        {
+            await paymentRepository.InsertAsync(installment, autoSave: true);
+            await paymentHandler.HandleEventAsync(new PaymentReceivedDomainEvent(
+                installment.Id,
+                installment.ReservationId,
+                installment.Amount,
+                installment.PaymentType,
+                installment.PaymentDate,
+                installment.ReceiptNumber));
+        }
 
         reservation = await reservationRepository.GetAsync(reservation.Id);
-        reservation.CancelWithReason(CancellationType.NonPaymentAutoCancel);
+
+        if (cancellationType.HasValue)
+        {
+            reservation.CancelWithReason(cancellationType.Value);
+        }
+        else
+        {
+            reservation.CancelWithReason(CancellationType.Manual);
+            typeof(Reservation)
+                .GetProperty(nameof(Reservation.CancellationType), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!
+                .SetValue(reservation, null);
+        }
+
         await reservationRepository.UpdateAsync(reservation, autoSave: true);
 
-        var refundHandler = GetRequiredService<RefundLiabilityHandler>();
-        await refundHandler.HandleEventAsync(new ReservationCancelledDomainEvent(
-            ReservationEventSnapshot.FromReservation(reservation)));
+        var refundLiabilityHandler = GetRequiredService<RefundLiabilityHandler>();
+        await refundLiabilityHandler.HandleEventAsync(
+            new ReservationCancelledDomainEvent(ReservationEventSnapshot.FromReservation(reservation)));
 
         await GetRequiredService<IUnitOfWorkManager>().Current!.SaveChangesAsync();
 

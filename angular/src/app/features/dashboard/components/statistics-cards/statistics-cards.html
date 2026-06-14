@@ -63,6 +63,14 @@
                         <h2>{{ stats.totalRevenue | number:'1.0-0' }} <small>{{ 'Currency:YER' | appLocalization }}</small></h2>
                     </div>
                 </div>
+
+                <div class="stat-card revenue">
+                    <div class="card-icon"><span>📊</span></div>
+                    <div class="card-content">
+                        <span class="card-title">{{ 'Dashboard:TotalDeferredRevenue' | appLocalization }}</span>
+                        <h2>{{ stats.totalDeferredRevenue | number:'1.0-0' }} <small>{{ 'Currency:YER' | appLocalization }}</small></h2>
+                    </div>
+                </div>
             }
 
         </div>

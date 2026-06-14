@@ -43,6 +43,21 @@ public class JournalPostingService : DomainService, IJournalPostingService
         Reservation reservation,
         CancellationToken cancellationToken = default)
     {
+        var earnedPortion = Math.Min(
+            payment.Amount,
+            FinancePaymentRules.CalculateDepositRevenuePortion(reservation.TotalPrice));
+        var deferredPortion = payment.Amount - earnedPortion;
+
+        if (deferredPortion > 0m)
+        {
+            return PostSplitDepositPaymentAsync(
+                payment,
+                reservation,
+                earnedPortion,
+                deferredPortion,
+                cancellationToken);
+        }
+
         return PostPaymentAsync(
             payment,
             reservation,
@@ -52,74 +67,20 @@ public class JournalPostingService : DomainService, IJournalPostingService
             cancellationToken);
     }
 
-    public async Task<JournalEntry> PostFullDepositPaymentAsync(
+    public Task<JournalEntry> PostFullDepositPaymentAsync(
         Payment payment,
         Reservation reservation,
         CancellationToken cancellationToken = default)
     {
-        var existingEntry = await FindExistingEntryAsync(payment, cancellationToken);
-        if (existingEntry != null)
-        {
-            payment.LinkJournalEntry(existingEntry.Id);
-            return existingEntry;
-        }
-
-        var metadata = await _journalEntryContextProvider.ResolveForReservationAsync(
-            reservation,
-            cancellationToken);
-
-        var cashAccount = await GetRequiredAccountAsync(FinanceAccountCodes.Cash, cancellationToken);
-        var depositRevenueAccount = await GetRequiredAccountAsync(
-            FinanceAccountCodes.NonRefundableDepositRevenue,
-            cancellationToken);
-        var deferredRevenueAccount = await GetRequiredAccountAsync(
-            FinanceAccountCodes.DeferredRevenue,
-            cancellationToken);
-
-        var depositPortion = FinancePaymentRules.CalculateDepositRevenuePortion(reservation.TotalPrice);
+        var earnedPortion = FinancePaymentRules.CalculateDepositRevenuePortion(reservation.TotalPrice);
         var deferredPortion = FinancePaymentRules.CalculateDeferredPortionForFullPayment(reservation.TotalPrice);
 
-        var entryNumber = await _entryNumberGenerator.GenerateAsync(cancellationToken);
-        var reservationLabel = metadata.ReservationNumber ?? reservation.ReservationNumber;
-
-        var entry = new JournalEntry(
-            GuidGenerator.Create(),
-            entryNumber,
-            payment.PaymentDate,
-            JournalEntrySourceType.DepositRevenue,
-            _localizer["Journal:FullDepositReceived", reservationLabel],
-            payment.ReservationId,
-            payment.Id,
-            metadata);
-
-        entry.AddLine(
-            GuidGenerator.Create(),
-            cashAccount.Id,
-            payment.Amount,
-            0m,
-            _localizer["Journal:Line:CashReceipt"]);
-
-        entry.AddLine(
-            GuidGenerator.Create(),
-            depositRevenueAccount.Id,
-            0m,
-            depositPortion,
-            _localizer["Journal:Line:DepositRevenue"]);
-
-        entry.AddLine(
-            GuidGenerator.Create(),
-            deferredRevenueAccount.Id,
-            0m,
+        return PostSplitDepositPaymentAsync(
+            payment,
+            reservation,
+            earnedPortion,
             deferredPortion,
-            _localizer["Journal:Line:DeferredRevenue"]);
-
-        entry.Post(Clock.Now);
-
-        await _journalEntryRepository.InsertAsync(entry, autoSave: false, cancellationToken);
-
-        payment.LinkJournalEntry(entry.Id);
-
-        return entry;
+            cancellationToken);
     }
 
     public Task<JournalEntry> PostDeferredRevenueAsync(
@@ -184,6 +145,75 @@ public class JournalPostingService : DomainService, IJournalPostingService
             0m,
             creditAmount,
             BuildCreditLineDescription(sourceType));
+
+        entry.Post(Clock.Now);
+
+        await _journalEntryRepository.InsertAsync(entry, autoSave: false, cancellationToken);
+
+        payment.LinkJournalEntry(entry.Id);
+
+        return entry;
+    }
+
+    private async Task<JournalEntry> PostSplitDepositPaymentAsync(
+        Payment payment,
+        Reservation reservation,
+        decimal earnedPortion,
+        decimal deferredPortion,
+        CancellationToken cancellationToken)
+    {
+        var existingEntry = await FindExistingEntryAsync(payment, cancellationToken);
+        if (existingEntry != null)
+        {
+            payment.LinkJournalEntry(existingEntry.Id);
+            return existingEntry;
+        }
+
+        var metadata = await _journalEntryContextProvider.ResolveForReservationAsync(
+            reservation,
+            cancellationToken);
+
+        var cashAccount = await GetRequiredAccountAsync(FinanceAccountCodes.Cash, cancellationToken);
+        var depositRevenueAccount = await GetRequiredAccountAsync(
+            FinanceAccountCodes.NonRefundableDepositRevenue,
+            cancellationToken);
+        var deferredRevenueAccount = await GetRequiredAccountAsync(
+            FinanceAccountCodes.DeferredRevenue,
+            cancellationToken);
+
+        var entryNumber = await _entryNumberGenerator.GenerateAsync(cancellationToken);
+        var reservationLabel = metadata.ReservationNumber ?? reservation.ReservationNumber;
+
+        var entry = new JournalEntry(
+            GuidGenerator.Create(),
+            entryNumber,
+            payment.PaymentDate,
+            JournalEntrySourceType.DepositRevenue,
+            BuildDescription(JournalEntrySourceType.DepositRevenue, reservationLabel),
+            payment.ReservationId,
+            payment.Id,
+            metadata);
+
+        entry.AddLine(
+            GuidGenerator.Create(),
+            cashAccount.Id,
+            payment.Amount,
+            0m,
+            _localizer["Journal:Line:CashReceipt"]);
+
+        entry.AddLine(
+            GuidGenerator.Create(),
+            depositRevenueAccount.Id,
+            0m,
+            earnedPortion,
+            _localizer["Journal:Line:DepositRevenue"]);
+
+        entry.AddLine(
+            GuidGenerator.Create(),
+            deferredRevenueAccount.Id,
+            0m,
+            deferredPortion,
+            _localizer["Journal:Line:DeferredRevenue"]);
 
         entry.Post(Clock.Now);
 

@@ -1,0 +1,112 @@
+.refund-details-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: 90dvh;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 0;
+
+  h2 {
+    margin: 0;
+    font-size: 1.125rem;
+    color: #0f172a;
+  }
+
+  p {
+    margin: 0.25rem 0 0;
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  cursor: pointer;
+}
+
+.dialog-body {
+  padding: 1rem 1.5rem;
+  overflow: auto;
+}
+
+.detail-section {
+  &:not(:last-child) {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  h3 {
+    margin: 0 0 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.875rem;
+
+  span {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 0.15rem;
+  }
+
+  strong {
+    font-size: 0.95rem;
+    color: #0f172a;
+  }
+
+  .highlight {
+    color: #b45309;
+  }
+}
+
+.payment-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.payment-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  font-size: 0.875rem;
+  color: #475569;
+
+  strong {
+    color: #0f172a;
+    text-align: right;
+  }
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0 1.5rem 1.25rem;
+}

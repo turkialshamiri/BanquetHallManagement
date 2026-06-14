@@ -34,7 +34,7 @@ public class HallEntryRevenueRecognitionIntegrationTests : BanquetHallManagement
             var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
             var reservation = await reservationRepository.GetAsync(reservationId, includeDetails: true);
 
-            reservation.ConfirmHallEntry();
+            reservation.ConfirmHallEntry(new DateTime(2026, 6, 12, 18, 0, 0));
             await reservationRepository.UpdateAsync(reservation, autoSave: true);
 
             await PublishHallEntryConfirmedEventAsync(reservation);

@@ -1,0 +1,156 @@
+<div class="refund-details-dialog">
+  <div class="dialog-header">
+    <div>
+      <h2>{{ 'Finance:Refunds:Details:Title' | appLocalization }}</h2>
+      <p>{{ data.details.reservationNumber }}</p>
+    </div>
+    <button type="button" class="icon-btn" (click)="close()" [attr.aria-label]="'Close' | appLocalization">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    <section class="detail-section">
+      <h3>{{ 'Finance:Refunds:Details:ReservationSection' | appLocalization }}</h3>
+      <div class="detail-grid">
+        <div>
+          <span>{{ 'Finance:Refunds:Column:ReservationNumber' | appLocalization }}</span>
+          <strong>{{ data.details.reservationNumber }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Details:ReservationDate' | appLocalization }}</span>
+          <strong>{{ data.details.reservationDate | date: 'medium' }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Column:EventDate' | appLocalization }}</span>
+          <strong>
+            {{ data.details.eventDate | date: 'mediumDate' }}
+            {{ formatTime(data.details.startTime) }}
+          </strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Column:Hall' | appLocalization }}</span>
+          <strong>{{ data.details.hallName }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Details:ReservationStatus' | appLocalization }}</span>
+          <strong>{{ reservationStatusLabel(data.details.reservationStatus) }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h3>{{ 'Finance:Refunds:Details:CustomerSection' | appLocalization }}</h3>
+      <div class="detail-grid">
+        <div>
+          <span>{{ 'Finance:Refunds:Column:Customer' | appLocalization }}</span>
+          <strong>{{ data.details.customerName }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Details:Phone' | appLocalization }}</span>
+          <strong>{{ data.details.customerPhone || '—' }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h3>{{ 'Finance:Refunds:Details:FinancialSection' | appLocalization }}</h3>
+      <div class="detail-grid">
+        <div>
+          <span>{{ 'Finance:Refunds:Details:ReservationTotal' | appLocalization }}</span>
+          <strong>{{ data.details.totalPrice | number }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Column:Deposit' | appLocalization }}</span>
+          <strong>{{ data.details.depositAmount | number }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Column:Installments' | appLocalization }}</span>
+          <strong>{{ data.details.installmentsPaid | number }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Column:Paid' | appLocalization }}</span>
+          <strong>{{ data.details.paidAmount | number }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Column:RefundableAmount' | appLocalization }}</span>
+          <strong class="highlight">{{ data.details.refundableAmount | number }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Details:RemainingBalance' | appLocalization }}</span>
+          <strong>{{ data.details.remainingBalance | number }}</strong>
+        </div>
+      </div>
+    </section>
+
+    @if (data.details.payments?.length) {
+      <section class="detail-section">
+        <h3>{{ 'Finance:Refunds:Details:PaymentHistory' | appLocalization }}</h3>
+        <div class="payment-history">
+          @for (payment of data.details.payments; track payment.id) {
+            <div class="payment-row">
+              <span>{{ payment.paymentType }}</span>
+              <span>{{ payment.paymentDate | date: 'mediumDate' }}</span>
+              <strong>{{ payment.amount | number }}</strong>
+              <span>{{ payment.receiptNumber }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <section class="detail-section">
+      <h3>{{ 'Finance:Refunds:Details:RefundSection' | appLocalization }}</h3>
+      <div class="detail-grid">
+        <div>
+          <span>{{ 'Finance:Refunds:Column:CancelledAt' | appLocalization }}</span>
+          <strong>
+            @if (data.details.cancelledAt) {
+              {{ data.details.cancelledAt | date: 'medium' }}
+            } @else {
+              —
+            }
+          </strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Column:Status' | appLocalization }}</span>
+          <strong>{{ refundStatusLabel(data.details.refundStatusCode) }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Details:Eligibility' | appLocalization }}</span>
+          <strong>
+            {{
+              (data.details.isRefundEligible
+                ? 'Finance:Refunds:Details:Eligible'
+                : 'Finance:Refunds:Details:NotEligible') | appLocalization
+            }}
+          </strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Column:LiabilityAmount' | appLocalization }}</span>
+          <strong>{{ data.details.liabilityAmount | number }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Details:ProcessedBy' | appLocalization }}</span>
+          <strong>{{ data.details.processedBy || '—' }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Finance:Refunds:Details:ProcessedAt' | appLocalization }}</span>
+          <strong>
+            @if (data.details.processedAt) {
+              {{ data.details.processedAt | date: 'medium' }}
+            } @else {
+              —
+            }
+          </strong>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="dialog-actions">
+    <button type="button" mat-stroked-button (click)="close()">
+      {{ 'Close' | appLocalization }}
+    </button>
+  </div>
+</div>

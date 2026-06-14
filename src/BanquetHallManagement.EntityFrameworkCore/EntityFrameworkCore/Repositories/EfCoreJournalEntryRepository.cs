@@ -63,13 +63,22 @@ public class EfCoreJournalEntryRepository :
 
         if (trackedEntry != null)
         {
+            if (trackedEntry.Lines.Count == 0)
+            {
+                await dbContext.Entry(trackedEntry)
+                    .Collection(entry => entry.Lines)
+                    .LoadAsync(cancellationToken);
+            }
+
             return trackedEntry;
         }
 
         var query = await GetQueryableAsync();
 
-        return await query.FirstOrDefaultAsync(
-            entry => entry.ReservationId == reservationId && entry.SourceType == sourceType,
-            cancellationToken);
+        return await query
+            .Include(entry => entry.Lines)
+            .FirstOrDefaultAsync(
+                entry => entry.ReservationId == reservationId && entry.SourceType == sourceType,
+                cancellationToken);
     }
 }

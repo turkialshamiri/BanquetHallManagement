@@ -58,5 +58,16 @@ public class Invoice : FullAuditedAggregateRoot<Guid>
                 invoiceType,
                 issuedAt));
         }
+        else if (invoiceType == InvoiceType.Final)
+        {
+            AddLocalEvent(new FinalInvoiceCreatedEvent(
+                id,
+                invoiceNumber,
+                reservationId,
+                paymentId,
+                amount,
+                invoiceType,
+                issuedAt));
+        }
     }
 }

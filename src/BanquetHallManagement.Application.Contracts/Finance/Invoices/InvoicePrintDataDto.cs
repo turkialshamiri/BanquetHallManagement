@@ -43,4 +43,12 @@ public class InvoicePrintDataDto
     public string HallName { get; set; } = null!;
 
     public string HallLocation { get; set; } = null!;
+
+    public string ReservationNumber { get; set; } = null!;
+
+    public DateTime ReservationCreatedAt { get; set; }
+
+    public string EmployeeName { get; set; } = null!;
+
+    public string CompanyName { get; set; } = null!;
 }

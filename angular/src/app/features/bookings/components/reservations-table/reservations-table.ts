@@ -18,12 +18,15 @@ import { Hall } from 'src/app/core/models/hall.model';
 import {
   CreateUpdateReservation,
   Reservation,
+  calculateDurationLabel,
+  resolvePaymentStatusCode,
   toTimeInputValue,
 } from 'src/app/core/models/reservation.model';
 import { ReservationService } from 'src/app/core/services/reservation.service';
 import { PaymentService } from 'src/app/core/services/payment.service';
 import { CustomerService } from 'src/app/core/services/customer.service';
 import { HallService } from 'src/app/core/services/hall.service';
+import { ServiceService } from 'src/app/core/services/service.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 import {
   canCancelReservation,
@@ -34,8 +37,10 @@ import {
 import {
   calculatePaymentPercentage,
   canRecordPayment,
+  canViewSettlementInvoice,
   getRemainingAmount,
 } from 'src/app/core/utils/payment.util';
+import { InvoiceService } from 'src/app/core/services/invoice.service';
 import { StatusLocalizationService } from 'src/app/core/services/status-localization.service';
 import {
   ADD_RESERVATION_DIALOG_CONFIG,
@@ -48,6 +53,12 @@ import {
   RecordPaymentDialogData,
   RecordPaymentDialogResult,
 } from 'src/app/shared/components/record-payment-dialog/record-payment-dialog';
+import { ReservationDetailsDialog } from 'src/app/shared/components/reservation-details-dialog/reservation-details-dialog';
+import {
+  RESERVATION_DETAILS_DIALOG_CONFIG,
+  ReservationDetailsViewModel,
+  ReservationServiceLine,
+} from 'src/app/shared/components/reservation-details-dialog/reservation-details-dialog.model';
 import { DialogService } from 'src/app/shared/services/dialog.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { PolicyService } from 'src/app/core/services/policy.service';
@@ -62,9 +73,11 @@ import { PolicyService } from 'src/app/core/services/policy.service';
 export class ReservationsTableComponent implements OnInit {
   private reservationService = inject(ReservationService);
   private paymentService = inject(PaymentService);
+  private invoiceService = inject(InvoiceService);
   private router = inject(Router);
   private customerService = inject(CustomerService);
   private hallService = inject(HallService);
+  private serviceService = inject(ServiceService);
   private dialog = inject(MatDialog);
   private dialogService = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
@@ -74,6 +87,7 @@ export class ReservationsTableComponent implements OnInit {
   readonly statusL10n = inject(StatusLocalizationService);
 
   readonly reservations = signal<Reservation[]>([]);
+  readonly detailsLoadingId = signal<string | null>(null);
   customersMap = new Map<string, Customer>();
   hallsMap = new Map<string, Hall>();
 
@@ -93,6 +107,11 @@ export class ReservationsTableComponent implements OnInit {
   canRecordPaymentAction = this.policy.hasSnapshot(
     'BanquetHallManagement.Reservations.RecordPayment'
   );
+  canViewInvoiceAction = this.policy.hasSnapshot(
+    'BanquetHallManagement.Finance.Invoices.View'
+  );
+
+  canViewSettlementInvoice = canViewSettlementInvoice;
 
   ngOnInit(): void {
     this.loadData();
@@ -132,6 +151,83 @@ export class ReservationsTableComponent implements OnInit {
 
   getHallName(hallId: string): string {
     return this.hallsMap.get(hallId)?.name ?? '—';
+  }
+
+  viewDetails(reservation: Reservation): void {
+    this.detailsLoadingId.set(reservation.id);
+
+    forkJoin({
+      reservation: this.reservationService.getReservation(reservation.id),
+      payments: this.paymentService.getByReservation(reservation.id),
+      services: this.serviceService.getServices(),
+    }).subscribe({
+      next: ({ reservation: detailsReservation, payments, services }) => {
+        this.detailsLoadingId.set(null);
+
+        const customer = this.customersMap.get(detailsReservation.customerId) ?? null;
+        const hall = this.hallsMap.get(detailsReservation.hallId) ?? null;
+        const serviceMap = new Map(
+          services.items.map((service) => [service.id, service])
+        );
+
+        const depositAmount = payments.items
+          .filter((payment) => payment.paymentType === 'Deposit')
+          .reduce((sum, payment) => sum + payment.amount, 0);
+
+        const serviceLines: ReservationServiceLine[] = (detailsReservation.serviceIds ?? [])
+          .map((serviceId) => {
+            const service = serviceMap.get(serviceId);
+            if (!service) {
+              return null;
+            }
+
+            return {
+              serviceId,
+              name: service.name,
+              quantity: 1,
+              price: service.price,
+              total: service.price,
+            };
+          })
+          .filter((line): line is ReservationServiceLine => line != null);
+
+        const details: ReservationDetailsViewModel = {
+          reservation: detailsReservation,
+          customer,
+          hall,
+          payments: payments.items,
+          depositAmount,
+          paymentStatusCode: resolvePaymentStatusCode(
+            detailsReservation.paidAmount ?? 0,
+            detailsReservation.totalPrice
+          ),
+          services: serviceLines,
+          durationLabel: calculateDurationLabel(
+            detailsReservation.startTime,
+            detailsReservation.endTime
+          ),
+        };
+
+        this.dialog
+          .open(ReservationDetailsDialog, {
+            ...RESERVATION_DETAILS_DIALOG_CONFIG,
+            data: {
+              details,
+              canArchive: this.canDelete,
+            },
+          })
+          .afterClosed()
+          .subscribe((result) => {
+            if (result === 'archived') {
+              this.loadData();
+            }
+          });
+      },
+      error: (error) => {
+        this.detailsLoadingId.set(null);
+        this.notification.showError(getAbpErrorMessage(error));
+      },
+    });
   }
 
   openAddReservationDialog(
@@ -306,6 +402,22 @@ export class ReservationsTableComponent implements OnInit {
             },
           });
       });
+  }
+
+  viewSettlementInvoice(reservation: Reservation): void {
+    this.invoiceService.getSettlementByReservation(reservation.id).subscribe({
+      next: (invoice) => {
+        void this.router.navigate(['/finance/invoices', invoice.id]);
+      },
+      error: (error) => {
+        this.notification.showError(
+          getAbpErrorMessage(
+            error,
+            this.l10n.instant('Finance:Invoices:Detail:NotFound')
+          )
+        );
+      },
+    });
   }
 
   deleteReservation(id: string): void {

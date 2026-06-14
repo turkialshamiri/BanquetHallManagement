@@ -30,6 +30,7 @@ export interface RefundLiabilityLookup {
   reservationNumber: string;
   customerName: string;
   hallName: string;
+  paidAmount: number;
   depositAmount: number;
   installmentsPaid: number;
   refundableAmount: number;
@@ -38,6 +39,7 @@ export interface RefundLiabilityLookup {
   liabilityJournalEntryNumber?: string | null;
   statusCode: string;
   status: string;
+  cancelledAt?: string | null;
 }
 
 export interface ProcessRefundResult {
@@ -45,4 +47,43 @@ export interface ProcessRefundResult {
   journalEntryId: string;
   entryNumber: string;
   refundAmount: number;
+}
+
+export interface RefundDetails {
+  reservationId: string;
+  reservationNumber: string;
+  reservationDate: string;
+  eventDate: string;
+  startTime: string;
+  hallName: string;
+  reservationStatus: string;
+  customerName: string;
+  customerPhone: string;
+  totalPrice: number;
+  depositAmount: number;
+  installmentsPaid: number;
+  paidAmount: number;
+  refundableAmount: number;
+  remainingBalance: number;
+  liabilityAmount: number;
+  cancelledAt?: string | null;
+  cancellationReason?: string | null;
+  refundStatusCode: string;
+  refundStatus: string;
+  isRefundEligible: boolean;
+  processedBy?: string | null;
+  processedAt?: string | null;
+  liabilityJournalEntryId?: string | null;
+  liabilityJournalEntryNumber?: string | null;
+  refundJournalEntryId?: string | null;
+  refundJournalEntryNumber?: string | null;
+  payments?: RefundPaymentHistoryItem[];
+}
+
+export interface RefundPaymentHistoryItem {
+  id: string;
+  amount: number;
+  paymentDate: string;
+  paymentType: string;
+  receiptNumber: string;
 }

@@ -34,4 +34,8 @@ export interface InvoicePrintData {
   customerCompany?: string | null;
   hallName: string;
   hallLocation: string;
+  reservationNumber: string;
+  reservationCreatedAt: string;
+  employeeName: string;
+  companyName: string;
 }

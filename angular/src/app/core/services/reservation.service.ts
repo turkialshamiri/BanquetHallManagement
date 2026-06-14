@@ -28,6 +28,10 @@ export class ReservationService {
     return this.http.get<PagedReservationResult>(this.apiUrl, { params });
   }
 
+  getReservation(id: string): Observable<Reservation> {
+    return this.http.get<Reservation>(`${this.apiUrl}/${id}`);
+  }
+
   createReservation(
     data: CreateUpdateReservation
   ): Observable<Reservation> {
@@ -45,6 +49,10 @@ export class ReservationService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  archiveReservation(id: string): Observable<Reservation> {
+    return this.http.post<Reservation>(`${this.apiUrl}/${id}/archive`, {});
+  }
+
   confirmReservation(id: string): Observable<Reservation> {
     return this.http.post<Reservation>(
       `${this.apiUrl}/${id}/confirm`,
@@ -55,13 +63,6 @@ export class ReservationService {
   cancelReservation(id: string): Observable<Reservation> {
     return this.http.post<Reservation>(
       `${this.apiUrl}/${id}/cancel`,
-      {}
-    );
-  }
-
-  completeReservation(id: string): Observable<Reservation> {
-    return this.http.post<Reservation>(
-      `${this.apiUrl}/${id}/complete`,
       {}
     );
   }

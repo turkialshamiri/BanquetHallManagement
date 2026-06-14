@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BanquetHallManagement.Customers;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Enums;
+using BanquetHallManagement.Finance.Accounts;
 using BanquetHallManagement.Reservations;
 using BanquetHallManagement.Permissions;
 using Microsoft.AspNetCore.Authorization;
@@ -23,17 +24,20 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
     private readonly IRepository<Hall, Guid> _hallRepository;
     private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly IReportQueryExecutor _reportQueryExecutor;
+    private readonly IAccountBalanceService _accountBalanceService;
 
     public ReportsAppService(
         IRepository<Reservation, Guid> reservationRepository,
         IRepository<Hall, Guid> hallRepository,
         IRepository<Customer, Guid> customerRepository,
-        IReportQueryExecutor reportQueryExecutor)
+        IReportQueryExecutor reportQueryExecutor,
+        IAccountBalanceService accountBalanceService)
     {
         _reservationRepository = reservationRepository;
         _hallRepository = hallRepository;
         _customerRepository = customerRepository;
         _reportQueryExecutor = reportQueryExecutor;
+        _accountBalanceService = accountBalanceService;
     }
 
     public async Task<ReportsResultDto> GetAsync(GetReportsInput input)
@@ -52,7 +56,6 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
         var customerQuery = await _customerRepository.GetQueryableAsync();
 
         var filteredQuery = ApplyFilters(reservationQuery, input, dateFrom, dateTo);
-        var contextualQuery = ApplyContextualFilters(reservationQuery, input);
 
         var periodDays = Math.Max(1, (dateTo.Date - dateFrom.Date).Days + 1);
         var availableHoursPerHall = periodDays * OperatingHoursPerDay;
@@ -63,10 +66,7 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
                 .Select(g => new PeriodAggregateResult
                 {
                     TotalReservations = g.Count(),
-                    TotalRevenue = g
-                        .Where(r => r.Status != ReservationStatus.Cancelled)
-                        .Sum(r => r.TotalPrice),
-                    RevenueReservationCount = g.Count(r => r.Status != ReservationStatus.Cancelled),
+                    RevenueReservationCount = g.Count(r => r.Status == ReservationStatus.Completed),
                     ActiveCustomers = g
                         .Where(r => r.Status != ReservationStatus.Cancelled)
                         .Select(r => r.CustomerId)
@@ -80,7 +80,13 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
 
         periodAggregate ??= new PeriodAggregateResult();
 
-        var revenueAnalytics = await BuildRevenueAnalyticsAsync(contextualQuery);
+        var earnedRevenue = await _accountBalanceService.GetEarnedRevenueForPeriodAsync(
+            dateFrom,
+            dateTo);
+        periodAggregate.TotalRevenue = earnedRevenue;
+        periodAggregate.RevenueReservationCount = periodAggregate.CompletedCount;
+
+        var revenueAnalytics = await BuildRevenueAnalyticsAsync();
 
         var hallAggregates = await _reportQueryExecutor.GetHallPerformanceAggregatesAsync(
             filteredQuery);
@@ -128,19 +134,9 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
             })
             .ToList();
 
-        var monthlyRows = await AsyncExecuter.ToListAsync(
-            filteredQuery
-                .Where(r => r.Status != ReservationStatus.Cancelled)
-                .GroupBy(r => new { r.EventDate.Year, r.EventDate.Month })
-                .OrderBy(g => g.Key.Year)
-                .ThenBy(g => g.Key.Month)
-                .Select(g => new MonthlyAggregateRow
-                {
-                    Year = g.Key.Year,
-                    Month = g.Key.Month,
-                    ReservationCount = g.Count(),
-                    Revenue = g.Sum(x => x.TotalPrice),
-                }));
+        var monthlyRows = await _accountBalanceService.GetMonthlyEarnedRevenueAsync(
+            dateFrom,
+            dateTo);
 
         return new ReportsResultDto
         {
@@ -150,7 +146,7 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
                 TotalRevenue = periodAggregate.TotalRevenue,
                 AverageReservationValue = periodAggregate.RevenueReservationCount > 0
                     ? Math.Round(
-                        periodAggregate.TotalRevenue / periodAggregate.RevenueReservationCount,
+                        earnedRevenue / periodAggregate.RevenueReservationCount,
                         2)
                     : 0,
                 ActiveCustomers = periodAggregate.ActiveCustomers,
@@ -187,15 +183,14 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
                     Year = row.Year,
                     Month = row.Month,
                     MonthLabel = FormatMonthLabel(row.Year, row.Month),
-                    ReservationCount = row.ReservationCount,
+                    ReservationCount = row.RecognitionCount,
                     Revenue = row.Revenue,
                 })
                 .ToList(),
         };
     }
 
-    private async Task<RevenueAnalyticsDto> BuildRevenueAnalyticsAsync(
-        IQueryable<Reservation> contextualQuery)
+    private async Task<RevenueAnalyticsDto> BuildRevenueAnalyticsAsync()
     {
         var today = Clock.Now.Date;
         var yesterday = today.AddDays(-1);
@@ -206,46 +201,28 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
         var previousYearStart = new DateTime(today.Year - 1, 1, 1);
         var previousYearEnd = new DateTime(today.Year - 1, 12, 31);
 
-        var revenueBase = contextualQuery.Where(r => r.Status != ReservationStatus.Cancelled);
-
-        var revenueAggregate = await AsyncExecuter.FirstOrDefaultAsync(
-            revenueBase
-                .GroupBy(_ => 1)
-                .Select(g => new RevenueAggregateResult
-                {
-                    Today = g.Where(r => r.EventDate.Date == today).Sum(r => r.TotalPrice),
-                    Yesterday = g.Where(r => r.EventDate.Date == yesterday).Sum(r => r.TotalPrice),
-                    ThisMonth = g.Where(r =>
-                            r.EventDate >= monthStart &&
-                            r.EventDate <= today)
-                        .Sum(r => r.TotalPrice),
-                    PreviousMonth = g.Where(r =>
-                            r.EventDate >= previousMonthStart &&
-                            r.EventDate <= previousMonthEnd)
-                        .Sum(r => r.TotalPrice),
-                    ThisYear = g.Where(r =>
-                            r.EventDate >= yearStart &&
-                            r.EventDate <= today)
-                        .Sum(r => r.TotalPrice),
-                    PreviousYear = g.Where(r =>
-                            r.EventDate >= previousYearStart &&
-                            r.EventDate <= previousYearEnd)
-                        .Sum(r => r.TotalPrice),
-                }));
-
-        revenueAggregate ??= new RevenueAggregateResult();
+        var todayRevenue = await _accountBalanceService.GetEarnedRevenueForPeriodAsync(today, today);
+        var yesterdayRevenue = await _accountBalanceService.GetEarnedRevenueForPeriodAsync(
+            yesterday,
+            yesterday);
+        var thisMonthRevenue = await _accountBalanceService.GetEarnedRevenueForPeriodAsync(
+            monthStart,
+            today);
+        var previousMonthRevenue = await _accountBalanceService.GetEarnedRevenueForPeriodAsync(
+            previousMonthStart,
+            previousMonthEnd);
+        var thisYearRevenue = await _accountBalanceService.GetEarnedRevenueForPeriodAsync(
+            yearStart,
+            today);
+        var previousYearRevenue = await _accountBalanceService.GetEarnedRevenueForPeriodAsync(
+            previousYearStart,
+            previousYearEnd);
 
         return new RevenueAnalyticsDto
         {
-            Today = BuildRevenuePeriod(
-                revenueAggregate.Today,
-                revenueAggregate.Yesterday),
-            ThisMonth = BuildRevenuePeriod(
-                revenueAggregate.ThisMonth,
-                revenueAggregate.PreviousMonth),
-            ThisYear = BuildRevenuePeriod(
-                revenueAggregate.ThisYear,
-                revenueAggregate.PreviousYear),
+            Today = BuildRevenuePeriod(todayRevenue, yesterdayRevenue),
+            ThisMonth = BuildRevenuePeriod(thisMonthRevenue, previousMonthRevenue),
+            ThisYear = BuildRevenuePeriod(thisYearRevenue, previousYearRevenue),
         };
     }
 
@@ -286,6 +263,8 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
         IQueryable<Reservation> query,
         GetReportsInput input)
     {
+        query = query.WhereActive();
+
         if (input.HallId.HasValue)
         {
             query = query.Where(r => r.HallId == input.HallId.Value);

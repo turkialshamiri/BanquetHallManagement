@@ -12,6 +12,8 @@ public class RefundLiabilityLookupDto
 
     public string HallName { get; set; } = null!;
 
+    public decimal PaidAmount { get; set; }
+
     public decimal DepositAmount { get; set; }
 
     public decimal InstallmentsPaid { get; set; }
@@ -27,4 +29,6 @@ public class RefundLiabilityLookupDto
     public string StatusCode { get; set; } = null!;
 
     public string Status { get; set; } = null!;
+
+    public DateTime? CancelledAt { get; set; }
 }

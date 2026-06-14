@@ -8,11 +8,13 @@ using BanquetHallManagement.Finance.Invoices;
 using BanquetHallManagement.Finance.Invoices.Events;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Services;
+using BanquetHallManagement.Reservations;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Shouldly;
 using Volo.Abp;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
 using Volo.Abp.Timing;
 using Xunit;
@@ -27,7 +29,7 @@ public class InvoiceManagerTests
     public async Task CreateDepositInvoiceAsync_Should_Create_Invoice_Linked_To_Payment_And_Reservation()
     {
         var payment = CreateDepositPayment();
-        var manager = CreateManager([], out var invoiceRepository);
+        var manager = CreateManager([], [], out var invoiceRepository);
 
         var invoice = await manager.CreateDepositInvoiceAsync(payment);
 
@@ -48,7 +50,7 @@ public class InvoiceManagerTests
     public async Task CreateDepositInvoiceAsync_Should_Publish_DepositInvoiceCreatedEvent()
     {
         var payment = CreateDepositPayment();
-        var manager = CreateManager([], out _);
+        var manager = CreateManager([], [], out _);
 
         var invoice = await manager.CreateDepositInvoiceAsync(payment);
 
@@ -67,7 +69,7 @@ public class InvoiceManagerTests
     public async Task CreateDepositInvoiceAsync_Should_Not_Create_Duplicate_Invoice_On_Retry()
     {
         var payment = CreateDepositPayment();
-        var manager = CreateManager([], out var invoiceRepository);
+        var manager = CreateManager([], [], out var invoiceRepository);
 
         var firstInvoice = await manager.CreateDepositInvoiceAsync(payment);
         var secondInvoice = await manager.CreateDepositInvoiceAsync(payment);
@@ -92,12 +94,83 @@ public class InvoiceManagerTests
             PaymentType.Installment,
             payment.ReceiptNumber);
 
-        var manager = CreateManager([], out _);
+        var manager = CreateManager([], [], out _);
 
         var exception = await Should.ThrowAsync<BusinessException>(() =>
             manager.CreateDepositInvoiceAsync(payment));
 
         exception.Code.ShouldBe(BanquetHallManagementDomainErrorCodes.InvoiceCreationNotSupported);
+    }
+
+    [Fact]
+    public async Task EnsureFullyPaidInvoiceAsync_Should_Create_Final_Invoice_For_Total_Price()
+    {
+        var reservation = CreateFullyPaidReservation(50_000m, 50_000m);
+        var payment = CreateDepositPayment(reservation.Id, 50_000m);
+        var manager = CreateManager([], [payment], out var invoiceRepository);
+
+        var invoice = await manager.EnsureFullyPaidInvoiceAsync(reservation);
+
+        invoice.InvoiceType.ShouldBe(InvoiceType.Final);
+        invoice.Amount.ShouldBe(reservation.TotalPrice);
+        invoice.ReservationId.ShouldBe(reservation.Id);
+        payment.InvoiceId.ShouldBe(invoice.Id);
+
+        await invoiceRepository.Received(1).InsertAsync(
+            Arg.Any<Invoice>(),
+            Arg.Is(false),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task EnsureFullyPaidInvoiceAsync_Should_Return_Existing_Final_Invoice()
+    {
+        var reservation = CreateFullyPaidReservation(50_000m, 50_000m);
+        var existingInvoice = new Invoice(
+            Guid.NewGuid(),
+            "INV-2026-00009",
+            reservation.Id,
+            Guid.NewGuid(),
+            InvoiceType.Final,
+            reservation.TotalPrice,
+            Now);
+
+        var manager = CreateManager([existingInvoice], [], out var invoiceRepository);
+
+        var invoice = await manager.EnsureFullyPaidInvoiceAsync(reservation);
+
+        invoice.Id.ShouldBe(existingInvoice.Id);
+
+        await invoiceRepository.DidNotReceive().InsertAsync(
+            Arg.Any<Invoice>(),
+            Arg.Any<bool>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task EnsureFullyPaidInvoiceAsync_Should_Reuse_Full_Deposit_Invoice()
+    {
+        var reservation = CreateFullyPaidReservation(50_000m, 50_000m);
+        var paymentId = Guid.NewGuid();
+        var existingDepositInvoice = new Invoice(
+            Guid.NewGuid(),
+            "INV-2026-00002",
+            reservation.Id,
+            paymentId,
+            InvoiceType.Deposit,
+            reservation.TotalPrice,
+            Now);
+
+        var manager = CreateManager([existingDepositInvoice], [], out var invoiceRepository);
+
+        var invoice = await manager.EnsureFullyPaidInvoiceAsync(reservation);
+
+        invoice.Id.ShouldBe(existingDepositInvoice.Id);
+
+        await invoiceRepository.DidNotReceive().InsertAsync(
+            Arg.Any<Invoice>(),
+            Arg.Any<bool>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -114,6 +187,7 @@ public class InvoiceManagerTests
 
     private static InvoiceManager CreateManager(
         IList<Invoice> invoices,
+        IList<Payment> payments,
         out IInvoiceRepository invoiceRepository)
     {
         invoiceRepository = Substitute.For<IInvoiceRepository>();
@@ -138,6 +212,35 @@ public class InvoiceManagerTests
                     invoices.FirstOrDefault(invoice => invoice.PaymentId == paymentId));
             });
 
+        invoiceRepository.FindByReservationIdAndTypeAsync(
+                Arg.Any<Guid>(),
+                Arg.Any<InvoiceType>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var reservationId = callInfo.Arg<Guid>();
+                var invoiceType = callInfo.Arg<InvoiceType>();
+                return Task.FromResult(
+                    invoices.FirstOrDefault(invoice =>
+                        invoice.ReservationId == reservationId &&
+                        invoice.InvoiceType == invoiceType));
+            });
+
+        invoiceRepository.FindSettlementInvoiceByReservationAsync(
+                Arg.Any<Guid>(),
+                Arg.Any<decimal>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var reservationId = callInfo.Arg<Guid>();
+                var totalPrice = callInfo.Arg<decimal>();
+                return Task.FromResult(
+                    invoices
+                        .Where(invoice => invoice.ReservationId == reservationId && invoice.Amount >= totalPrice)
+                        .OrderByDescending(invoice => invoice.IssuedAt)
+                        .FirstOrDefault());
+            });
+
         invoiceRepository.InsertAsync(
                 Arg.Any<Invoice>(),
                 Arg.Any<bool>(),
@@ -156,6 +259,19 @@ public class InvoiceManagerTests
         var guidGenerator = Substitute.For<IGuidGenerator>();
         guidGenerator.Create().Returns(_ => Guid.NewGuid());
 
+        var paymentRepository = Substitute.For<IRepository<Payment, Guid>>();
+        paymentRepository
+            .GetListAsync(
+                Arg.Any<System.Linq.Expressions.Expression<Func<Payment, bool>>>(),
+                Arg.Any<bool>(),
+                Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var predicate = callInfo.Arg<System.Linq.Expressions.Expression<Func<Payment, bool>>>();
+                var compiled = predicate.Compile();
+                return Task.FromResult(payments.Where(compiled).ToList());
+            });
+
         var clock = Substitute.For<IClock>();
         clock.Now.Returns(Now);
 
@@ -163,20 +279,37 @@ public class InvoiceManagerTests
         services.AddSingleton(clock);
         services.AddSingleton(guidGenerator);
 
-        return new InvoiceManager(invoiceRepository, invoiceNumberGenerator)
+        return new InvoiceManager(invoiceRepository, invoiceNumberGenerator, paymentRepository)
         {
             LazyServiceProvider = new AbpLazyServiceProvider(services.BuildServiceProvider()),
         };
     }
 
-    private static Payment CreateDepositPayment()
+    private static Reservation CreateFullyPaidReservation(decimal totalPrice, decimal paidAmount)
+    {
+        var reservation = new Reservation(Guid.NewGuid())
+        {
+            TotalPrice = totalPrice,
+            PaidAmount = paidAmount,
+        };
+
+        reservation.AssignReservationNumber("RSV-2026-00001");
+        return reservation;
+    }
+
+    private static Payment CreateDepositPayment(Guid reservationId, decimal amount)
     {
         return new Payment(
             Guid.NewGuid(),
-            Guid.NewGuid(),
-            30_000m,
+            reservationId,
+            amount,
             Now,
             PaymentType.Deposit,
             "RC-2026-00001");
+    }
+
+    private static Payment CreateDepositPayment()
+    {
+        return CreateDepositPayment(Guid.NewGuid(), 30_000m);
     }
 }

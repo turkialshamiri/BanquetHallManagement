@@ -48,10 +48,10 @@ public class RefundLiabilityServiceTests
         entry.ShouldNotBeNull();
         entry!.SourceType.ShouldBe(JournalEntrySourceType.RefundLiability);
         entry.IsBalanced().ShouldBeTrue();
-        entry.GetTotalDebit().ShouldBe(50_000m);
+        entry.GetTotalDebit().ShouldBe(20_000m);
 
-        entry.Lines.Single(line => line.AccountId == DeferredRevenueAccountId).Debit.ShouldBe(50_000m);
-        entry.Lines.Single(line => line.AccountId == RefundLiabilityAccountId).Credit.ShouldBe(50_000m);
+        entry.Lines.Single(line => line.AccountId == DeferredRevenueAccountId).Debit.ShouldBe(20_000m);
+        entry.Lines.Single(line => line.AccountId == RefundLiabilityAccountId).Credit.ShouldBe(20_000m);
 
         await journalEntryRepository.Received(1).InsertAsync(
             Arg.Any<JournalEntry>(),
@@ -60,14 +60,38 @@ public class RefundLiabilityServiceTests
     }
 
     [Fact]
-    public async Task TransferInstallmentsToLiabilityAsync_Should_Return_Null_When_No_Installments()
+    public async Task TransferInstallmentsToLiabilityAsync_Should_Return_Null_When_No_Refundable_Balance()
     {
         var reservation = CreateCancelledReservation();
+        reservation.PaidAmount = 30_000m;
         var service = CreateService(reservation, [], [], out _);
 
         var entry = await service.TransferInstallmentsToLiabilityAsync(reservation);
 
         entry.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task TransferInstallmentsToLiabilityAsync_Should_Post_For_Deposit_Above_NonRefundable_Threshold()
+    {
+        var reservation = CreateCancelledReservation();
+        reservation.PaidAmount = 50_000m;
+        var payments = new List<Payment>
+        {
+            new Payment(
+                Guid.NewGuid(),
+                reservation.Id,
+                50_000m,
+                Now,
+                PaymentType.Deposit,
+                "RCP-DEP-001"),
+        };
+        var service = CreateService(reservation, payments, [], out _);
+
+        var entry = await service.TransferInstallmentsToLiabilityAsync(reservation);
+
+        entry.ShouldNotBeNull();
+        entry!.GetTotalDebit().ShouldBe(20_000m);
     }
 
     [Fact]
@@ -77,7 +101,7 @@ public class RefundLiabilityServiceTests
         var liabilityEntry = CreateLiabilityEntry(reservation.Id, 50_000m);
         var service = CreateService(
             reservation,
-            [],
+            CreateInstallmentPayments(reservation.Id, 50_000m),
             [liabilityEntry],
             out var journalEntryRepository,
             existingRefundPayment: null);
@@ -98,10 +122,62 @@ public class RefundLiabilityServiceTests
     }
 
     [Fact]
-    public async Task ProcessRefundAsync_Should_Throw_When_Reservation_Not_Auto_Cancelled()
+    public async Task ProcessRefundAsync_Should_Allow_Manual_Cancellation_When_Liability_Exists()
     {
         var reservation = CreateConfirmedReservation();
         reservation.CancelWithReason(CancellationType.Manual);
+
+        var liabilityEntry = CreateLiabilityEntry(reservation.Id, 20_000m);
+        var service = CreateService(
+            reservation,
+            CreateInstallmentPayments(reservation.Id, 20_000m),
+            [liabilityEntry],
+            out _);
+
+        var entry = await service.ProcessRefundAsync(reservation);
+
+        entry.SourceType.ShouldBe(JournalEntrySourceType.RefundPayment);
+        entry.GetTotalDebit().ShouldBe(20_000m);
+    }
+
+    [Fact]
+    public async Task ProcessRefundAsync_Should_Throw_When_Reservation_Not_Cancelled()
+    {
+        var reservation = CreateConfirmedReservation();
+
+        var service = CreateService(reservation, [], [], out _);
+
+        await Should.ThrowAsync<Volo.Abp.BusinessException>(
+            () => service.ProcessRefundAsync(reservation));
+    }
+
+    [Fact]
+    public async Task ProcessRefundAsync_Should_Allow_Legacy_Null_CancellationType()
+    {
+        var reservation = CreateConfirmedReservation();
+        reservation.CancelWithReason(CancellationType.Manual);
+        typeof(Reservation)
+            .GetProperty(nameof(Reservation.CancellationType), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)!
+            .SetValue(reservation, null);
+
+        var liabilityEntry = CreateLiabilityEntry(reservation.Id, 20_000m);
+        var service = CreateService(
+            reservation,
+            CreateInstallmentPayments(reservation.Id, 20_000m),
+            [liabilityEntry],
+            out _);
+
+        var entry = await service.ProcessRefundAsync(reservation);
+
+        entry.SourceType.ShouldBe(JournalEntrySourceType.RefundPayment);
+        entry.GetTotalDebit().ShouldBe(20_000m);
+    }
+
+    [Fact]
+    public async Task ProcessRefundAsync_Should_Throw_When_Cancellation_Type_Not_Refundable()
+    {
+        var reservation = CreateConfirmedReservation();
+        reservation.CancelWithReason(CancellationType.ConflictOverride);
 
         var service = CreateService(reservation, [], [], out _);
 
@@ -111,8 +187,16 @@ public class RefundLiabilityServiceTests
 
     private static Reservation CreateCancelledReservation()
     {
-        var reservation = CreateConfirmedReservation();
+        var reservation = new Reservation(Guid.NewGuid())
+        {
+            TotalPrice = 100_000m,
+            PaidAmount = 50_000m,
+            Status = ReservationStatus.Confirmed,
+        };
+
+        ReservationTestData.AssignReservationNumber(reservation);
         reservation.CancelWithReason(CancellationType.NonPaymentAutoCancel);
+
         return reservation;
     }
 

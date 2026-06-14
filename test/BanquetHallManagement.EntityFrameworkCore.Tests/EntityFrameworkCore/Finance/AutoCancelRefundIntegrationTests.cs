@@ -12,7 +12,6 @@ using BanquetHallManagement.Finance.Payments.Events;
 using BanquetHallManagement.Finance.Refunds;
 using BanquetHallManagement.Halls;
 using BanquetHallManagement.Reservations;
-using BanquetHallManagement.Reservations.Events;
 using Shouldly;
 using Volo.Abp.Data;
 using Volo.Abp.Domain.Repositories;
@@ -36,7 +35,7 @@ public class AutoCancelRefundIntegrationTests : BanquetHallManagementEntityFrame
 
             reservationId = await CreateConfirmedReservationNearEventAsync(
                 totalPrice: 100_000m,
-                paidAmount: 50_000m);
+                paidAmount: 0m);
         });
 
         await WithUnitOfWorkAsync(async () =>
@@ -56,7 +55,81 @@ public class AutoCancelRefundIntegrationTests : BanquetHallManagementEntityFrame
     }
 
     [Fact]
-    public async Task AutoCancel_Should_Keep_Deposit_Revenue_And_Transfer_Installments_To_Liability()
+    public async Task PaymentMonitor_Should_Not_Auto_Cancel_Reservation_With_Deposit()
+    {
+        var reservationId = Guid.Empty;
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            await SeedAccountsAsync();
+
+            reservationId = await CreateConfirmedReservationNearEventAsync(
+                totalPrice: 100_000m,
+                paidAmount: 30_000m);
+        });
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var monitorService = GetRequiredService<IReservationPaymentMonitorService>();
+            await monitorService.ProcessAsync();
+        });
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
+            var reservation = await reservationRepository.GetAsync(reservationId);
+
+            reservation.Status.ShouldBe(ReservationStatus.Confirmed);
+            reservation.CancellationType.ShouldBeNull();
+
+            var journalEntryRepository = GetRequiredService<IJournalEntryRepository>();
+            var liabilityEntry = await journalEntryRepository.FindByReservationAndSourceTypeAsync(
+                reservationId,
+                JournalEntrySourceType.RefundLiability);
+
+            liabilityEntry.ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public async Task Unpaid_AutoCancel_Should_Not_Create_Refund_Liability_Entry()
+    {
+        var reservationId = Guid.Empty;
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            await SeedAccountsAsync();
+
+            reservationId = await CreateConfirmedReservationNearEventAsync(
+                totalPrice: 100_000m,
+                paidAmount: 0m);
+        });
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var monitorService = GetRequiredService<IReservationPaymentMonitorService>();
+            await monitorService.ProcessAsync();
+        });
+
+        await WithUnitOfWorkAsync(async () =>
+        {
+            var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
+            var reservation = await reservationRepository.GetAsync(reservationId);
+
+            reservation.Status.ShouldBe(ReservationStatus.Cancelled);
+            reservation.CancellationType.ShouldBe(CancellationType.NonPaymentAutoCancel);
+
+            var journalEntryRepository = GetRequiredService<IJournalEntryRepository>();
+            var liabilityEntry = await journalEntryRepository.FindByReservationAndSourceTypeAsync(
+                reservationId,
+                JournalEntrySourceType.RefundLiability);
+
+            liabilityEntry.ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public async Task RefundLiabilityService_Should_Transfer_Installments_When_Cancelled_Without_Payments_On_Aggregate()
     {
         await WithUnitOfWorkAsync(async () =>
         {
@@ -66,36 +139,24 @@ public class AutoCancelRefundIntegrationTests : BanquetHallManagementEntityFrame
             var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
             var reservation = await reservationRepository.GetAsync(reservationId);
 
-            reservation.CancelWithReason(CancellationType.NonPaymentAutoCancel);
+            reservation.CancelWithReason(CancellationType.Manual);
             await reservationRepository.UpdateAsync(reservation, autoSave: true);
 
-            await PublishCancelledEventAsync(reservation);
+            var refundService = GetRequiredService<IRefundLiabilityService>();
+            var liabilityEntry = await refundService.TransferInstallmentsToLiabilityAsync(reservation);
             await FlushChangesAsync();
 
-            var journalEntryRepository = GetRequiredService<IJournalEntryRepository>();
+            liabilityEntry.ShouldNotBeNull();
+            liabilityEntry!.IsBalanced().ShouldBeTrue();
+            liabilityEntry.GetTotalDebit().ShouldBe(20_000m);
+
             var accountRepository = GetRequiredService<IRepository<Account, Guid>>();
             var accounts = await accountRepository.GetListAsync();
-
-            var depositRevenueAccount = accounts.Single(
-                account => account.Code == FinanceAccountCodes.NonRefundableDepositRevenue);
             var deferredRevenueAccount = accounts.Single(
                 account => account.Code == FinanceAccountCodes.DeferredRevenue);
             var refundLiabilityAccount = accounts.Single(
                 account => account.Code == FinanceAccountCodes.CustomerRefundLiabilities);
 
-            var depositEntry = await journalEntryRepository.FindByReservationAndSourceTypeAsync(
-                reservationId,
-                JournalEntrySourceType.DepositRevenue);
-            depositEntry.ShouldNotBeNull();
-            depositEntry!.Lines.ShouldContain(line =>
-                line.AccountId == depositRevenueAccount.Id && line.Credit == 30_000m);
-
-            var liabilityEntry = await journalEntryRepository.FindByReservationAndSourceTypeAsync(
-                reservationId,
-                JournalEntrySourceType.RefundLiability);
-            liabilityEntry.ShouldNotBeNull();
-            liabilityEntry!.IsBalanced().ShouldBeTrue();
-            liabilityEntry.GetTotalDebit().ShouldBe(20_000m);
             liabilityEntry.Lines.ShouldContain(line =>
                 line.AccountId == deferredRevenueAccount.Id && line.Debit == 20_000m);
             liabilityEntry.Lines.ShouldContain(line =>
@@ -114,12 +175,13 @@ public class AutoCancelRefundIntegrationTests : BanquetHallManagementEntityFrame
             var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
             var reservation = await reservationRepository.GetAsync(reservationId);
 
-            reservation.CancelWithReason(CancellationType.NonPaymentAutoCancel);
+            reservation.CancelWithReason(CancellationType.Manual);
             await reservationRepository.UpdateAsync(reservation, autoSave: true);
-            await PublishCancelledEventAsync(reservation);
-            await FlushChangesAsync();
 
             var refundService = GetRequiredService<IRefundLiabilityService>();
+            await refundService.TransferInstallmentsToLiabilityAsync(reservation);
+            await FlushChangesAsync();
+
             var refundEntry = await refundService.ProcessRefundAsync(reservation);
             await FlushChangesAsync();
 
@@ -138,19 +200,9 @@ public class AutoCancelRefundIntegrationTests : BanquetHallManagementEntityFrame
             refundEntry.Lines.ShouldContain(line =>
                 line.AccountId == cashAccount.Id && line.Credit == 20_000m);
 
-            var journalEntryRepository = GetRequiredService<IJournalEntryRepository>();
             var duplicate = await refundService.ProcessRefundAsync(reservation);
             duplicate.Id.ShouldBe(refundEntry.Id);
         });
-    }
-
-    private async Task PublishCancelledEventAsync(Reservation reservation)
-    {
-        var handler = GetRequiredService<RefundLiabilityHandler>();
-        var domainEvent = new ReservationCancelledDomainEvent(
-            ReservationEventSnapshot.FromReservation(reservation));
-
-        await handler.HandleEventAsync(domainEvent);
     }
 
     private async Task<Guid> CreateConfirmedReservationNearEventAsync(

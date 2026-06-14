@@ -450,6 +450,10 @@ namespace BanquetHallManagement.Migrations
 
                     b.HasIndex("ReservationId");
 
+                    b.HasIndex("ReservationId", "InvoiceType")
+                        .IsUnique()
+                        .HasFilter("[InvoiceType] = 'Final'");
+
                     b.ToTable("Invoices", null, t =>
                         {
                             t.HasComment("جدول فواتير الحجوزات.");
@@ -784,6 +788,10 @@ namespace BanquetHallManagement.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasComment("نوع إلغاء الحجز مثل تعارض أو إلغاء يدوي أو إلغاء تلقائي.");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2")
+                        .HasComment("تاريخ ووقت إكمال الحجز عند توفره.");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()

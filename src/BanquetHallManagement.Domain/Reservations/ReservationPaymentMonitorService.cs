@@ -57,7 +57,7 @@ public class ReservationPaymentMonitorService : DomainService, IReservationPayme
             return false;
         }
 
-        if (reservation.PaidAmount >= reservation.TotalPrice)
+        if (reservation.PaidAmount > 0)
         {
             return false;
         }
@@ -80,7 +80,7 @@ public class ReservationPaymentMonitorService : DomainService, IReservationPayme
         var confirmed = await AsyncExecuter.ToListAsync(
             query.Where(reservation =>
                 reservation.Status == ReservationStatus.Confirmed &&
-                reservation.PaidAmount < reservation.TotalPrice),
+                reservation.PaidAmount <= 0),
             cancellationToken);
 
         var candidateIds = confirmed

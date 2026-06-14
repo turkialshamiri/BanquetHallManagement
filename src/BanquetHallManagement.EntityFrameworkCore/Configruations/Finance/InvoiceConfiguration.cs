@@ -58,6 +58,9 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.HasIndex(x => x.InvoiceNumber).IsUnique();
         builder.HasIndex(x => x.PaymentId).IsUnique();
         builder.HasIndex(x => x.ReservationId);
+        builder.HasIndex(x => new { x.ReservationId, x.InvoiceType })
+            .IsUnique()
+            .HasFilter($"[{nameof(Invoice.InvoiceType)}] = '{nameof(InvoiceType.Final)}'");
         builder.HasIndex(x => x.IssuedAt);
 
         builder.ConfigureByConvention();

@@ -17,6 +17,7 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Identity;
 using Volo.Abp.Uow;
 
 namespace BanquetHallManagement.Reservations;
@@ -37,6 +38,7 @@ public class ReservationAppService :
     private readonly ReservationSchedulingManager _reservationSchedulingManager;
     private readonly IReservationNumberGenerator _reservationNumberGenerator;
     private readonly IHallAccessCardRepository _hallAccessCardRepository;
+    private readonly IIdentityUserRepository _identityUserRepository;
 
     public ReservationAppService(
         IReservationRepository reservationRepository,
@@ -47,7 +49,8 @@ public class ReservationAppService :
         HallAvailabilityManager hallAvailabilityManager,
         ReservationSchedulingManager reservationSchedulingManager,
         IReservationNumberGenerator reservationNumberGenerator,
-        IHallAccessCardRepository hallAccessCardRepository)
+        IHallAccessCardRepository hallAccessCardRepository,
+        IIdentityUserRepository identityUserRepository)
     {
         _reservationRepository = reservationRepository;
         _hallRepository = hallRepository;
@@ -58,19 +61,21 @@ public class ReservationAppService :
         _reservationSchedulingManager = reservationSchedulingManager;
         _reservationNumberGenerator = reservationNumberGenerator;
         _hallAccessCardRepository = hallAccessCardRepository;
+        _identityUserRepository = identityUserRepository;
     }
 
     public async Task<ReservationDto> GetAsync(Guid id)
     {
         var reservation = await _reservationRepository.GetAsync(id, includeDetails: true);
 
-        return MapToDto(reservation);
+        return await MapToDtoAsync(reservation);
     }
 
     public async Task<PagedResultDto<ReservationDto>> GetListAsync(
         PagedAndSortedResultRequestDto input)
     {
         var query = await _reservationRepository.WithDetailsAsync();
+        query = query.WhereActive();
 
         var totalCount = await AsyncExecuter.CountAsync(query);
 
@@ -115,6 +120,19 @@ public class ReservationAppService :
         await _reservationRepository.DeleteAsync(reservation);
     }
 
+    [Authorize(BanquetHallManagementPermissions.Reservations.Delete)]
+    public async Task<ReservationDto> ArchiveAsync(Guid id)
+    {
+        var reservation = await _reservationRepository.GetAsync(id, includeDetails: true);
+
+        reservation.Archive();
+
+        await _reservationRepository.UpdateAsync(reservation, autoSave: false);
+        await CurrentUnitOfWork!.SaveChangesAsync();
+
+        return await MapToDtoAsync(reservation);
+    }
+
     [Authorize(BanquetHallManagementPermissions.Reservations.Confirm)]
     public Task<ReservationDto> ConfirmAsync(Guid id)
     {
@@ -128,7 +146,8 @@ public class ReservationAppService :
 
         reservation.Cancel();
 
-        await _reservationRepository.UpdateAsync(reservation);
+        await _reservationRepository.UpdateAsync(reservation, autoSave: false);
+        await CurrentUnitOfWork!.SaveChangesAsync();
 
         return MapToDto(reservation);
     }
@@ -139,7 +158,7 @@ public class ReservationAppService :
         var reservation = await _reservationRepository.GetAsync(id, includeDetails: true);
 
         await EnsureHallAccessCardExistsAsync(reservation.Id);
-        reservation.ConfirmHallEntry();
+        reservation.ConfirmHallEntry(Clock.Now);
 
         await _reservationRepository.UpdateAsync(reservation, autoSave: false);
         await CurrentUnitOfWork!.SaveChangesAsync();
@@ -160,7 +179,7 @@ public class ReservationAppService :
         }
 
         await EnsureHallAccessCardExistsAsync(reservation.Id);
-        reservation.ConfirmHallEntry();
+        reservation.ConfirmHallEntry(Clock.Now);
 
         await _reservationRepository.UpdateAsync(reservation, autoSave: false);
         await CurrentUnitOfWork!.SaveChangesAsync();
@@ -171,14 +190,21 @@ public class ReservationAppService :
     public async Task<ReservationDto> GetByReservationNumberAsync(string reservationNumber)
     {
         var reservation = await GetReservationByNumberOrThrowAsync(reservationNumber);
-        return MapToDto(reservation);
+        return await MapToDtoAsync(reservation);
     }
 
     [Authorize(BanquetHallManagementPermissions.Reservations.Complete)]
-    [Obsolete("Use ConfirmHallEntryAsync instead.")]
-    public Task<ReservationDto> CompleteAsync(Guid id)
+    [System.Obsolete("Use ConfirmHallEntryAsync instead. Hall entry confirmation is the official completion path.")]
+    public async Task<ReservationDto> CompleteAsync(Guid id)
     {
-        return ConfirmHallEntryAsync(id);
+        var reservation = await _reservationRepository.GetAsync(id, includeDetails: true);
+
+        reservation.CompleteReservation(Clock.Now);
+
+        await _reservationRepository.UpdateAsync(reservation, autoSave: false);
+        await CurrentUnitOfWork!.SaveChangesAsync();
+
+        return MapToDto(reservation);
     }
 
     private async Task<ReservationDto> CreateAsyncCore(CreateUpdateReservationDto input)
@@ -449,6 +475,35 @@ public class ReservationAppService :
         return reservation;
     }
 
+    private async Task<ReservationDto> MapToDtoAsync(
+        Reservation reservation,
+        IReadOnlyList<Guid> serviceIds = null)
+    {
+        var dto = MapToDto(reservation, serviceIds);
+        dto.CreatedBy = await ResolveUserDisplayNameAsync(reservation.CreatorId);
+        dto.LastModifiedBy = await ResolveUserDisplayNameAsync(reservation.LastModifierId);
+
+        return dto;
+    }
+
+    private async Task<string?> ResolveUserDisplayNameAsync(Guid? userId)
+    {
+        if (!userId.HasValue)
+        {
+            return null;
+        }
+
+        var user = await _identityUserRepository.FindAsync(userId.Value);
+        if (user == null)
+        {
+            return null;
+        }
+
+        return string.IsNullOrWhiteSpace(user.Name)
+            ? user.UserName
+            : user.Name;
+    }
+
     private ReservationDto MapToDto(
         Reservation reservation,
         IReadOnlyList<Guid> serviceIds = null)
@@ -460,6 +515,8 @@ public class ReservationAppService :
         dto.ServiceIds = serviceIds?.ToList()
             ?? reservation.Services?.Select(rs => rs.ServiceId).ToList()
             ?? [];
+        dto.CreationTime = reservation.CreationTime;
+        dto.LastModificationTime = reservation.LastModificationTime;
 
         return dto;
     }

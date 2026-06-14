@@ -59,4 +59,8 @@ export class InvoiceDetail implements OnInit {
     const translated = this.l10n.instant(key);
     return translated === key ? type : translated;
   }
+
+  remainingAmount(data: InvoicePrintData): number {
+    return Math.max(0, data.totalPrice - data.paidAmount);
+  }
 }

@@ -4,6 +4,7 @@ export const RESERVATION_STATUS = {
   Cancelled: 'Cancelled',
   Completed: 'Completed',
   FullyPaid: 'FullyPaid',
+  Archived: 'Archived',
 } as const;
 
 export type ReservationStatusValue =
@@ -15,6 +16,7 @@ const STATUS_LABELS: Record<string, string> = {
   Cancelled: 'ملغي',
   Completed: 'مكتمل',
   FullyPaid: 'مدفوع بالكامل',
+  Archived: 'مؤرشف',
 };
 
 export function getReservationStatusLabel(status: string): string {
@@ -44,10 +46,6 @@ export function canCancelReservation(status: string): boolean {
   );
 }
 
-export function canCompleteReservation(status: string): boolean {
-  return status === RESERVATION_STATUS.Confirmed;
-}
-
 export function canConfirmHallEntry(status: string): boolean {
   return status === RESERVATION_STATUS.FullyPaid;
 }
@@ -62,4 +60,13 @@ export function canEditReservation(status: string): boolean {
 
 export function canDeleteReservation(status: string): boolean {
   return status === RESERVATION_STATUS.Pending;
+}
+
+export function canArchiveReservation(status: string): boolean {
+  return (
+    status === RESERVATION_STATUS.Pending ||
+    status === RESERVATION_STATUS.Confirmed ||
+    status === RESERVATION_STATUS.Cancelled ||
+    status === RESERVATION_STATUS.FullyPaid
+  );
 }

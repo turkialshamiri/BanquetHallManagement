@@ -50,12 +50,33 @@ public class JournalPostingServiceTests
         entry.GetTotalCredit().ShouldBe(30_000m);
         entry.Lines.Count.ShouldBe(2);
 
+        var depositRevenueLine = entry.Lines.Single(line => line.AccountId == DepositRevenueAccountId);
+        depositRevenueLine.Credit.ShouldBe(30_000m);
+
         payment.JournalEntryId.ShouldBe(entry.Id);
 
         await journalEntryRepository.Received(1).InsertAsync(
             Arg.Any<JournalEntry>(),
             Arg.Is(false),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task PostDepositRevenueAsync_Should_Split_Earned_And_Deferred_For_Deposit_Above_Minimum()
+    {
+        var reservation = CreateReservation(100_000m);
+        var payment = CreatePayment(PaymentType.Deposit, 50_000m, reservation.Id);
+        var service = CreateService([], out _);
+
+        var entry = await service.PostDepositRevenueAsync(payment, reservation);
+
+        entry.IsBalanced().ShouldBeTrue();
+        entry.Lines.Count.ShouldBe(3);
+        entry.GetTotalDebit().ShouldBe(50_000m);
+        entry.GetTotalCredit().ShouldBe(50_000m);
+
+        entry.Lines.Single(line => line.AccountId == DepositRevenueAccountId).Credit.ShouldBe(30_000m);
+        entry.Lines.Single(line => line.AccountId == DeferredRevenueAccountId).Credit.ShouldBe(20_000m);
     }
 
     [Fact]
@@ -72,11 +93,8 @@ public class JournalPostingServiceTests
         entry.GetTotalDebit().ShouldBe(90_000m);
         entry.GetTotalCredit().ShouldBe(90_000m);
 
-        var depositLine = entry.Lines.Single(line => line.AccountId == DepositRevenueAccountId);
-        depositLine.Credit.ShouldBe(27_000m);
-
-        var deferredLine = entry.Lines.Single(line => line.AccountId == DeferredRevenueAccountId);
-        deferredLine.Credit.ShouldBe(63_000m);
+        entry.Lines.Single(line => line.AccountId == DepositRevenueAccountId).Credit.ShouldBe(27_000m);
+        entry.Lines.Single(line => line.AccountId == DeferredRevenueAccountId).Credit.ShouldBe(63_000m);
     }
 
     [Fact]

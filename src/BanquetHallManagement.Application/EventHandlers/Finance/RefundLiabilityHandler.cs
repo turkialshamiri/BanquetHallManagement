@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using BanquetHallManagement.Enums;
 using BanquetHallManagement.Finance.Refunds;
 using BanquetHallManagement.Reservations;
 using BanquetHallManagement.Reservations.Events;
@@ -25,15 +24,14 @@ public class RefundLiabilityHandler :
 
     public async Task HandleEventAsync(ReservationCancelledDomainEvent eventData)
     {
-        if (eventData.Snapshot.ReservationStatus != ReservationStatus.Cancelled)
+        var reservation = await _reservationRepository.GetAsync(eventData.Snapshot.ReservationId);
+
+        if (!RefundEligibility.IsEligibleForRefundProcessing(reservation))
         {
             return;
         }
 
-        var reservation = await _reservationRepository.GetAsync(
-            eventData.Snapshot.ReservationId);
-
-        if (reservation.CancellationType != CancellationType.NonPaymentAutoCancel)
+        if (!RefundEligibility.HasRefundableBalance(reservation.TotalPrice, reservation.PaidAmount))
         {
             return;
         }

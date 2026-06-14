@@ -1,71 +1,99 @@
 @use '../finance-table';
 
-.toolbar,
-.lookup-form {
+.search-panel {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   flex-wrap: wrap;
+}
+
+.search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: min(100%, 320px);
 
   input {
-    min-width: 220px;
-    flex: 1;
+    width: 100%;
+    padding: 0.75rem 2.75rem 0.75rem 2.75rem;
+    border: 1px solid #dbe3ee;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
   }
 }
 
-.lookup-panel {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  border: 1px solid var(--border-color, #e5e7eb);
+.search-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: #64748b;
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem;
+  border: none;
   border-radius: 12px;
-  background: #fff;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
 
-  h3 {
-    margin: 0 0 0.75rem;
-    font-size: 1rem;
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
   }
 }
 
-.lookup-loading {
-  margin-top: 0.75rem;
-  color: var(--text-secondary);
-}
-
-.lookup-details {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
-}
-
-.lookup-header {
+.action-group {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-
-  span {
-    display: block;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-  }
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.lookup-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 
-  span {
-    display: block;
-    font-size: 0.75rem;
-    color: #64748b;
+  &.secondary {
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #dbe3ee;
   }
-}
-
-.process-btn {
-  margin-top: 0.25rem;
 }
 
 .status-pill {
@@ -101,11 +129,6 @@
   text-decoration: underline;
 }
 
-.muted {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
 .refund-amount {
   font-weight: 700;
   color: #b45309;
@@ -114,4 +137,15 @@
 .action-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .search-panel {
+    padding: 0.875rem;
+  }
+
+  .search-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }

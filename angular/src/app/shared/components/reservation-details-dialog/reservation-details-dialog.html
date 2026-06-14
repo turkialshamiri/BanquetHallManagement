@@ -1,0 +1,190 @@
+<div class="reservation-details-dialog">
+  <div class="dialog-header">
+    <div>
+      <h2>{{ 'Reservations:Details:Title' | appLocalization }}</h2>
+      <p>{{ data.details.reservation.reservationNumber }}</p>
+    </div>
+    <button type="button" class="icon-btn" (click)="close()" [attr.aria-label]="'Close' | appLocalization">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    <section class="detail-section">
+      <h3>{{ 'Reservations:Details:ReservationSection' | appLocalization }}</h3>
+      <div class="detail-grid">
+        <div>
+          <span>{{ 'Reservations:Column:ReservationNumber' | appLocalization }}</span>
+          <strong>{{ data.details.reservation.reservationNumber }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Column:Status' | appLocalization }}</span>
+          <strong>{{ reservationStatusLabel(data.details.reservation.status) }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Details:ReservationDate' | appLocalization }}</span>
+          <strong>{{ formatDateTime(data.details.reservation.creationTime) }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Details:CreationDate' | appLocalization }}</span>
+          <strong>{{ formatDateTime(data.details.reservation.creationTime) }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Column:Date' | appLocalization }}</span>
+          <strong>{{ data.details.reservation.eventDate | date: 'mediumDate' }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Column:Hall' | appLocalization }}</span>
+          <strong>{{ data.details.hall?.name || '—' }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Column:Customer' | appLocalization }}</span>
+          <strong>{{ data.details.customer?.name || '—' }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Details:EventType' | appLocalization }}</span>
+          <strong>{{ hallTypeLabel(data.details.hall?.type) }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h3>{{ 'Reservations:Details:CustomerSection' | appLocalization }}</h3>
+      <div class="detail-grid">
+        <div>
+          <span>{{ 'Reservations:Column:Customer' | appLocalization }}</span>
+          <strong>{{ data.details.customer?.name || '—' }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Details:Phone' | appLocalization }}</span>
+          <strong>{{ data.details.customer?.phone || '—' }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Details:Email' | appLocalization }}</span>
+          <strong>{{ 'Reservations:Details:NotAvailable' | appLocalization }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h3>{{ 'Reservations:Details:EventSection' | appLocalization }}</h3>
+      <div class="detail-grid">
+        <div>
+          <span>{{ 'Reservations:Column:Guests' | appLocalization }}</span>
+          <strong>{{ data.details.reservation.guestsCount }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Column:StartTime' | appLocalization }}</span>
+          <strong>{{ formatTime(data.details.reservation.startTime) }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Column:EndTime' | appLocalization }}</span>
+          <strong>{{ formatTime(data.details.reservation.endTime) }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Details:Duration' | appLocalization }}</span>
+          <strong>{{ data.details.durationLabel }}</strong>
+        </div>
+        <div class="detail-span-2">
+          <span>{{ 'Reservations:Details:SpecialNotes' | appLocalization }}</span>
+          <strong>{{ data.details.reservation.cancellationReason || '—' }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h3>{{ 'Reservations:Details:FinancialSection' | appLocalization }}</h3>
+      <div class="detail-grid">
+        <div>
+          <span>{{ 'Reservations:Column:TotalPrice' | appLocalization }}</span>
+          <strong>{{ data.details.reservation.totalPrice | number }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Details:DepositAmount' | appLocalization }}</span>
+          <strong>{{ data.details.depositAmount | number }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Column:PaidAmount' | appLocalization }}</span>
+          <strong>{{ data.details.reservation.paidAmount ?? 0 | number }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Column:RemainingAmount' | appLocalization }}</span>
+          <strong>{{ remainingBalance() | number }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Details:PaymentStatus' | appLocalization }}</span>
+          <strong>{{ paymentStatusLabel(data.details.paymentStatusCode) }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h3>{{ 'Reservations:Details:ServicesSection' | appLocalization }}</h3>
+      @if (data.details.services.length > 0) {
+        <div class="services-table-wrapper">
+          <table class="services-table">
+            <thead>
+              <tr>
+                <th>{{ 'Reservations:Details:ServiceName' | appLocalization }}</th>
+                <th>{{ 'Reservations:Details:Quantity' | appLocalization }}</th>
+                <th>{{ 'Reservations:Details:Price' | appLocalization }}</th>
+                <th>{{ 'Reservations:Details:Total' | appLocalization }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (service of data.details.services; track service.serviceId) {
+                <tr>
+                  <td>{{ service.name }}</td>
+                  <td>{{ service.quantity }}</td>
+                  <td>{{ service.price | number }}</td>
+                  <td>{{ service.total | number }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="empty-note">{{ 'Reservations:Details:NoServices' | appLocalization }}</p>
+      }
+    </section>
+
+    <section class="detail-section">
+      <h3>{{ 'Reservations:Details:AuditSection' | appLocalization }}</h3>
+      <div class="detail-grid">
+        <div>
+          <span>{{ 'Reservations:Details:CreatedBy' | appLocalization }}</span>
+          <strong>{{ displayUserName(data.details.reservation.createdBy) }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Details:CreationTime' | appLocalization }}</span>
+          <strong>{{ formatDateTime(data.details.reservation.creationTime) }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Details:LastModifiedBy' | appLocalization }}</span>
+          <strong>{{ displayUserName(data.details.reservation.lastModifiedBy) }}</strong>
+        </div>
+        <div>
+          <span>{{ 'Reservations:Details:LastModifiedTime' | appLocalization }}</span>
+          <strong>{{ formatDateTime(data.details.reservation.lastModificationTime) }}</strong>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="dialog-actions">
+    @if (showArchiveAction()) {
+      <button
+        type="button"
+        mat-stroked-button
+        class="archive-btn"
+        [disabled]="archiving()"
+        (click)="confirmArchive()"
+      >
+        {{ 'Reservations:Details:DeleteReservation' | appLocalization }}
+      </button>
+    }
+    <button type="button" mat-stroked-button (click)="close()">
+      {{ 'Close' | appLocalization }}
+    </button>
+  </div>
+</div>

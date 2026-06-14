@@ -66,6 +66,17 @@ public class ReservationAggregateTests
     }
 
     [Fact]
+    public void CancelWithReason_Should_Reject_NonPaymentAutoCancel_When_Payments_Recorded()
+    {
+        var reservation = CreateReservation(ReservationStatus.Confirmed, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        reservation.TotalPrice = 100_000m;
+        reservation.PaidAmount = 30_000m;
+
+        Should.Throw<Volo.Abp.BusinessException>(() =>
+            reservation.CancelWithReason(CancellationType.NonPaymentAutoCancel));
+    }
+
+    [Fact]
     public void CancelWithReason_Should_Cancel_Pending_Reservation_With_Reason()
     {
         var reservation = CreateReservation(ReservationStatus.Pending, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
@@ -111,12 +122,14 @@ public class ReservationAggregateTests
             .Code.ShouldBe(BanquetHallManagementDomainErrorCodes.ReservationCannotMarkFullyPaid);
     }
 
+    private static readonly DateTime CompletedAt = new(2026, 6, 12, 18, 0, 0);
+
     [Fact]
     public void ConfirmHallEntry_Should_Require_FullyPaid_Status()
     {
         var reservation = CreateReservation(ReservationStatus.Confirmed, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
 
-        Should.Throw<BusinessException>(() => reservation.ConfirmHallEntry())
+        Should.Throw<BusinessException>(() => reservation.ConfirmHallEntry(CompletedAt))
             .Code.ShouldBe(BanquetHallManagementDomainErrorCodes.ReservationCannotConfirmHallEntry);
     }
 
@@ -127,21 +140,59 @@ public class ReservationAggregateTests
         reservation.TotalPrice = 1000m;
         reservation.PaidAmount = 1000m;
 
-        reservation.ConfirmHallEntry();
+        reservation.ConfirmHallEntry(CompletedAt);
 
         reservation.Status.ShouldBe(ReservationStatus.Completed);
+        reservation.CompletedAt.ShouldBe(CompletedAt);
     }
 
     [Fact]
-    public void Complete_Should_Move_FullyPaid_Reservation_To_Completed()
+    public void CompleteReservation_Should_Move_FullyPaid_Reservation_To_Completed()
     {
         var reservation = CreateReservation(ReservationStatus.FullyPaid, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
         reservation.TotalPrice = 1000m;
         reservation.PaidAmount = 1000m;
 
-        reservation.Complete();
+        reservation.CompleteReservation(CompletedAt);
 
         reservation.Status.ShouldBe(ReservationStatus.Completed);
+        reservation.CompletedAt.ShouldBe(CompletedAt);
+    }
+
+    [Fact]
+    public void CompleteReservation_Should_Throw_When_Already_Completed()
+    {
+        var reservation = CreateReservation(ReservationStatus.FullyPaid, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        reservation.TotalPrice = 1000m;
+        reservation.PaidAmount = 1000m;
+        reservation.CompleteReservation(CompletedAt);
+
+        Should.Throw<BusinessException>(() => reservation.CompleteReservation(CompletedAt))
+            .Code.ShouldBe(BanquetHallManagementDomainErrorCodes.ReservationCannotComplete);
+    }
+
+    [Fact]
+    public void CompleteReservation_Should_Throw_When_Not_Fully_Paid()
+    {
+        var reservation = CreateReservation(ReservationStatus.Confirmed, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        reservation.TotalPrice = 1000m;
+        reservation.PaidAmount = 1000m;
+
+        Should.Throw<BusinessException>(() => reservation.CompleteReservation(CompletedAt))
+            .Code.ShouldBe(BanquetHallManagementDomainErrorCodes.ReservationCannotComplete);
+    }
+
+    [Fact]
+    public void Complete_Should_Delegate_To_CompleteReservation()
+    {
+        var reservation = CreateReservation(ReservationStatus.FullyPaid, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        reservation.TotalPrice = 1000m;
+        reservation.PaidAmount = 1000m;
+
+        reservation.Complete(CompletedAt);
+
+        reservation.Status.ShouldBe(ReservationStatus.Completed);
+        reservation.CompletedAt.ShouldBe(CompletedAt);
     }
 
     [Fact]
@@ -184,6 +235,54 @@ public class ReservationAggregateTests
             eventDate: AsOf.Date);
 
         reservation.BlocksScheduling(AsOf).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Archive_Should_Set_Status_To_Archived_For_Pending_Reservation()
+    {
+        var reservation = CreateReservation(ReservationStatus.Pending, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+
+        reservation.Archive();
+
+        reservation.Status.ShouldBe(ReservationStatus.Archived);
+    }
+
+    [Fact]
+    public void Archive_Should_Allow_Confirmed_And_Cancelled_Reservations()
+    {
+        var confirmed = CreateReservation(ReservationStatus.Confirmed, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        confirmed.Archive();
+        confirmed.Status.ShouldBe(ReservationStatus.Archived);
+
+        var cancelled = CreateReservation(ReservationStatus.Confirmed, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        cancelled.CancelWithReason(CancellationType.Manual);
+        cancelled.Archive();
+        cancelled.Status.ShouldBe(ReservationStatus.Archived);
+    }
+
+    [Fact]
+    public void Archive_Should_Reject_Completed_And_Already_Archived_Reservations()
+    {
+        var completed = CreateReservation(ReservationStatus.FullyPaid, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        completed.TotalPrice = 100_000m;
+        completed.PaidAmount = 100_000m;
+        completed.CompleteReservation(new DateTime(2026, 6, 10, 23, 0, 0));
+
+        Should.Throw<BusinessException>(() => completed.Archive());
+
+        var archived = CreateReservation(ReservationStatus.Pending, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0));
+        archived.Archive();
+
+        Should.Throw<BusinessException>(() => archived.Archive());
+    }
+
+    [Fact]
+    public void Archived_Reservation_Should_Not_Block_Scheduling()
+    {
+        var archived = CreateReservation(ReservationStatus.Pending, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0), eventDate: AsOf.Date);
+        archived.Archive();
+
+        archived.BlocksScheduling(AsOf).ShouldBeFalse();
     }
 
     private static Reservation CreateReservation(

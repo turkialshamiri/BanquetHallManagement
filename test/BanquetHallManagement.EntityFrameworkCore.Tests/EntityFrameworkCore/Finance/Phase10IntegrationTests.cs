@@ -27,7 +27,7 @@ public class Phase10IntegrationTests : BanquetHallManagementEntityFrameworkCoreT
     private static int _reservationSequence;
 
     [Fact]
-    public async Task Full_Deposit_Payment_Should_Create_Split_Journal_Entry()
+    public async Task Full_Deposit_Payment_Should_Split_Deposit_And_Deferred_Revenue()
     {
         await WithUnitOfWorkAsync(async () =>
         {
@@ -79,10 +79,11 @@ public class Phase10IntegrationTests : BanquetHallManagementEntityFrameworkCoreT
 
             var accountRepository = GetRequiredService<IRepository<Account, Guid>>();
             var accounts = await accountRepository.GetListAsync();
-            var depositAccount = accounts.Single(a => a.Code == FinanceAccountCodes.NonRefundableDepositRevenue);
+            var depositRevenueAccount = accounts.Single(
+                a => a.Code == FinanceAccountCodes.NonRefundableDepositRevenue);
             var deferredAccount = accounts.Single(a => a.Code == FinanceAccountCodes.DeferredRevenue);
 
-            entry.Lines.Single(line => line.AccountId == depositAccount.Id).Credit.ShouldBe(27_000m);
+            entry.Lines.Single(line => line.AccountId == depositRevenueAccount.Id).Credit.ShouldBe(27_000m);
             entry.Lines.Single(line => line.AccountId == deferredAccount.Id).Credit.ShouldBe(63_000m);
         });
     }

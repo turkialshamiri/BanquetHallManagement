@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using BanquetHallManagement.Customers;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Enums;
+using BanquetHallManagement.Finance.Accounts;
 using BanquetHallManagement.Reservations;
 using BanquetHallManagement.Services;
 using BanquetHallManagement.Permissions;
@@ -18,17 +19,20 @@ public class DashboardAppService : BanquetHallManagementAppService, IDashboardAp
     private readonly IRepository<Customer, System.Guid> _customerRepository;
     private readonly IRepository<Service, System.Guid> _serviceRepository;
     private readonly IRepository<Reservation, System.Guid> _reservationRepository;
+    private readonly IAccountBalanceService _accountBalanceService;
 
     public DashboardAppService(
         IRepository<Hall, System.Guid> hallRepository,
         IRepository<Customer, System.Guid> customerRepository,
         IRepository<Service, System.Guid> serviceRepository,
-        IRepository<Reservation, System.Guid> reservationRepository)
+        IRepository<Reservation, System.Guid> reservationRepository,
+        IAccountBalanceService accountBalanceService)
     {
         _hallRepository = hallRepository;
         _customerRepository = customerRepository;
         _serviceRepository = serviceRepository;
         _reservationRepository = reservationRepository;
+        _accountBalanceService = accountBalanceService;
     }
 
     public async Task<DashboardStatsDto> GetStatsAsync()
@@ -38,6 +42,7 @@ public class DashboardAppService : BanquetHallManagementAppService, IDashboardAp
         var totalServices = await _serviceRepository.CountAsync();
 
         var reservationQuery = await _reservationRepository.GetQueryableAsync();
+        reservationQuery = reservationQuery.WhereActive();
 
         var reservationStats = await AsyncExecuter.FirstOrDefaultAsync(
             reservationQuery
@@ -45,9 +50,6 @@ public class DashboardAppService : BanquetHallManagementAppService, IDashboardAp
                 .Select(g => new ReservationAggregateResult
                 {
                     TotalReservations = g.Count(),
-                    TotalRevenue = g
-                        .Where(r => r.Status != ReservationStatus.Cancelled)
-                        .Sum(r => r.TotalPrice),
                     PendingReservations = g.Count(r => r.Status == ReservationStatus.Pending),
                     ConfirmedReservations = g.Count(r => r.Status == ReservationStatus.Confirmed),
                     CancelledReservations = g.Count(r => r.Status == ReservationStatus.Cancelled),
@@ -57,15 +59,22 @@ public class DashboardAppService : BanquetHallManagementAppService, IDashboardAp
         var canViewRevenue = await AuthorizationService.IsGrantedAsync(
             BanquetHallManagementPermissions.Dashboard.ViewRevenue);
 
+        var totalEarnedRevenue = canViewRevenue
+            ? await _accountBalanceService.GetEarnedRevenueBalanceAsync()
+            : 0m;
+
+        var totalDeferredRevenue = canViewRevenue
+            ? await _accountBalanceService.GetDeferredRevenueBalanceAsync()
+            : 0m;
+
         return new DashboardStatsDto
         {
             TotalHalls = totalHalls,
             TotalCustomers = totalCustomers,
             TotalServices = totalServices,
             TotalReservations = reservationStats?.TotalReservations ?? 0,
-            TotalRevenue = canViewRevenue
-                ? reservationStats?.TotalRevenue ?? 0
-                : 0,
+            TotalRevenue = totalEarnedRevenue,
+            TotalDeferredRevenue = totalDeferredRevenue,
             PendingReservations = reservationStats?.PendingReservations ?? 0,
             ConfirmedReservations = reservationStats?.ConfirmedReservations ?? 0,
             CancelledReservations = reservationStats?.CancelledReservations ?? 0,
@@ -76,8 +85,6 @@ public class DashboardAppService : BanquetHallManagementAppService, IDashboardAp
     private sealed class ReservationAggregateResult
     {
         public long TotalReservations { get; set; }
-
-        public decimal TotalRevenue { get; set; }
 
         public long PendingReservations { get; set; }
 

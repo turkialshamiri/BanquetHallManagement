@@ -12,6 +12,8 @@ public class DashboardStatsDto
 
     public decimal TotalRevenue { get; set; }
 
+    public decimal TotalDeferredRevenue { get; set; }
+
     public long PendingReservations { get; set; }
 
     public long ConfirmedReservations { get; set; }

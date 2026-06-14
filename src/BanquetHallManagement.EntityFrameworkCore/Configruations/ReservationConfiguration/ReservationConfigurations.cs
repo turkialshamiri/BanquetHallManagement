@@ -75,6 +75,9 @@ namespace BanquetHallManagement.Configurations.ReservationConfigurations
                 .HasDefaultValue(ReservationStatus.Pending)
                 .HasComment("الحالة الحالية للحجز مثل قيد الانتظار أو مؤكد أو ملغي أو مكتمل.");
 
+            builder.Property(x => x.CompletedAt)
+                .HasComment("تاريخ ووقت إكمال الحجز عند توفره.");
+
             builder.HasOne<Hall>()
                 .WithMany()
                 .HasForeignKey(x => x.HallId)

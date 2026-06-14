@@ -11,7 +11,14 @@ export interface Reservation {
   paidAmount?: number;
   remainingAmount?: number;
   status: string;
+  completedAt?: string | null;
   serviceIds?: string[] | null;
+  cancellationReason?: string | null;
+  cancellationType?: string | null;
+  creationTime?: string;
+  lastModificationTime?: string | null;
+  createdBy?: string | null;
+  lastModifiedBy?: string | null;
 }
 
 export interface CreateUpdateReservation {
@@ -69,4 +76,43 @@ export function toApiEventDate(dateInput: string): string {
   }
 
   return dateInput.includes('T') ? dateInput : `${dateInput}T00:00:00`;
+}
+
+export function calculateDurationLabel(startTime: string, endTime: string): string {
+  if (!startTime || !endTime) {
+    return '—';
+  }
+
+  const [startHours, startMinutes] = startTime.split(':').map(Number);
+  const [endHours, endMinutes] = endTime.split(':').map(Number);
+  const startTotal = startHours * 60 + (startMinutes || 0);
+  const endTotal = endHours * 60 + (endMinutes || 0);
+  const diff = Math.max(0, endTotal - startTotal);
+  const hours = Math.floor(diff / 60);
+  const minutes = diff % 60;
+
+  if (hours > 0 && minutes > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  if (hours > 0) {
+    return `${hours}h`;
+  }
+
+  return `${minutes}m`;
+}
+
+export function resolvePaymentStatusCode(
+  paidAmount: number,
+  totalPrice: number
+): 'FullyPaid' | 'PartiallyPaid' | 'Unpaid' {
+  if (!totalPrice || paidAmount <= 0) {
+    return 'Unpaid';
+  }
+
+  if (paidAmount >= totalPrice) {
+    return 'FullyPaid';
+  }
+
+  return 'PartiallyPaid';
 }

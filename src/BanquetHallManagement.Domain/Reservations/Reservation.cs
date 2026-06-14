@@ -39,6 +39,8 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
 
     public CancellationType? CancellationType { get; private set; }
 
+    public DateTime? CompletedAt { get; private set; }
+
     public ICollection<ReservationService> Services { get; set; } = new List<ReservationService>();
 
     public void AssignReservationNumber(string reservationNumber)
@@ -158,10 +160,26 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
         string? cancellationReason = null)
     {
         if (Status == ReservationStatus.Cancelled ||
-            Status == ReservationStatus.Completed)
+            Status == ReservationStatus.Completed ||
+            Status == ReservationStatus.Archived)
         {
             throw new BusinessException(
                 BanquetHallManagementDomainErrorCodes.ReservationCannotCancel);
+        }
+
+        if (cancellationType == Enums.CancellationType.NonPaymentAutoCancel)
+        {
+            if (Status != ReservationStatus.Confirmed)
+            {
+                throw new BusinessException(
+                    BanquetHallManagementDomainErrorCodes.ReservationCannotCancel);
+            }
+
+            if (PaidAmount > 0)
+            {
+                throw new BusinessException(
+                    BanquetHallManagementDomainErrorCodes.ReservationCannotAutoCancelWithPayments);
+            }
         }
 
         CancellationType = cancellationType;
@@ -190,24 +208,60 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
             ReservationEventSnapshot.FromReservation(this)));
     }
 
-    public void ConfirmHallEntry()
+    public void ConfirmHallEntry(DateTime completedAt)
     {
+        if (Status == ReservationStatus.Completed)
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.ReservationCannotConfirmHallEntry);
+        }
+
         if (Status != ReservationStatus.FullyPaid)
         {
             throw new BusinessException(
                 BanquetHallManagementDomainErrorCodes.ReservationCannotConfirmHallEntry);
         }
 
-        Status = ReservationStatus.Completed;
         AddLocalEvent(new HallEntryConfirmedDomainEvent(
             ReservationEventSnapshot.FromReservation(this)));
+
+        CompleteReservation(completedAt);
+    }
+
+    public void CompleteReservation(DateTime completedAt)
+    {
+        EnsureCanComplete();
+
+        Status = ReservationStatus.Completed;
+        CompletedAt = completedAt;
         AddLocalEvent(new ReservationCompletedDomainEvent(
             ReservationEventSnapshot.FromReservation(this)));
     }
 
-    public void Complete()
+    public void Complete(DateTime completedAt)
     {
-        ConfirmHallEntry();
+        CompleteReservation(completedAt);
+    }
+
+    private void EnsureCanComplete()
+    {
+        if (Status == ReservationStatus.Completed)
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.ReservationCannotComplete);
+        }
+
+        if (Status != ReservationStatus.FullyPaid)
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.ReservationCannotComplete);
+        }
+
+        if (PaidAmount < TotalPrice)
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.ReservationCannotComplete);
+        }
     }
 
     public bool CanBeUpdated()
@@ -218,6 +272,25 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
     public bool CanBeDeleted()
     {
         return Status == ReservationStatus.Pending;
+    }
+
+    public bool CanBeArchived()
+    {
+        return Status is ReservationStatus.Pending
+            or ReservationStatus.Confirmed
+            or ReservationStatus.Cancelled
+            or ReservationStatus.FullyPaid;
+    }
+
+    public void Archive()
+    {
+        if (!CanBeArchived())
+        {
+            throw new BusinessException(
+                BanquetHallManagementDomainErrorCodes.ReservationCannotArchive);
+        }
+
+        Status = ReservationStatus.Archived;
     }
 
     public DateTime GetEventEndDateTime()
