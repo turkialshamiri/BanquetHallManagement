@@ -28,7 +28,7 @@ export class RefundService {
   }
 
   getDetails(reservationId: string): Observable<RefundDetails> {
-    return this.http.get<RefundDetails>(`${this.apiUrl}/${reservationId}/details`);
+    return this.http.get<RefundDetails>(`${this.apiUrl}/details/${reservationId}`);
   }
 
   getByReservationNumber(reservationNumber: string): Observable<RefundLiabilityLookup> {
@@ -39,7 +39,7 @@ export class RefundService {
 
   process(reservationId: string): Observable<ProcessRefundResult> {
     return this.http.post<ProcessRefundResult>(
-      `${this.apiUrl}/${reservationId}/process`,
+      `${this.apiUrl}/process/${reservationId}`,
       {}
     );
   }
