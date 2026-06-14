@@ -8,11 +8,14 @@ import { JournalEntryService } from 'src/app/core/services/journal-entry.service
 import { JournalEntry } from 'src/app/core/models/journal-entry.model';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 import { NotificationService } from 'src/app/shared/services/notification.service';
+import { DEFAULT_PAGE_SIZE } from 'src/app/core/constants/pagination.constants';
+import { getSkipCount } from 'src/app/core/utils/pagination.util';
+import { DataTablePaginationComponent } from 'src/app/shared/components/data-table-pagination/data-table-pagination';
 
 @Component({
   selector: 'app-journal-entries',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatIconModule, AppLocalizationPipe],
+  imports: [CommonModule, RouterModule, MatIconModule, AppLocalizationPipe, DataTablePaginationComponent],
   templateUrl: './journal-entries.html',
   styleUrl: './journal-entries.scss',
 })
@@ -24,6 +27,9 @@ export class JournalEntries implements OnInit {
 
   readonly entries = signal<JournalEntry[]>([]);
   readonly loading = signal(false);
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  readonly totalCount = signal(0);
 
   ngOnInit(): void {
     this.loadEntries();
@@ -31,10 +37,12 @@ export class JournalEntries implements OnInit {
 
   loadEntries(): void {
     this.loading.set(true);
+    const skip = getSkipCount(this.pageIndex(), this.pageSize());
 
-    this.journalEntryService.getList().subscribe({
+    this.journalEntryService.getList(skip, this.pageSize()).subscribe({
       next: (result) => {
         this.entries.set(result.items);
+        this.totalCount.set(result.totalCount);
         this.loading.set(false);
       },
       error: (error) => {
@@ -47,6 +55,11 @@ export class JournalEntries implements OnInit {
         );
       },
     });
+  }
+
+  onPageChange(pageIndex: number): void {
+    this.pageIndex.set(pageIndex);
+    this.loadEntries();
   }
 
   viewEntry(id: string): void {

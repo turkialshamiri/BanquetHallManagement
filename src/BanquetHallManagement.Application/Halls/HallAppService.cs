@@ -48,7 +48,7 @@ namespace BanquetHallManagement.Halls
 
             var halls = await AsyncExecuter.ToListAsync(
                 query
-                    .OrderBy(x => x.Name)
+                    .OrderByDescending(x => x.CreationTime)
                     .Skip(input.SkipCount)
                     .Take(input.MaxResultCount));
 
@@ -119,7 +119,7 @@ namespace BanquetHallManagement.Halls
         {
             var query = await _hallRepository.GetQueryableAsync();
             var bookedHallIds = await GetHallIdsWithActiveConfirmedReservationsAsync();
-            var halls = await AsyncExecuter.ToListAsync(query.OrderBy(x => x.Name));
+            var halls = await AsyncExecuter.ToListAsync(query.OrderByDescending(x => x.CreationTime));
 
             return halls
                 .Select(hall => MapToHallDto(hall, bookedHallIds))

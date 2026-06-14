@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_APP_BASE } from '../constants/api.constants';
 import { DEFAULT_LIST_MAX_RESULT_COUNT } from '../constants/pagination.constants';
+import { createPagingParams } from '../utils/pagination.util';
 import {
   CreateUpdateReservation,
   PagedReservationResult,
@@ -21,9 +22,7 @@ export class ReservationService {
     skipCount = 0,
     maxResultCount = DEFAULT_LIST_MAX_RESULT_COUNT
   ): Observable<PagedReservationResult> {
-    const params = new HttpParams()
-      .set('skipCount', skipCount)
-      .set('maxResultCount', maxResultCount);
+    const params = createPagingParams(skipCount, maxResultCount);
 
     return this.http.get<PagedReservationResult>(this.apiUrl, { params });
   }

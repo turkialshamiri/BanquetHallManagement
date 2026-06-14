@@ -5,6 +5,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { API_APP_BASE } from '../constants/api.constants';
+import { DEFAULT_PAGE_SIZE } from '../constants/pagination.constants';
+import { createPagingParams } from '../utils/pagination.util';
 
 import {
 
@@ -31,33 +33,15 @@ export class HallAccessCardService {
 
 
   getList(
-
     skipCount = 0,
-
-    maxResultCount = 20,
-
+    maxResultCount = DEFAULT_PAGE_SIZE,
     reservationNumber?: string
-
   ): Observable<PagedHallAccessCardResult> {
-
-    let params = new HttpParams()
-
-      .set('skipCount', skipCount)
-
-      .set('maxResultCount', maxResultCount);
-
-
-
-    if (reservationNumber?.trim()) {
-
-      params = params.set('reservationNumber', reservationNumber.trim());
-
-    }
-
-
+    const params = createPagingParams(skipCount, maxResultCount, undefined, {
+      reservationNumber: reservationNumber?.trim(),
+    });
 
     return this.http.get<PagedHallAccessCardResult>(this.apiUrl, { params });
-
   }
 
 

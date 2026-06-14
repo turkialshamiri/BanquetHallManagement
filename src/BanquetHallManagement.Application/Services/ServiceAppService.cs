@@ -42,10 +42,11 @@ namespace BanquetHallManagement.Services
 
             var totalCount = query.Count();
 
-            var services = query
-                .Skip(input.SkipCount)
-                .Take(input.MaxResultCount)
-                .ToList();
+            var services = await AsyncExecuter.ToListAsync(
+                query
+                    .OrderByDescending(service => service.CreationTime)
+                    .Skip(input.SkipCount)
+                    .Take(input.MaxResultCount));
 
             return new PagedResultDto<ServiceDto>
             {

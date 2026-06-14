@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -18,11 +18,14 @@ import { PolicyService } from 'src/app/core/services/policy.service';
 import { getFriendlyIdentityErrorMessage } from 'src/app/core/utils/identity-error.util';
 import { formatRoleLabels } from 'src/app/core/utils/role-label.util';
 import { StatusLocalizationService } from 'src/app/core/services/status-localization.service';
+import { DEFAULT_PAGE_SIZE } from 'src/app/core/constants/pagination.constants';
+import { getSkipCount } from 'src/app/core/utils/pagination.util';
+import { DataTablePaginationComponent } from 'src/app/shared/components/data-table-pagination/data-table-pagination';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe],
+  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe, DataTablePaginationComponent],
   templateUrl: './users.html',
   styleUrl: './users.scss',
 })
@@ -37,6 +40,9 @@ export class Users implements OnInit {
   private statusL10n = inject(StatusLocalizationService);
 
   employees: Employee[] = [];
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  readonly totalCount = signal(0);
   isLoading = false;
   loadError: string | null = null;
 
@@ -54,9 +60,12 @@ export class Users implements OnInit {
   loadEmployees(): void {
     this.isLoading = true;
     this.loadError = null;
-    this.employeeService.getEmployees().subscribe({
+    const skip = getSkipCount(this.pageIndex(), this.pageSize());
+
+    this.employeeService.getEmployees(skip, this.pageSize()).subscribe({
       next: (res) => {
         this.employees = res.items;
+        this.totalCount.set(res.totalCount);
         this.isLoading = false;
         this.cdr.markForCheck();
       },
@@ -69,6 +78,11 @@ export class Users implements OnInit {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  onPageChange(pageIndex: number): void {
+    this.pageIndex.set(pageIndex);
+    this.loadEmployees();
   }
 
   openCreateDialog(): void {

@@ -3,6 +3,7 @@ import {
   Component,
   inject,
   OnInit,
+  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -18,11 +19,14 @@ import { DialogService } from 'src/app/shared/services/dialog.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { PolicyService } from 'src/app/core/services/policy.service';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
+import { DEFAULT_PAGE_SIZE } from 'src/app/core/constants/pagination.constants';
+import { getSkipCount } from 'src/app/core/utils/pagination.util';
+import { DataTablePaginationComponent } from 'src/app/shared/components/data-table-pagination/data-table-pagination';
 
 @Component({
   selector: 'app-customers-table',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe],
+  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe, DataTablePaginationComponent],
   templateUrl: './customers-table.html',
   styleUrl: './customers-table.scss',
 })
@@ -37,6 +41,9 @@ export class CustomersTableComponent implements OnInit {
   private l10n = inject(AppLocalizationService);
 
   customers: Customer[] = [];
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  readonly totalCount = signal(0);
   canCreate = this.policy.hasSnapshot('BanquetHallManagement.Customers.Create');
   canUpdate = this.policy.hasSnapshot('BanquetHallManagement.Customers.Update');
   canDelete = this.policy.hasSnapshot('BanquetHallManagement.Customers.Delete');
@@ -46,9 +53,12 @@ export class CustomersTableComponent implements OnInit {
   }
 
   loadCustomers(): void {
-    this.customerService.getCustomers().subscribe({
+    const skip = getSkipCount(this.pageIndex(), this.pageSize());
+
+    this.customerService.getCustomers(skip, this.pageSize()).subscribe({
       next: (response) => {
         this.customers = response.items;
+        this.totalCount.set(response.totalCount);
         this.cdr.markForCheck();
       },
       error: (error) => {
@@ -57,6 +67,11 @@ export class CustomersTableComponent implements OnInit {
         );
       },
     });
+  }
+
+  onPageChange(pageIndex: number): void {
+    this.pageIndex.set(pageIndex);
+    this.loadCustomers();
   }
 
   openAddCustomerDialog(): void {

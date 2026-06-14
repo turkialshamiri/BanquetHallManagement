@@ -17,11 +17,14 @@ import {
   REFUND_DETAILS_DIALOG_CONFIG,
   RefundDetailsDialog,
 } from 'src/app/shared/components/refund-details-dialog/refund-details-dialog';
+import { DEFAULT_PAGE_SIZE } from 'src/app/core/constants/pagination.constants';
+import { getSkipCount } from 'src/app/core/utils/pagination.util';
+import { DataTablePaginationComponent } from 'src/app/shared/components/data-table-pagination/data-table-pagination';
 
 @Component({
   selector: 'app-refunds',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MatIconModule, MatDialogModule, AppLocalizationPipe],
+  imports: [CommonModule, FormsModule, RouterModule, MatIconModule, MatDialogModule, AppLocalizationPipe, DataTablePaginationComponent],
   templateUrl: './refunds.html',
   styleUrl: './refunds.scss',
 })
@@ -40,6 +43,9 @@ export class Refunds implements OnInit {
   readonly processingId = signal<string | null>(null);
   readonly detailsLoadingId = signal<string | null>(null);
   readonly searchTerm = signal('');
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  readonly totalCount = signal(0);
 
   readonly canProcess = this.policy.hasSnapshot(
     'BanquetHallManagement.Finance.Refunds.Process'
@@ -51,10 +57,12 @@ export class Refunds implements OnInit {
 
   loadRefunds(): void {
     this.loading.set(true);
+    const skip = getSkipCount(this.pageIndex(), this.pageSize());
 
-    this.refundService.getPending(this.searchTerm()).subscribe({
+    this.refundService.getPending(this.searchTerm(), skip, this.pageSize()).subscribe({
       next: (result) => {
         this.refunds.set(result.items);
+        this.totalCount.set(result.totalCount);
         this.loading.set(false);
       },
       error: (error) => {
@@ -67,6 +75,7 @@ export class Refunds implements OnInit {
   }
 
   onSearch(): void {
+    this.pageIndex.set(0);
     this.loadRefunds();
   }
 
@@ -76,6 +85,7 @@ export class Refunds implements OnInit {
     }
 
     this.searchTerm.set('');
+    this.pageIndex.set(0);
     this.loadRefunds();
   }
 
@@ -83,6 +93,11 @@ export class Refunds implements OnInit {
     if (event.key === 'Enter') {
       this.onSearch();
     }
+  }
+
+  onPageChange(pageIndex: number): void {
+    this.pageIndex.set(pageIndex);
+    this.loadRefunds();
   }
 
   processRefund(refund: PendingRefund): void {

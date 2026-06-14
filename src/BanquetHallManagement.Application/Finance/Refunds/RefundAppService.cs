@@ -52,7 +52,7 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
         _identityUserRepository = identityUserRepository;
     }
 
-    public async Task<ListResultDto<PendingRefundDto>> GetPendingAsync(RefundLiabilityGetListInput input)
+    public async Task<PagedResultDto<PendingRefundDto>> GetPendingAsync(RefundLiabilityGetListInput input)
     {
         var filter = ResolveFilter(input);
 
@@ -76,8 +76,12 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
 
         if (cancelledReservations.Count == 0)
         {
-            return new ListResultDto<PendingRefundDto>();
+            return new PagedResultDto<PendingRefundDto>();
         }
+
+        cancelledReservations = cancelledReservations
+            .OrderByDescending(reservation => reservation.CreationTime)
+            .ToList();
 
         var customerIds = cancelledReservations.Select(reservation => reservation.CustomerId).Distinct().ToList();
         var hallIds = cancelledReservations.Select(reservation => reservation.HallId).Distinct().ToList();
@@ -151,11 +155,16 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
 
         if (pendingItems.Count == 0)
         {
-            return new ListResultDto<PendingRefundDto>();
+            return new PagedResultDto<PendingRefundDto>();
         }
 
-        return new ListResultDto<PendingRefundDto>(
-            pendingItems.OrderBy(item => item.EventDate).ToList());
+        var totalCount = pendingItems.Count;
+        var pagedItems = pendingItems
+            .Skip(input.SkipCount)
+            .Take(input.MaxResultCount)
+            .ToList();
+
+        return new PagedResultDto<PendingRefundDto>(totalCount, pagedItems);
     }
 
     public async Task<RefundDetailsDto> GetDetailsAsync(Guid reservationId)

@@ -62,11 +62,14 @@ import {
 import { DialogService } from 'src/app/shared/services/dialog.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { PolicyService } from 'src/app/core/services/policy.service';
+import { DEFAULT_PAGE_SIZE } from 'src/app/core/constants/pagination.constants';
+import { getSkipCount } from 'src/app/core/utils/pagination.util';
+import { DataTablePaginationComponent } from 'src/app/shared/components/data-table-pagination/data-table-pagination';
 
 @Component({
   selector: 'app-reservations-table',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe],
+  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe, DataTablePaginationComponent],
   templateUrl: './reservations-table.html',
   styleUrl: './reservations-table.scss',
 })
@@ -87,6 +90,9 @@ export class ReservationsTableComponent implements OnInit {
   readonly statusL10n = inject(StatusLocalizationService);
 
   readonly reservations = signal<Reservation[]>([]);
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  readonly totalCount = signal(0);
   readonly detailsLoadingId = signal<string | null>(null);
   customersMap = new Map<string, Customer>();
   hallsMap = new Map<string, Hall>();
@@ -118,13 +124,16 @@ export class ReservationsTableComponent implements OnInit {
   }
 
   loadData(): void {
+    const skip = getSkipCount(this.pageIndex(), this.pageSize());
+
     forkJoin({
-      reservations: this.reservationService.getReservations(),
+      reservations: this.reservationService.getReservations(skip, this.pageSize()),
       customers: this.customerService.getCustomers(),
       halls: this.hallService.getHalls(),
     }).subscribe({
       next: ({ reservations, customers, halls }) => {
         this.reservations.set(reservations.items);
+        this.totalCount.set(reservations.totalCount);
         this.customersMap = new Map(
           customers.items.map((customer) => [customer.id, customer])
         );
@@ -139,6 +148,11 @@ export class ReservationsTableComponent implements OnInit {
         );
       },
     });
+  }
+
+  onPageChange(pageIndex: number): void {
+    this.pageIndex.set(pageIndex);
+    this.loadData();
   }
 
   reservationStatusLabel(status: string): string {

@@ -23,6 +23,7 @@ export interface PendingRefund {
 
 export interface PendingRefundListResult {
   items: PendingRefund[];
+  totalCount: number;
 }
 
 export interface RefundLiabilityLookup {

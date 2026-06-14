@@ -143,4 +143,11 @@
 
     </div>
 
+    <app-data-table-pagination
+      [totalCount]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      (pageChange)="onPageChange($event)"
+    />
+
 </div>

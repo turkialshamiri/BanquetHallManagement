@@ -1,0 +1,128 @@
+.table-pagination {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 20px 20px;
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  background: var(--surface-card, #fff);
+}
+
+.pagination-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary, #64748b);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.pagination-range,
+.pagination-meta {
+  color: var(--text-primary, #1e293b);
+}
+
+.pagination-divider {
+  color: var(--text-muted, #94a3b8);
+}
+
+.pagination-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pagination-nav,
+.pagination-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  background: var(--surface-card, #fff);
+  color: var(--text-primary, #1e293b);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--primary-color, #2563eb);
+    background: var(--primary-soft, rgba(37, 99, 235, 0.06));
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.pagination-pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.pagination-page {
+  min-width: 36px;
+  padding-inline: 10px;
+
+  &.is-active {
+    border-color: var(--primary-color, #2563eb);
+    background: var(--primary-color, #2563eb);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  }
+}
+
+.pagination-ellipsis {
+  min-width: 24px;
+  text-align: center;
+  color: var(--text-muted, #94a3b8);
+  font-weight: 600;
+  user-select: none;
+}
+
+html[dir='rtl'] {
+  .pagination-nav mat-icon {
+    transform: scaleX(-1);
+  }
+}
+
+@media (max-width: 768px) {
+  .table-pagination {
+    padding-inline: 16px;
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pagination-pages {
+    order: -1;
+  }
+
+  .pagination-nav {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -18,6 +18,9 @@ import { PolicyService } from 'src/app/core/services/policy.service';
 import { StatusLocalizationService } from 'src/app/core/services/status-localization.service';
 import { toTimeInputValue } from 'src/app/core/models/reservation.model';
 import { RESERVATION_STATUS } from 'src/app/core/utils/reservation-status.util';
+import { DEFAULT_PAGE_SIZE } from 'src/app/core/constants/pagination.constants';
+import { getSkipCount } from 'src/app/core/utils/pagination.util';
+import { DataTablePaginationComponent } from 'src/app/shared/components/data-table-pagination/data-table-pagination';
 
 @Component({
   selector: 'app-access-cards',
@@ -28,6 +31,7 @@ import { RESERVATION_STATUS } from 'src/app/core/utils/reservation-status.util';
     RouterModule,
     MatIconModule,
     AppLocalizationPipe,
+    DataTablePaginationComponent,
   ],
   templateUrl: './access-cards.html',
   styleUrl: './access-cards.scss',
@@ -46,6 +50,9 @@ export class AccessCards implements OnInit {
   readonly confirming = signal(false);
   readonly loadingPreview = signal(false);
   readonly searchTerm = signal('');
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  readonly totalCount = signal(0);
   readonly entryPreview = signal<HallAccessCardEntryPreview | null>(null);
   readonly confirmationSucceeded = signal(false);
   readonly formatTime = toTimeInputValue;
@@ -63,6 +70,7 @@ export class AccessCards implements OnInit {
   }
 
   onSearch(): void {
+    this.pageIndex.set(0);
     this.confirmationSucceeded.set(false);
     this.loadCards();
     this.loadEntryPreview();
@@ -70,6 +78,7 @@ export class AccessCards implements OnInit {
 
   clearSearch(): void {
     this.searchTerm.set('');
+    this.pageIndex.set(0);
     this.entryPreview.set(null);
     this.confirmationSucceeded.set(false);
     this.loadCards();
@@ -77,10 +86,12 @@ export class AccessCards implements OnInit {
 
   loadCards(): void {
     this.loading.set(true);
+    const skip = getSkipCount(this.pageIndex(), this.pageSize());
 
-    this.accessCardService.getList(0, 50, this.searchTerm()).subscribe({
+    this.accessCardService.getList(skip, this.pageSize(), this.searchTerm()).subscribe({
       next: (result) => {
         this.cards.set(result.items);
+        this.totalCount.set(result.totalCount);
         this.loading.set(false);
       },
       error: (error) => {
@@ -93,6 +104,11 @@ export class AccessCards implements OnInit {
         );
       },
     });
+  }
+
+  onPageChange(pageIndex: number): void {
+    this.pageIndex.set(pageIndex);
+    this.loadCards();
   }
 
   openPrint(cardId: string): void {

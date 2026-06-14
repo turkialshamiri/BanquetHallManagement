@@ -8,11 +8,14 @@ import { InvoiceService } from 'src/app/core/services/invoice.service';
 import { Invoice } from 'src/app/core/models/invoice.model';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
 import { NotificationService } from 'src/app/shared/services/notification.service';
+import { DEFAULT_PAGE_SIZE } from 'src/app/core/constants/pagination.constants';
+import { getSkipCount } from 'src/app/core/utils/pagination.util';
+import { DataTablePaginationComponent } from 'src/app/shared/components/data-table-pagination/data-table-pagination';
 
 @Component({
   selector: 'app-invoices',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatIconModule, AppLocalizationPipe],
+  imports: [CommonModule, RouterModule, MatIconModule, AppLocalizationPipe, DataTablePaginationComponent],
   templateUrl: './invoices.html',
   styleUrl: './invoices.scss',
 })
@@ -24,6 +27,9 @@ export class Invoices implements OnInit {
 
   readonly invoices = signal<Invoice[]>([]);
   readonly loading = signal(false);
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  readonly totalCount = signal(0);
 
   ngOnInit(): void {
     this.loadInvoices();
@@ -31,10 +37,12 @@ export class Invoices implements OnInit {
 
   loadInvoices(): void {
     this.loading.set(true);
+    const skip = getSkipCount(this.pageIndex(), this.pageSize());
 
-    this.invoiceService.getList().subscribe({
+    this.invoiceService.getList(skip, this.pageSize()).subscribe({
       next: (result) => {
         this.invoices.set(result.items);
+        this.totalCount.set(result.totalCount);
         this.loading.set(false);
       },
       error: (error) => {
@@ -44,6 +52,11 @@ export class Invoices implements OnInit {
         );
       },
     });
+  }
+
+  onPageChange(pageIndex: number): void {
+    this.pageIndex.set(pageIndex);
+    this.loadInvoices();
   }
 
   viewInvoice(id: string): void {

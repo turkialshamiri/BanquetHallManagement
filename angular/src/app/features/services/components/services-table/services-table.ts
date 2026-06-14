@@ -3,6 +3,7 @@ import {
   Component,
   inject,
   OnInit,
+  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -24,11 +25,14 @@ import {
 import { DialogService } from 'src/app/shared/services/dialog.service';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { PolicyService } from 'src/app/core/services/policy.service';
+import { DEFAULT_PAGE_SIZE } from 'src/app/core/constants/pagination.constants';
+import { getSkipCount } from 'src/app/core/utils/pagination.util';
+import { DataTablePaginationComponent } from 'src/app/shared/components/data-table-pagination/data-table-pagination';
 
 @Component({
   selector: 'app-services-table',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe],
+  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe, DataTablePaginationComponent],
   templateUrl: './services-table.html',
   styleUrl: './services-table.scss',
 })
@@ -43,6 +47,9 @@ export class ServicesTableComponent implements OnInit {
   private l10n = inject(AppLocalizationService);
 
   services: ServiceItem[] = [];
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  readonly totalCount = signal(0);
 
   get canCreate(): boolean {
     return this.policy.hasSnapshot('BanquetHallManagement.Services.Create');
@@ -65,9 +72,12 @@ export class ServicesTableComponent implements OnInit {
   }
 
   loadServices(): void {
-    this.serviceService.getServices().subscribe({
+    const skip = getSkipCount(this.pageIndex(), this.pageSize());
+
+    this.serviceService.getServices(skip, this.pageSize()).subscribe({
       next: (response) => {
         this.services = response.items;
+        this.totalCount.set(response.totalCount);
         this.cdr.markForCheck();
       },
       error: (error) => {
@@ -76,6 +86,11 @@ export class ServicesTableComponent implements OnInit {
         );
       },
     });
+  }
+
+  onPageChange(pageIndex: number): void {
+    this.pageIndex.set(pageIndex);
+    this.loadServices();
   }
 
   openAddServiceDialog(

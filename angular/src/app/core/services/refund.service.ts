@@ -1,7 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_APP_BASE } from '../constants/api.constants';
+import { DEFAULT_PAGE_SIZE } from '../constants/pagination.constants';
+import { createPagingParams } from '../utils/pagination.util';
 import {
   PendingRefundListResult,
   ProcessRefundResult,
@@ -14,13 +16,14 @@ export class RefundService {
   private http = inject(HttpClient);
   private apiUrl = `${API_APP_BASE}/refund`;
 
-  getPending(filter?: string): Observable<PendingRefundListResult> {
-    let params = new HttpParams();
-    const trimmed = filter?.trim();
-
-    if (trimmed) {
-      params = params.set('filter', trimmed);
-    }
+  getPending(
+    filter?: string,
+    skipCount = 0,
+    maxResultCount = DEFAULT_PAGE_SIZE
+  ): Observable<PendingRefundListResult> {
+    const params = createPagingParams(skipCount, maxResultCount, undefined, {
+      filter: filter?.trim(),
+    });
 
     return this.http.get<PendingRefundListResult>(`${this.apiUrl}/pending`, {
       params,
