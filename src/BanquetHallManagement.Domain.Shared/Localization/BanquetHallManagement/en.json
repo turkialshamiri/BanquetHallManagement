@@ -472,7 +472,7 @@
     "Reservations:Filters:AllHalls": "All halls",
     "Reservations:Filters:Customer": "Customer",
     "Reservations:Filters:AllCustomers": "All customers",
-    "Reservations:Filters:CustomerSearch": "Search customer...",
+    "Reservations:Filters:NoMatchingResults": "No matching results",
     "Reservations:Filters:DateFrom": "From date",
     "Reservations:Filters:DateTo": "To date",
     "Reservations:Filters:AllDates": "All dates",

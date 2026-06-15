@@ -472,7 +472,7 @@
     "Reservations:Filters:AllHalls": "جميع القاعات",
     "Reservations:Filters:Customer": "العميل",
     "Reservations:Filters:AllCustomers": "جميع العملاء",
-    "Reservations:Filters:CustomerSearch": "ابحث عن عميل...",
+    "Reservations:Filters:NoMatchingResults": "لا توجد نتائج مطابقة",
     "Reservations:Filters:DateFrom": "من تاريخ",
     "Reservations:Filters:DateTo": "إلى تاريخ",
     "Reservations:Filters:AllDates": "جميع التواريخ",

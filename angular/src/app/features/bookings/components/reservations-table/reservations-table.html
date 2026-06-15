@@ -26,50 +26,27 @@
                 />
             </mat-form-field>
 
-            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-control">
-                <mat-icon matPrefix class="control-prefix-icon">apartment</mat-icon>
-                <mat-select
-                    [placeholder]="'Reservations:Filters:Hall' | appLocalization"
-                    [ngModel]="filterDraft().hallId"
-                    (ngModelChange)="updateFilterDraft('hallId', $event)"
-                    panelClass="reservation-filter-panel"
-                >
-                    <mat-option [value]="null">
-                        {{ 'Reservations:Filters:AllHalls' | appLocalization }}
-                    </mat-option>
-                    @for (hall of halls(); track hall.id) {
-                        <mat-option [value]="hall.id">{{ hall.name }}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
+            <app-filter-searchable-select
+                class="filter-control"
+                icon="apartment"
+                [placeholder]="'Reservations:Filters:Hall' | appLocalization"
+                [allLabel]="'Reservations:Filters:AllHalls' | appLocalization"
+                [emptyLabel]="'Reservations:Filters:NoMatchingResults' | appLocalization"
+                [items]="hallSelectItems()"
+                [selectedId]="filterDraft().hallId"
+                (selectedIdChange)="updateFilterDraft('hallId', $event)"
+            />
 
-            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-control">
-                <mat-icon matPrefix class="control-prefix-icon">person</mat-icon>
-                <mat-select
-                    [placeholder]="'Reservations:Filters:Customer' | appLocalization"
-                    [ngModel]="filterDraft().customerId"
-                    (ngModelChange)="onCustomerSelected($event)"
-                    panelClass="reservation-filter-panel"
-                >
-                    <mat-option disabled class="select-search-option">
-                        <input
-                            class="select-search-input"
-                            type="search"
-                            [placeholder]="'Reservations:Filters:CustomerSearch' | appLocalization"
-                            [ngModel]="customerSearch()"
-                            (ngModelChange)="customerSearch.set($event)"
-                            (click)="$event.stopPropagation()"
-                            (keydown)="$event.stopPropagation()"
-                        />
-                    </mat-option>
-                    <mat-option [value]="null">
-                        {{ 'Reservations:Filters:AllCustomers' | appLocalization }}
-                    </mat-option>
-                    @for (customer of filteredCustomers(); track customer.id) {
-                        <mat-option [value]="customer.id">{{ customer.name }}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
+            <app-filter-searchable-select
+                class="filter-control"
+                icon="person"
+                [placeholder]="'Reservations:Filters:Customer' | appLocalization"
+                [allLabel]="'Reservations:Filters:AllCustomers' | appLocalization"
+                [emptyLabel]="'Reservations:Filters:NoMatchingResults' | appLocalization"
+                [items]="customerSelectItems()"
+                [selectedId]="filterDraft().customerId"
+                (selectedIdChange)="updateFilterDraft('customerId', $event)"
+            />
 
             <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-control">
                 <mat-icon matPrefix class="control-prefix-icon">flag</mat-icon>

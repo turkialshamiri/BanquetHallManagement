@@ -1,0 +1,47 @@
+<mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-searchable-field">
+    <mat-icon matPrefix class="control-prefix-icon">{{ icon }}</mat-icon>
+    <input
+        matInput
+        type="search"
+        autocomplete="off"
+        [placeholder]="placeholder"
+        [ngModel]="searchText()"
+        (ngModelChange)="onSearchInput($event)"
+        (focus)="onFocus()"
+        (blur)="onBlur()"
+        [matAutocomplete]="auto"
+    />
+    @if (hasSelection()) {
+        <button
+            type="button"
+            mat-icon-button
+            matSuffix
+            class="clear-selection-btn"
+            [attr.aria-label]="allLabel"
+            (mousedown)="clearSelection($event)"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    }
+    <mat-autocomplete
+        #auto="matAutocomplete"
+        autoActiveFirstOption
+        class="filter-searchable-panel"
+        (optionSelected)="onOptionSelected($event.option.value)"
+    >
+        <mat-option [value]="null">{{ allLabel }}</mat-option>
+        @for (item of filteredItems(); track item.id) {
+            <mat-option
+                [value]="item.id"
+                [class.is-selected]="item.id === selectedId"
+            >
+                {{ item.label }}
+            </mat-option>
+        }
+        @if (showEmptyState()) {
+            <mat-option disabled class="empty-state-option">
+                {{ emptyLabel }}
+            </mat-option>
+        }
+    </mat-autocomplete>
+</mat-form-field>

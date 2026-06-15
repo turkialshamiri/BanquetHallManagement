@@ -90,6 +90,8 @@ import {
   ReservationFilterChip,
   ReservationFilterChipType,
 } from 'src/app/core/models/reservation-filter-chip.model';
+import { FilterSearchableSelectComponent } from 'src/app/shared/components/filter-searchable-select/filter-searchable-select';
+import { FilterSearchableSelectItem } from 'src/app/shared/components/filter-searchable-select/filter-searchable-select.model';
 
 @Component({
   selector: 'app-reservations-table',
@@ -107,6 +109,7 @@ import {
     MatDialogModule,
     AppLocalizationPipe,
     DataTablePaginationComponent,
+    FilterSearchableSelectComponent,
   ],
   providers: [provideNativeDateAdapter()],
   templateUrl: './reservations-table.html',
@@ -135,7 +138,6 @@ export class ReservationsTableComponent implements OnInit {
   readonly loading = signal(false);
   readonly filterDraft = signal<ReservationFilter>({ ...EMPTY_RESERVATION_FILTER });
   readonly appliedFilters = signal<ReservationFilter>({ ...EMPTY_RESERVATION_FILTER });
-  readonly customerSearch = signal('');
   readonly dateRangeStart = signal<Date | null>(null);
   readonly dateRangeEnd = signal<Date | null>(null);
   readonly activeDatePreset = signal<DatePresetId | null>(null);
@@ -251,7 +253,6 @@ export class ReservationsTableComponent implements OnInit {
   resetFilters(): void {
     this.filterDraft.set({ ...EMPTY_RESERVATION_FILTER });
     this.appliedFilters.set({ ...EMPTY_RESERVATION_FILTER });
-    this.customerSearch.set('');
     this.dateRangeStart.set(null);
     this.dateRangeEnd.set(null);
     this.activeDatePreset.set(null);
@@ -259,38 +260,27 @@ export class ReservationsTableComponent implements OnInit {
     this.loadData();
   }
 
+  hallSelectItems(): FilterSearchableSelectItem[] {
+    return this.halls().map((hall) => ({
+      id: hall.id,
+      label: hall.name,
+      searchText: hall.name,
+    }));
+  }
+
+  customerSelectItems(): FilterSearchableSelectItem[] {
+    return this.customers().map((customer) => ({
+      id: customer.id,
+      label: customer.name,
+      searchText: `${customer.name} ${customer.phone}`,
+    }));
+  }
+
   updateFilterDraft<K extends keyof ReservationFilter>(
     key: K,
     value: ReservationFilter[K]
   ): void {
     this.filterDraft.update((current) => ({ ...current, [key]: value }));
-  }
-
-  filteredCustomers(): Customer[] {
-    const term = this.customerSearch().trim().toLowerCase();
-    const list = this.customers();
-
-    if (!term) {
-      return list;
-    }
-
-    return list.filter(
-      (customer) =>
-        customer.name.toLowerCase().includes(term) ||
-        customer.phone.toLowerCase().includes(term)
-    );
-  }
-
-  onCustomerSelected(customerId: string | null): void {
-    this.updateFilterDraft('customerId', customerId);
-
-    if (!customerId) {
-      this.customerSearch.set('');
-      return;
-    }
-
-    const customer = this.customersMap.get(customerId);
-    this.customerSearch.set(customer?.name ?? '');
   }
 
   onDateRangeStartChange(value: Date | null): void {
@@ -439,7 +429,6 @@ export class ReservationsTableComponent implements OnInit {
         break;
       case 'customer':
         patch.customerId = null;
-        this.customerSearch.set('');
         break;
       case 'date':
         patch.eventDateFrom = null;
