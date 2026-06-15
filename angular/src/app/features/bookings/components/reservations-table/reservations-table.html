@@ -1,25 +1,194 @@
-<div class="table-card">
+<div class="reservations-page">
 
-    <div class="table-header">
-
-        <div>
-
-            <h2 class="table-title">{{ 'Reservations:Title' | appLocalization }}</h2>
-
-            <span>{{ 'Reservations:Subtitle' | appLocalization }}</span>
-
+    <header class="page-header">
+        <div class="page-header-text">
+            <h1 class="page-title">{{ 'Reservations:Title' | appLocalization }}</h1>
+            <p class="page-subtitle">{{ 'Reservations:Subtitle' | appLocalization }}</p>
         </div>
-
         @if (canCreate) {
-            <button class="add-btn" (click)="openAddReservationDialog()">
-                + {{ 'Reservations:Add' | appLocalization }}
+            <button type="button" class="add-reservation-btn" (click)="openAddReservationDialog()">
+                <mat-icon>add</mat-icon>
+                <span>{{ 'Reservations:Add' | appLocalization }}</span>
             </button>
         }
+    </header>
 
-    </div>
+    <section class="filter-card">
+        <div class="filter-main-row">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-control search-control">
+                <mat-icon matPrefix class="control-prefix-icon">search</mat-icon>
+                <input
+                    matInput
+                    type="search"
+                    [placeholder]="'Reservations:Filters:ReservationNumberPlaceholder' | appLocalization"
+                    [ngModel]="filterDraft().reservationNumber"
+                    (ngModelChange)="updateFilterDraft('reservationNumber', $event || null)"
+                />
+            </mat-form-field>
 
-    <div class="table-wrapper">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-control">
+                <mat-icon matPrefix class="control-prefix-icon">apartment</mat-icon>
+                <mat-select
+                    [placeholder]="'Reservations:Filters:Hall' | appLocalization"
+                    [ngModel]="filterDraft().hallId"
+                    (ngModelChange)="updateFilterDraft('hallId', $event)"
+                    panelClass="reservation-filter-panel"
+                >
+                    <mat-option [value]="null">
+                        {{ 'Reservations:Filters:AllHalls' | appLocalization }}
+                    </mat-option>
+                    @for (hall of halls(); track hall.id) {
+                        <mat-option [value]="hall.id">{{ hall.name }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
 
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-control">
+                <mat-icon matPrefix class="control-prefix-icon">person</mat-icon>
+                <mat-select
+                    [placeholder]="'Reservations:Filters:Customer' | appLocalization"
+                    [ngModel]="filterDraft().customerId"
+                    (ngModelChange)="onCustomerSelected($event)"
+                    panelClass="reservation-filter-panel"
+                >
+                    <mat-option disabled class="select-search-option">
+                        <input
+                            class="select-search-input"
+                            type="search"
+                            [placeholder]="'Reservations:Filters:CustomerSearch' | appLocalization"
+                            [ngModel]="customerSearch()"
+                            (ngModelChange)="customerSearch.set($event)"
+                            (click)="$event.stopPropagation()"
+                            (keydown)="$event.stopPropagation()"
+                        />
+                    </mat-option>
+                    <mat-option [value]="null">
+                        {{ 'Reservations:Filters:AllCustomers' | appLocalization }}
+                    </mat-option>
+                    @for (customer of filteredCustomers(); track customer.id) {
+                        <mat-option [value]="customer.id">{{ customer.name }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-control">
+                <mat-icon matPrefix class="control-prefix-icon">flag</mat-icon>
+                <mat-select
+                    [placeholder]="'Reservations:Filters:Status' | appLocalization"
+                    [ngModel]="filterDraft().status"
+                    (ngModelChange)="updateFilterDraft('status', $event)"
+                    panelClass="reservation-filter-panel"
+                >
+                    <mat-option [value]="null">
+                        {{ 'Reservations:Filters:AllStatuses' | appLocalization }}
+                    </mat-option>
+                    @for (status of statusFilterOptions; track status) {
+                        <mat-option [value]="status">
+                            {{ reservationStatusLabel(status) }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <div class="filter-control date-control">
+                <button
+                    type="button"
+                    class="date-trigger"
+                    (click)="eventDateRangePicker.open()"
+                >
+                    <mat-icon>calendar_today</mat-icon>
+                    <span>{{ dateRangeDisplayLabel() }}</span>
+                </button>
+                <div class="hidden-date-picker">
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                        <mat-date-range-input [rangePicker]="eventDateRangePicker">
+                            <input
+                                matStartDate
+                                [ngModel]="dateRangeStart()"
+                                (ngModelChange)="onDateRangeStartChange($event)"
+                            />
+                            <input
+                                matEndDate
+                                [ngModel]="dateRangeEnd()"
+                                (ngModelChange)="onDateRangeEndChange($event)"
+                            />
+                        </mat-date-range-input>
+                        <mat-date-range-picker #eventDateRangePicker></mat-date-range-picker>
+                    </mat-form-field>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-secondary-row">
+            <div class="quick-presets" role="group" [attr.aria-label]="'Reservations:Filters:DateRange' | appLocalization">
+                @for (preset of datePresets; track preset) {
+                    <button
+                        type="button"
+                        class="preset-pill"
+                        [class.is-active]="activeDatePreset() === preset"
+                        (click)="applyDatePreset(preset)"
+                    >
+                        {{ datePresetLabel(preset) }}
+                    </button>
+                }
+            </div>
+
+            <div class="filter-actions">
+                <button
+                    type="button"
+                    class="filter-action-btn apply-btn"
+                    (click)="applyFilters()"
+                    [disabled]="loading()"
+                >
+                    @if (loading()) {
+                        <mat-spinner diameter="18"></mat-spinner>
+                    } @else {
+                        <mat-icon>filter_alt</mat-icon>
+                    }
+                    <span>{{ 'Reservations:Filters:Apply' | appLocalization }}</span>
+                </button>
+                <button
+                    type="button"
+                    class="filter-action-btn reset-btn"
+                    (click)="resetFilters()"
+                    [disabled]="loading()"
+                >
+                    <mat-icon>refresh</mat-icon>
+                    <span>{{ 'Reservations:Filters:Reset' | appLocalization }}</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="filter-footer-row">
+            <div class="stat-card">
+                <span class="stat-value">{{ totalCount() }}</span>
+                <span class="stat-label">{{ 'Reservations:Filters:TotalReservations' | appLocalization }}</span>
+            </div>
+
+            @if (activeFilterChips().length > 0) {
+                <div class="active-filters-section">
+                    <h3 class="active-filters-title">
+                        {{ 'Reservations:Filters:ActiveTitle' | appLocalization }}
+                    </h3>
+                    <div class="active-chips">
+                        @for (chip of activeFilterChips(); track chip.type) {
+                            <button
+                                type="button"
+                                class="active-chip"
+                                (click)="removeFilterChip(chip.type)"
+                            >
+                                <span>{{ chipDisplayLabel(chip) }}</span>
+                                <mat-icon>close</mat-icon>
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <div class="table-card">
+        <div class="table-wrapper">
         <table>
 
             <thead>
@@ -43,7 +212,11 @@
 
             <tbody>
 
-                @if (reservations().length > 0) {
+                @if (loading()) {
+                    <tr>
+                        <td colspan="10" class="empty-state">...</td>
+                    </tr>
+                } @else if (reservations().length > 0) {
 
                     @for (reservation of reservations(); track reservation.id) {
 
@@ -190,6 +363,21 @@
 
                     }
 
+                } @else if (hasActiveFilters()) {
+
+                    <tr>
+                        <td colspan="10" class="empty-state filtered-empty">
+                            <div class="filtered-empty-content">
+                                <mat-icon>search_off</mat-icon>
+                                <p>{{ 'Reservations:Filters:Empty' | appLocalization }}</p>
+                                <button type="button" class="filter-action-btn reset-btn" (click)="resetFilters()">
+                                    <mat-icon>restart_alt</mat-icon>
+                                    {{ 'Reservations:Filters:Empty:Action' | appLocalization }}
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
                 } @else {
 
                     <tr>
@@ -203,8 +391,7 @@
             </tbody>
 
         </table>
-
-    </div>
+        </div>
 
     <app-data-table-pagination
       [totalCount]="totalCount()"
@@ -212,5 +399,7 @@
       [pageSize]="pageSize()"
       (pageChange)="onPageChange($event)"
     />
+
+</div>
 
 </div>

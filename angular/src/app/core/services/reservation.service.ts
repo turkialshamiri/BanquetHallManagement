@@ -9,6 +9,10 @@ import {
   PagedReservationResult,
   Reservation,
 } from '../models/reservation.model';
+import {
+  EMPTY_RESERVATION_FILTER,
+  ReservationFilter,
+} from '../models/reservation-filter.model';
 
 @Injectable({
   providedIn: 'root',
@@ -20,9 +24,17 @@ export class ReservationService {
 
   getReservations(
     skipCount = 0,
-    maxResultCount = DEFAULT_LIST_MAX_RESULT_COUNT
+    maxResultCount = DEFAULT_LIST_MAX_RESULT_COUNT,
+    filter: ReservationFilter = EMPTY_RESERVATION_FILTER
   ): Observable<PagedReservationResult> {
-    const params = createPagingParams(skipCount, maxResultCount);
+    const params = createPagingParams(skipCount, maxResultCount, undefined, {
+      hallId: filter.hallId,
+      customerId: filter.customerId,
+      eventDateFrom: filter.eventDateFrom,
+      eventDateTo: filter.eventDateTo,
+      reservationNumber: filter.reservationNumber?.trim(),
+      status: filter.status,
+    });
 
     return this.http.get<PagedReservationResult>(this.apiUrl, { params });
   }

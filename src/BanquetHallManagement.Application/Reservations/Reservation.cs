@@ -72,10 +72,44 @@ public class ReservationAppService :
     }
 
     public async Task<PagedResultDto<ReservationDto>> GetListAsync(
-        PagedAndSortedResultRequestDto input)
+        ReservationGetListInput input)
     {
         var query = await _reservationRepository.WithDetailsAsync();
         query = query.WhereActive();
+
+        if (input.HallId.HasValue)
+        {
+            query = query.Where(reservation => reservation.HallId == input.HallId.Value);
+        }
+
+        if (input.CustomerId.HasValue)
+        {
+            query = query.Where(reservation => reservation.CustomerId == input.CustomerId.Value);
+        }
+
+        if (input.EventDateFrom.HasValue)
+        {
+            var fromDate = input.EventDateFrom.Value.Date;
+            query = query.Where(reservation => reservation.EventDate.Date >= fromDate);
+        }
+
+        if (input.EventDateTo.HasValue)
+        {
+            var toDate = input.EventDateTo.Value.Date;
+            query = query.Where(reservation => reservation.EventDate.Date <= toDate);
+        }
+
+        if (!string.IsNullOrWhiteSpace(input.ReservationNumber))
+        {
+            var reservationNumber = input.ReservationNumber.Trim();
+            query = query.Where(reservation =>
+                reservation.ReservationNumber.Contains(reservationNumber));
+        }
+
+        if (input.Status.HasValue)
+        {
+            query = query.Where(reservation => reservation.Status == input.Status.Value);
+        }
 
         var totalCount = await AsyncExecuter.CountAsync(query);
 

@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
 import { AppLocalizationService } from 'src/app/core/services/app-localization.service';
+import { FinanceLocalizationService } from 'src/app/core/services/finance-localization.service';
 import { JournalEntryService } from 'src/app/core/services/journal-entry.service';
 import { JournalEntry } from 'src/app/core/models/journal-entry.model';
 import { getAbpErrorMessage } from 'src/app/core/utils/abp-error.util';
@@ -21,6 +22,7 @@ export class JournalEntryDetail implements OnInit {
   private journalEntryService = inject(JournalEntryService);
   private notification = inject(NotificationService);
   private l10n = inject(AppLocalizationService);
+  private financeL10n = inject(FinanceLocalizationService);
 
   readonly entry = signal<JournalEntry | null>(null);
   readonly loading = signal(true);
@@ -50,9 +52,19 @@ export class JournalEntryDetail implements OnInit {
   }
 
   sourceTypeLabel(sourceType: string): string {
-    const key = `Enum:JournalEntrySourceType:${sourceType}`;
-    const translated = this.l10n.instant(key);
-    return translated === key ? sourceType : translated;
+    return this.financeL10n.journalSourceType(sourceType);
+  }
+
+  accountNameLabel(accountCode: string, storedName: string): string {
+    return this.financeL10n.accountName(accountCode, storedName);
+  }
+
+  lineDescriptionLabel(description: string | null | undefined): string {
+    return this.financeL10n.journalLineDescription(description);
+  }
+
+  entryDescriptionLabel(description: string | null | undefined): string {
+    return this.financeL10n.journalEntryDescription(description);
   }
 
   print(): void {

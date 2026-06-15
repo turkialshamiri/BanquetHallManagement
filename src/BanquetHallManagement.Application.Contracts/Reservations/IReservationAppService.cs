@@ -9,8 +9,7 @@ public interface IReservationAppService : IApplicationService
 {
     Task<ReservationDto> GetAsync(Guid id);
 
-    Task<PagedResultDto<ReservationDto>> GetListAsync(
-        PagedAndSortedResultRequestDto input);
+    Task<PagedResultDto<ReservationDto>> GetListAsync(ReservationGetListInput input);
 
     Task<ReservationDto> CreateAsync(
         CreateUpdateReservationDto input);

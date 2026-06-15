@@ -64,7 +64,7 @@
     </div>
 
     @if (data.description) {
-      <p class="description">{{ data.description }}</p>
+      <p class="description">{{ entryDescriptionLabel(data.description) }}</p>
     }
 
     <h2>{{ 'Finance:JournalEntries:Detail:Lines' | appLocalization }}</h2>
@@ -84,11 +84,11 @@
             <tr>
               <td>
                 <strong>{{ line.accountCode }}</strong>
-                <div class="muted">{{ line.accountName }}</div>
+                <div class="muted">{{ accountNameLabel(line.accountCode, line.accountName) }}</div>
               </td>
               <td>{{ line.debit | number }}</td>
               <td>{{ line.credit | number }}</td>
-              <td>{{ line.description || '—' }}</td>
+              <td>{{ lineDescriptionLabel(line.description) }}</td>
             </tr>
           }
         </tbody>

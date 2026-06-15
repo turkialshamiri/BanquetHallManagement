@@ -6,8 +6,18 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {
+  MatDatepickerModule,
+} from '@angular/material/datepicker';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import { leaveCreateRoute } from 'src/app/core/utils/create-route.util';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AppLocalizationPipe } from 'src/app/core/pipes/app-localization.pipe';
@@ -65,11 +75,40 @@ import { PolicyService } from 'src/app/core/services/policy.service';
 import { DEFAULT_PAGE_SIZE } from 'src/app/core/constants/pagination.constants';
 import { getSkipCount } from 'src/app/core/utils/pagination.util';
 import { DataTablePaginationComponent } from 'src/app/shared/components/data-table-pagination/data-table-pagination';
+import {
+  EMPTY_RESERVATION_FILTER,
+  ReservationFilter,
+} from 'src/app/core/models/reservation-filter.model';
+import { RESERVATION_STATUS } from 'src/app/core/utils/reservation-status.util';
+import {
+  DatePresetId,
+  formatDateForFilter,
+  parseFilterDate,
+  resolveDatePreset,
+} from 'src/app/core/utils/date-preset.util';
+import {
+  ReservationFilterChip,
+  ReservationFilterChipType,
+} from 'src/app/core/models/reservation-filter-chip.model';
 
 @Component({
   selector: 'app-reservations-table',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatDialogModule, AppLocalizationPipe, DataTablePaginationComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatDatepickerModule,
+    MatDialogModule,
+    AppLocalizationPipe,
+    DataTablePaginationComponent,
+  ],
+  providers: [provideNativeDateAdapter()],
   templateUrl: './reservations-table.html',
   styleUrl: './reservations-table.scss',
 })
@@ -93,9 +132,35 @@ export class ReservationsTableComponent implements OnInit {
   readonly pageIndex = signal(0);
   readonly pageSize = signal(DEFAULT_PAGE_SIZE);
   readonly totalCount = signal(0);
+  readonly loading = signal(false);
+  readonly filterDraft = signal<ReservationFilter>({ ...EMPTY_RESERVATION_FILTER });
+  readonly appliedFilters = signal<ReservationFilter>({ ...EMPTY_RESERVATION_FILTER });
+  readonly customerSearch = signal('');
+  readonly dateRangeStart = signal<Date | null>(null);
+  readonly dateRangeEnd = signal<Date | null>(null);
+  readonly activeDatePreset = signal<DatePresetId | null>(null);
+  readonly halls = signal<Hall[]>([]);
+  readonly customers = signal<Customer[]>([]);
   readonly detailsLoadingId = signal<string | null>(null);
   customersMap = new Map<string, Customer>();
   hallsMap = new Map<string, Hall>();
+
+  readonly statusFilterOptions = [
+    RESERVATION_STATUS.Pending,
+    RESERVATION_STATUS.Confirmed,
+    RESERVATION_STATUS.FullyPaid,
+    RESERVATION_STATUS.Completed,
+    RESERVATION_STATUS.Cancelled,
+  ] as const;
+
+  readonly datePresets: DatePresetId[] = [
+    'today',
+    'thisWeek',
+    'thisMonth',
+    'last30Days',
+    'thisYear',
+    'all',
+  ];
 
   getReservationStatusClass = getReservationStatusClass;
   canCancelReservation = canCancelReservation;
@@ -120,26 +185,22 @@ export class ReservationsTableComponent implements OnInit {
   canViewSettlementInvoice = canViewSettlementInvoice;
 
   ngOnInit(): void {
+    this.loadLookups();
     this.loadData();
   }
 
-  loadData(): void {
-    const skip = getSkipCount(this.pageIndex(), this.pageSize());
-
+  loadLookups(): void {
     forkJoin({
-      reservations: this.reservationService.getReservations(skip, this.pageSize()),
       customers: this.customerService.getCustomers(),
       halls: this.hallService.getHalls(),
     }).subscribe({
-      next: ({ reservations, customers, halls }) => {
-        this.reservations.set(reservations.items);
-        this.totalCount.set(reservations.totalCount);
+      next: ({ customers, halls }) => {
+        this.customers.set(customers.items);
+        this.halls.set(halls.items);
         this.customersMap = new Map(
           customers.items.map((customer) => [customer.id, customer])
         );
-        this.hallsMap = new Map(
-          halls.items.map((hall) => [hall.id, hall])
-        );
+        this.hallsMap = new Map(halls.items.map((hall) => [hall.id, hall]));
         this.cdr.markForCheck();
       },
       error: (error) => {
@@ -148,6 +209,281 @@ export class ReservationsTableComponent implements OnInit {
         );
       },
     });
+  }
+
+  loadData(): void {
+    const skip = getSkipCount(this.pageIndex(), this.pageSize());
+    this.loading.set(true);
+
+    this.reservationService
+      .getReservations(skip, this.pageSize(), this.appliedFilters())
+      .subscribe({
+        next: (reservations) => {
+          this.reservations.set(reservations.items);
+          this.totalCount.set(reservations.totalCount);
+          this.loading.set(false);
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          this.loading.set(false);
+          this.notification.showError(
+            getAbpErrorMessage(error, this.l10n.instant('Reservations:LoadFailed'))
+          );
+        },
+      });
+  }
+
+  applyFilters(): void {
+    this.appliedFilters.set({ ...this.filterDraft() });
+    this.syncDateRangeFromFilter(this.filterDraft());
+    this.pageIndex.set(0);
+    this.loadData();
+  }
+
+  resetFilters(): void {
+    this.filterDraft.set({ ...EMPTY_RESERVATION_FILTER });
+    this.appliedFilters.set({ ...EMPTY_RESERVATION_FILTER });
+    this.customerSearch.set('');
+    this.dateRangeStart.set(null);
+    this.dateRangeEnd.set(null);
+    this.activeDatePreset.set(null);
+    this.pageIndex.set(0);
+    this.loadData();
+  }
+
+  updateFilterDraft<K extends keyof ReservationFilter>(
+    key: K,
+    value: ReservationFilter[K]
+  ): void {
+    this.filterDraft.update((current) => ({ ...current, [key]: value }));
+  }
+
+  filteredCustomers(): Customer[] {
+    const term = this.customerSearch().trim().toLowerCase();
+    const list = this.customers();
+
+    if (!term) {
+      return list;
+    }
+
+    return list.filter(
+      (customer) =>
+        customer.name.toLowerCase().includes(term) ||
+        customer.phone.toLowerCase().includes(term)
+    );
+  }
+
+  onCustomerSelected(customerId: string | null): void {
+    this.updateFilterDraft('customerId', customerId);
+
+    if (!customerId) {
+      this.customerSearch.set('');
+      return;
+    }
+
+    const customer = this.customersMap.get(customerId);
+    this.customerSearch.set(customer?.name ?? '');
+  }
+
+  onDateRangeStartChange(value: Date | null): void {
+    this.activeDatePreset.set(null);
+    this.dateRangeStart.set(value);
+    this.updateFilterDraft('eventDateFrom', formatDateForFilter(value));
+  }
+
+  onDateRangeEndChange(value: Date | null): void {
+    this.activeDatePreset.set(null);
+    this.dateRangeEnd.set(value);
+    this.updateFilterDraft('eventDateTo', formatDateForFilter(value));
+  }
+
+  applyDatePreset(preset: DatePresetId): void {
+    const range = resolveDatePreset(preset);
+    this.activeDatePreset.set(preset);
+    this.dateRangeStart.set(range.from);
+    this.dateRangeEnd.set(range.to);
+    this.updateFilterDraft('eventDateFrom', formatDateForFilter(range.from));
+    this.updateFilterDraft('eventDateTo', formatDateForFilter(range.to));
+  }
+
+  datePresetLabel(preset: DatePresetId): string {
+    const keyMap: Record<DatePresetId, string> = {
+      today: 'Reservations:Filters:Preset:Today',
+      thisWeek: 'Reservations:Filters:Preset:ThisWeek',
+      thisMonth: 'Reservations:Filters:Preset:ThisMonth',
+      last30Days: 'Reservations:Filters:Preset:Last30Days',
+      thisYear: 'Reservations:Filters:Preset:ThisYear',
+      all: 'Reservations:Filters:Preset:AllDates',
+    };
+
+    return this.l10n.instant(keyMap[preset]);
+  }
+
+  dateRangeDisplayLabel(): string {
+    const from = this.filterDraft().eventDateFrom;
+    const to = this.filterDraft().eventDateTo;
+
+    if (!from && !to) {
+      return this.l10n.instant('Reservations:Filters:DateRange');
+    }
+
+    const format = (value: string) => value.replaceAll('-', '/');
+
+    if (from && to) {
+      return `${format(from)} - ${format(to)}`;
+    }
+
+    if (from) {
+      return `${format(from)} -`;
+    }
+
+    return `- ${format(to!)}`;
+  }
+
+  chipDisplayLabel(chip: ReservationFilterChip): string {
+    if (chip.type === 'date') {
+      return chip.label;
+    }
+
+    const prefixMap: Record<Exclude<ReservationFilterChipType, 'date'>, string> = {
+      hall: this.l10n.instant('Reservations:Filters:Hall'),
+      customer: this.l10n.instant('Reservations:Filters:Customer'),
+      status: this.l10n.instant('Reservations:Filters:Status'),
+      reservationNumber: this.l10n.instant('Reservations:Filters:ReservationNumber'),
+    };
+
+    return `${prefixMap[chip.type]}: ${chip.label}`;
+  }
+
+  chipIcon(type: ReservationFilterChipType): string {
+    const icons: Record<ReservationFilterChipType, string> = {
+      hall: 'apartment',
+      customer: 'person',
+      date: 'calendar_today',
+      status: 'flag',
+      reservationNumber: 'tag',
+    };
+
+    return icons[type];
+  }
+
+  hasActiveFilters(): boolean {
+    const filters = this.appliedFilters();
+
+    return !!(
+      filters.hallId ||
+      filters.customerId ||
+      filters.eventDateFrom ||
+      filters.eventDateTo ||
+      filters.reservationNumber?.trim() ||
+      filters.status
+    );
+  }
+
+  activeFilterChips(): ReservationFilterChip[] {
+    const filters = this.appliedFilters();
+    const chips: ReservationFilterChip[] = [];
+
+    if (filters.hallId) {
+      chips.push({
+        type: 'hall',
+        label: this.getHallName(filters.hallId),
+      });
+    }
+
+    if (filters.customerId) {
+      chips.push({
+        type: 'customer',
+        label: this.getCustomerName(filters.customerId),
+      });
+    }
+
+    if (filters.eventDateFrom || filters.eventDateTo) {
+      chips.push({
+        type: 'date',
+        label: this.dateRangeSummary(filters),
+      });
+    }
+
+    if (filters.status) {
+      chips.push({
+        type: 'status',
+        label: this.reservationStatusLabel(filters.status),
+      });
+    }
+
+    if (filters.reservationNumber?.trim()) {
+      chips.push({
+        type: 'reservationNumber',
+        label: filters.reservationNumber.trim(),
+      });
+    }
+
+    return chips;
+  }
+
+  removeFilterChip(type: ReservationFilterChipType): void {
+    const patch: Partial<ReservationFilter> = {};
+
+    switch (type) {
+      case 'hall':
+        patch.hallId = null;
+        break;
+      case 'customer':
+        patch.customerId = null;
+        this.customerSearch.set('');
+        break;
+      case 'date':
+        patch.eventDateFrom = null;
+        patch.eventDateTo = null;
+        this.dateRangeStart.set(null);
+        this.dateRangeEnd.set(null);
+        this.activeDatePreset.set(null);
+        break;
+      case 'status':
+        patch.status = null;
+        break;
+      case 'reservationNumber':
+        patch.reservationNumber = null;
+        break;
+    }
+
+    this.filterDraft.update((current) => ({ ...current, ...patch }));
+    this.appliedFilters.update((current) => ({ ...current, ...patch }));
+    this.pageIndex.set(0);
+    this.loadData();
+  }
+
+  private syncDateRangeFromFilter(filter: ReservationFilter): void {
+    this.dateRangeStart.set(parseFilterDate(filter.eventDateFrom));
+    this.dateRangeEnd.set(parseFilterDate(filter.eventDateTo));
+  }
+
+  private dateRangeSummary(filters: ReservationFilter): string {
+    const { eventDateFrom, eventDateTo } = filters;
+
+    if (!eventDateFrom && !eventDateTo) {
+      return this.l10n.instant('Reservations:Filters:AllDates');
+    }
+
+    const format = (value: string) => value.replaceAll('-', '/');
+
+    if (eventDateFrom && eventDateTo) {
+      return `${format(eventDateFrom)} - ${format(eventDateTo)}`;
+    }
+
+    if (eventDateFrom) {
+      return `${format(eventDateFrom)} -`;
+    }
+
+    return `- ${format(eventDateTo!)}`;
+  }
+
+  recordsSummaryLabel(): string {
+    return this.l10n.instant(
+      'Reservations:Filters:Summary:Records',
+      String(this.totalCount())
+    );
   }
 
   onPageChange(pageIndex: number): void {
