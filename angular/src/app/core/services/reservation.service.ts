@@ -14,6 +14,15 @@ import {
   ReservationFilter,
 } from '../models/reservation-filter.model';
 
+const RESERVATION_STATUS_API_VALUES: Record<string, number> = {
+  Pending: 1,
+  Confirmed: 2,
+  Cancelled: 3,
+  Completed: 4,
+  FullyPaid: 5,
+  Archived: 6,
+};
+
 @Injectable({
   providedIn: 'root',
 })
@@ -27,16 +36,48 @@ export class ReservationService {
     maxResultCount = DEFAULT_LIST_MAX_RESULT_COUNT,
     filter: ReservationFilter = EMPTY_RESERVATION_FILTER
   ): Observable<PagedReservationResult> {
-    const params = createPagingParams(skipCount, maxResultCount, undefined, {
-      hallId: filter.hallId,
-      customerId: filter.customerId,
-      eventDateFrom: filter.eventDateFrom,
-      eventDateTo: filter.eventDateTo,
-      reservationNumber: filter.reservationNumber?.trim(),
-      status: filter.status,
-    });
+    const params = createPagingParams(
+      skipCount,
+      maxResultCount,
+      undefined,
+      this.buildFilterQueryParams(filter)
+    );
 
     return this.http.get<PagedReservationResult>(this.apiUrl, { params });
+  }
+
+  private buildFilterQueryParams(
+    filter: ReservationFilter
+  ): Record<string, string | number | boolean | null | undefined> {
+    const params: Record<string, string | number | boolean | null | undefined> = {};
+
+    if (filter.hallId) {
+      params.hallId = filter.hallId;
+    }
+
+    if (filter.customerId) {
+      params.customerId = filter.customerId;
+    }
+
+    if (filter.eventDateFrom) {
+      params.eventDateFrom = filter.eventDateFrom;
+    }
+
+    if (filter.eventDateTo) {
+      params.eventDateTo = filter.eventDateTo;
+    }
+
+    const reservationNumber = filter.reservationNumber?.trim();
+    if (reservationNumber) {
+      params.reservationNumber = reservationNumber;
+    }
+
+    if (filter.status) {
+      params.status =
+        RESERVATION_STATUS_API_VALUES[filter.status] ?? filter.status;
+    }
+
+    return params;
   }
 
   getReservation(id: string): Observable<Reservation> {

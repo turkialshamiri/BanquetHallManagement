@@ -234,8 +234,16 @@ export class ReservationsTableComponent implements OnInit {
   }
 
   applyFilters(): void {
-    this.appliedFilters.set({ ...this.filterDraft() });
-    this.syncDateRangeFromFilter(this.filterDraft());
+    const draft = this.filterDraft();
+    this.appliedFilters.set({
+      hallId: draft.hallId || null,
+      customerId: draft.customerId || null,
+      eventDateFrom: draft.eventDateFrom,
+      eventDateTo: draft.eventDateTo,
+      reservationNumber: draft.reservationNumber?.trim() || null,
+      status: draft.status,
+    });
+    this.syncDateRangeFromFilter(this.appliedFilters());
     this.pageIndex.set(0);
     this.loadData();
   }
