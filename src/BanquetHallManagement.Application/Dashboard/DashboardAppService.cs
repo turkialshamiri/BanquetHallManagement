@@ -1,97 +1,85 @@
-using System.Linq;
+using System;
 using System.Threading.Tasks;
-using BanquetHallManagement.Customers;
-using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
-using BanquetHallManagement.Enums;
-using BanquetHallManagement.Finance.Accounts;
-using BanquetHallManagement.Reservations;
-using BanquetHallManagement.Services;
 using BanquetHallManagement.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Domain.Repositories;
+using Microsoft.Extensions.Options;
 
 namespace BanquetHallManagement.Dashboard;
 
 [Authorize(BanquetHallManagementPermissions.Dashboard.Default)]
 public class DashboardAppService : BanquetHallManagementAppService, IDashboardAppService
 {
-    private readonly IRepository<Hall, System.Guid> _hallRepository;
-    private readonly IRepository<Customer, System.Guid> _customerRepository;
-    private readonly IRepository<Service, System.Guid> _serviceRepository;
-    private readonly IRepository<Reservation, System.Guid> _reservationRepository;
-    private readonly IAccountBalanceService _accountBalanceService;
+    private readonly IRepository<DashboardMetricsSnapshot, Guid> _snapshotRepository;
+    private readonly DashboardMetricsSnapshotGenerator _snapshotGenerator;
+    private readonly DashboardMetricsSnapshotOptions _snapshotOptions;
 
     public DashboardAppService(
-        IRepository<Hall, System.Guid> hallRepository,
-        IRepository<Customer, System.Guid> customerRepository,
-        IRepository<Service, System.Guid> serviceRepository,
-        IRepository<Reservation, System.Guid> reservationRepository,
-        IAccountBalanceService accountBalanceService)
+        IRepository<DashboardMetricsSnapshot, Guid> snapshotRepository,
+        DashboardMetricsSnapshotGenerator snapshotGenerator,
+        IOptions<DashboardMetricsSnapshotOptions> snapshotOptions)
     {
-        _hallRepository = hallRepository;
-        _customerRepository = customerRepository;
-        _serviceRepository = serviceRepository;
-        _reservationRepository = reservationRepository;
-        _accountBalanceService = accountBalanceService;
+        _snapshotRepository = snapshotRepository;
+        _snapshotGenerator = snapshotGenerator;
+        _snapshotOptions = snapshotOptions.Value ?? new DashboardMetricsSnapshotOptions();
     }
 
     public async Task<DashboardStatsDto> GetStatsAsync()
     {
-        var totalHalls = await _hallRepository.CountAsync();
-        var totalCustomers = await _customerRepository.CountAsync();
-        var totalServices = await _serviceRepository.CountAsync();
-
-        var reservationQuery = await _reservationRepository.GetQueryableAsync();
-        reservationQuery = reservationQuery.WhereActive();
-
-        var reservationStats = await AsyncExecuter.FirstOrDefaultAsync(
-            reservationQuery
-                .GroupBy(_ => 1)
-                .Select(g => new ReservationAggregateResult
-                {
-                    TotalReservations = g.Count(),
-                    PendingReservations = g.Count(r => r.Status == ReservationStatus.Pending),
-                    ConfirmedReservations = g.Count(r => r.Status == ReservationStatus.Confirmed),
-                    CancelledReservations = g.Count(r => r.Status == ReservationStatus.Cancelled),
-                    CompletedReservations = g.Count(r => r.Status == ReservationStatus.Completed),
-                }));
-
         var canViewRevenue = await AuthorizationService.IsGrantedAsync(
             BanquetHallManagementPermissions.Dashboard.ViewRevenue);
 
-        var totalEarnedRevenue = canViewRevenue
-            ? await _accountBalanceService.GetEarnedRevenueBalanceAsync()
-            : 0m;
+        var snapshot = await _snapshotRepository.FindAsync(
+            DashboardMetricsSnapshotConsts.SingletonId,
+            includeDetails: false);
+        var snapshotExisted = snapshot != null;
 
-        var totalDeferredRevenue = canViewRevenue
-            ? await _accountBalanceService.GetDeferredRevenueBalanceAsync()
-            : 0m;
+        var maxAgeMinutes = Math.Max(1, _snapshotOptions.MaxSnapshotAgeMinutes);
+        var now = Clock.Now;
+        var isSnapshotStale = snapshot == null ||
+                              snapshot.SnapshotCreatedAt == DateTime.MinValue ||
+                              (now - snapshot.SnapshotCreatedAt) > TimeSpan.FromMinutes(maxAgeMinutes);
+
+        if (snapshot == null || isSnapshotStale)
+        {
+            var data = await _snapshotGenerator.GenerateAsync();
+
+            snapshot ??= new DashboardMetricsSnapshot(DashboardMetricsSnapshotConsts.SingletonId);
+            snapshot.Apply(
+                data.TotalHalls,
+                data.TotalCustomers,
+                data.TotalServices,
+                data.TotalReservations,
+                data.PendingReservations,
+                data.ConfirmedReservations,
+                data.CancelledReservations,
+                data.CompletedReservations,
+                data.TotalRevenue,
+                data.TotalDeferredRevenue,
+                now);
+
+            if (snapshotExisted)
+            {
+                await _snapshotRepository.UpdateAsync(snapshot, autoSave: true);
+            }
+            else
+            {
+                await _snapshotRepository.InsertAsync(snapshot, autoSave: true);
+            }
+        }
 
         return new DashboardStatsDto
         {
-            TotalHalls = totalHalls,
-            TotalCustomers = totalCustomers,
-            TotalServices = totalServices,
-            TotalReservations = reservationStats?.TotalReservations ?? 0,
-            TotalRevenue = totalEarnedRevenue,
-            TotalDeferredRevenue = totalDeferredRevenue,
-            PendingReservations = reservationStats?.PendingReservations ?? 0,
-            ConfirmedReservations = reservationStats?.ConfirmedReservations ?? 0,
-            CancelledReservations = reservationStats?.CancelledReservations ?? 0,
-            CompletedReservations = reservationStats?.CompletedReservations ?? 0,
+            TotalHalls = snapshot.TotalHalls,
+            TotalCustomers = snapshot.TotalCustomers,
+            TotalServices = snapshot.TotalServices,
+            TotalReservations = snapshot.TotalReservations,
+            TotalRevenue = canViewRevenue ? snapshot.TotalRevenue : 0m,
+            TotalDeferredRevenue = canViewRevenue ? snapshot.TotalDeferredRevenue : 0m,
+            PendingReservations = snapshot.PendingReservations,
+            ConfirmedReservations = snapshot.ConfirmedReservations,
+            CancelledReservations = snapshot.CancelledReservations,
+            CompletedReservations = snapshot.CompletedReservations,
         };
-    }
-
-    private sealed class ReservationAggregateResult
-    {
-        public long TotalReservations { get; set; }
-
-        public long PendingReservations { get; set; }
-
-        public long ConfirmedReservations { get; set; }
-
-        public long CancelledReservations { get; set; }
-
-        public long CompletedReservations { get; set; }
     }
 }

@@ -12,9 +12,11 @@ using BanquetHallManagement.Finance.HallAccessCards;
 using BanquetHallManagement.Finance.Invoices;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Sequences;
+using BanquetHallManagement.Dashboard;
 using BanquetHallManagement.Reservations;
 using BanquetHallManagement.ReservationServices;
 using BanquetHallManagement.Services;
+using BanquetHallManagement.Configurations.Dashboard;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
@@ -55,6 +57,7 @@ public class BanquetHallManagementDbContext :
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<HallAccessCard> HallAccessCards { get; set; }
+    public DbSet<DashboardMetricsSnapshot> DashboardMetricsSnapshots { get; set; }
     #region Entities from the modules
 
     /* Notice: We only implemented IIdentityProDbContext and ISaasDbContext
@@ -128,5 +131,6 @@ public class BanquetHallManagementDbContext :
         builder.ApplyConfiguration(new PaymentConfiguration());
         builder.ApplyConfiguration(new InvoiceConfiguration());
         builder.ApplyConfiguration(new HallAccessCardConfiguration());
+        builder.ApplyConfiguration(new DashboardMetricsSnapshotConfiguration());
     }
 }
