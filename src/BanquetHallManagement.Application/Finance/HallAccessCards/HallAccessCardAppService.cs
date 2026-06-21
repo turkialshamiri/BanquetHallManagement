@@ -187,8 +187,7 @@ public class HallAccessCardAppService : BanquetHallManagementAppService, IHallAc
         var customer = await _customerRepository.GetAsync(reservation.CustomerId);
         var hall = await _hallRepository.GetAsync(reservation.HallId);
         var eventDateIsToday = reservation.EventDate.Date == Clock.Now.Date;
-        var canConfirmEntry = reservation.Status == ReservationStatus.FullyPaid
-            && eventDateIsToday
+        var canConfirmEntry = reservation.CanConfirmHallEntry(Clock.Now)
             && await AuthorizationService.IsGrantedAsync(
                 BanquetHallManagementPermissions.Reservations.ConfirmHallEntry);
 

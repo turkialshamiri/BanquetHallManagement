@@ -1,8 +1,10 @@
 using BanquetHallManagement.EntityFrameworkCore.Repositories;
+using BanquetHallManagement.EntityFrameworkCore.Finance.Refunds;
 using BanquetHallManagement.EntityFrameworkCore.Reports;
 using BanquetHallManagement.Finance.HallAccessCards;
 using BanquetHallManagement.Finance.Invoices;
 using BanquetHallManagement.Finance.JournalEntries;
+using BanquetHallManagement.Finance.Refunds;
 using BanquetHallManagement.Reports;
 using BanquetHallManagement.Reservations;
 using Microsoft.Extensions.Configuration;
@@ -60,6 +62,7 @@ public class BanquetHallManagementEntityFrameworkCoreModule : AbpModule
         });
 
         context.Services.AddTransient<IReportQueryExecutor, EfCoreReportQueryExecutor>();
+        context.Services.AddTransient<IRefundQueryRepository, EfCoreRefundQueryRepository>();
 
         if (AbpStudioAnalyzeHelper.IsInAnalyzeMode)
         {

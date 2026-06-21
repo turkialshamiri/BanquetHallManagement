@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BanquetHallManagement.Customers;
-using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Enums;
 using BanquetHallManagement.Finance;
-using BanquetHallManagement.Finance.Accounts;
 using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Refunds;
+using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Halls;
 using BanquetHallManagement.Permissions;
 using BanquetHallManagement.Reservations;
@@ -27,8 +26,7 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
     private readonly IReservationRepository _reservationRepository;
     private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly IRepository<Hall, Guid> _hallRepository;
-    private readonly IRepository<Account, Guid> _accountRepository;
-    private readonly IRepository<Payment, Guid> _paymentRepository;
+    private readonly IRefundQueryRepository _refundQueryRepository;
     private readonly IRefundLiabilityService _refundLiabilityService;
     private readonly IIdentityUserRepository _identityUserRepository;
 
@@ -37,8 +35,7 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
         IReservationRepository reservationRepository,
         IRepository<Customer, Guid> customerRepository,
         IRepository<Hall, Guid> hallRepository,
-        IRepository<Account, Guid> accountRepository,
-        IRepository<Payment, Guid> paymentRepository,
+        IRefundQueryRepository refundQueryRepository,
         IRefundLiabilityService refundLiabilityService,
         IIdentityUserRepository identityUserRepository)
     {
@@ -46,8 +43,7 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
         _reservationRepository = reservationRepository;
         _customerRepository = customerRepository;
         _hallRepository = hallRepository;
-        _accountRepository = accountRepository;
-        _paymentRepository = paymentRepository;
+        _refundQueryRepository = refundQueryRepository;
         _refundLiabilityService = refundLiabilityService;
         _identityUserRepository = identityUserRepository;
     }
@@ -55,83 +51,19 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
     public async Task<PagedResultDto<PendingRefundDto>> GetPendingAsync(RefundLiabilityGetListInput input)
     {
         var filter = ResolveFilter(input);
-
-        var journalQuery = await _journalEntryRepository.GetQueryableAsync();
-        var paidReservationIds = await AsyncExecuter.ToListAsync(
-            journalQuery
-                .Where(entry =>
-                    entry.SourceType == JournalEntrySourceType.RefundPayment &&
-                    entry.IsPosted &&
-                    entry.ReservationId.HasValue)
-                .Select(entry => entry.ReservationId!.Value));
-
-        var paidSet = paidReservationIds.ToHashSet();
-
-        var reservationQuery = await _reservationRepository.GetQueryableAsync();
-        var cancelledReservations = await AsyncExecuter.ToListAsync(
-            reservationQuery.Where(reservation =>
-                reservation.Status == ReservationStatus.Cancelled &&
-                (reservation.CancellationType == null ||
-                 reservation.CancellationType != CancellationType.ConflictOverride)));
-
-        if (cancelledReservations.Count == 0)
-        {
-            return new PagedResultDto<PendingRefundDto>();
-        }
-
-        cancelledReservations = cancelledReservations
-            .OrderByDescending(reservation => reservation.CreationTime)
-            .ToList();
-
-        var customerIds = cancelledReservations.Select(reservation => reservation.CustomerId).Distinct().ToList();
-        var hallIds = cancelledReservations.Select(reservation => reservation.HallId).Distinct().ToList();
-
-        var customerQuery = await _customerRepository.GetQueryableAsync();
-        var customers = await AsyncExecuter.ToListAsync(
-            customerQuery.Where(customer => customerIds.Contains(customer.Id)));
-        var customerMap = customers.ToDictionary(customer => customer.Id);
-
-        var hallQuery = await _hallRepository.GetQueryableAsync();
-        var halls = await AsyncExecuter.ToListAsync(
-            hallQuery.Where(hall => hallIds.Contains(hall.Id)));
-        var hallMap = halls.ToDictionary(hall => hall.Id);
-
-        var reservationIds = cancelledReservations.Select(reservation => reservation.Id).ToList();
-        var paymentQuery = await _paymentRepository.GetQueryableAsync();
-        var payments = await AsyncExecuter.ToListAsync(
-            paymentQuery.Where(payment => reservationIds.Contains(payment.ReservationId)));
-
-        var paymentsByReservation = payments
-            .GroupBy(payment => payment.ReservationId)
-            .ToDictionary(group => group.Key, group => group.ToList());
-
-        var liabilityEntries = await AsyncExecuter.ToListAsync(
-            journalQuery.Where(entry =>
-                entry.SourceType == JournalEntrySourceType.RefundLiability &&
-                entry.IsPosted &&
-                entry.ReservationId.HasValue &&
-                reservationIds.Contains(entry.ReservationId.Value)));
-
-        var liabilityByReservation = liabilityEntries
-            .GroupBy(entry => entry.ReservationId!.Value)
-            .ToDictionary(group => group.Key, group => group.First());
+        var paidSet = await _refundQueryRepository.GetProcessedRefundReservationIdsAsync();
+        var candidates = await _refundQueryRepository.GetCancelledRefundCandidatesAsync(filter);
 
         var pendingItems = new List<PendingRefundDto>();
 
-        foreach (var reservation in cancelledReservations)
+        foreach (var candidate in candidates)
         {
+            var reservation = candidate.Reservation;
+
             if (paidSet.Contains(reservation.Id))
             {
                 continue;
             }
-
-            if (!MatchesFilter(reservation, customerMap, filter))
-            {
-                continue;
-            }
-
-            paymentsByReservation.TryGetValue(reservation.Id, out var reservationPayments);
-            reservationPayments ??= [];
 
             if (!RefundEligibility.HasRefundableBalance(reservation.TotalPrice, reservation.PaidAmount))
             {
@@ -142,15 +74,13 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
                 reservation.TotalPrice,
                 reservation.PaidAmount);
 
-            liabilityByReservation.TryGetValue(reservation.Id, out var liabilityEntry);
-
             pendingItems.Add(MapPendingRefund(
                 reservation,
                 refundableAmount,
-                customerMap,
-                hallMap,
-                reservationPayments,
-                liabilityEntry));
+                candidate.CustomerName,
+                candidate.HallName,
+                candidate.Payments,
+                candidate.LiabilityEntry));
         }
 
         if (pendingItems.Count == 0)
@@ -173,9 +103,7 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
         var customer = await _customerRepository.GetAsync(reservation.CustomerId);
         var hall = await _hallRepository.GetAsync(reservation.HallId);
 
-        var paymentQuery = await _paymentRepository.GetQueryableAsync();
-        var payments = await AsyncExecuter.ToListAsync(
-            paymentQuery.Where(payment => payment.ReservationId == reservation.Id));
+        var payments = await _refundQueryRepository.GetPaymentsByReservationAsync(reservation.Id);
 
         var depositAmount = FinancePaymentRules.CalculateDepositRevenuePortion(reservation.TotalPrice);
         var installmentsPaid = RefundEligibility.CalculateInstallmentRefundAmount(payments);
@@ -191,7 +119,7 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
             reservation.Id,
             JournalEntrySourceType.RefundPayment);
 
-        var refundLiabilityAccount = await GetRefundLiabilityAccountAsync();
+        var refundLiabilityAccount = await _refundQueryRepository.GetRefundLiabilityAccountAsync();
         var liabilityAmount = liabilityEntry == null
             ? refundableAmount
             : GetLiabilityCreditAmount(liabilityEntry, refundLiabilityAccount.Id);
@@ -330,14 +258,11 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
     private PendingRefundDto MapPendingRefund(
         Reservation reservation,
         decimal refundableAmount,
-        IReadOnlyDictionary<Guid, Customer> customerMap,
-        IReadOnlyDictionary<Guid, Hall> hallMap,
+        string customerName,
+        string hallName,
         IReadOnlyList<Payment> reservationPayments,
         JournalEntry? liabilityEntry)
     {
-        customerMap.TryGetValue(reservation.CustomerId, out var customer);
-        hallMap.TryGetValue(reservation.HallId, out var hall);
-
         var depositAmount = FinancePaymentRules.CalculateDepositRevenuePortion(reservation.TotalPrice);
         var installmentsPaid = RefundEligibility.CalculateInstallmentRefundAmount(reservationPayments);
         var liabilityAmount = liabilityEntry?.GetTotalCredit() ?? refundableAmount;
@@ -347,8 +272,8 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
             ReservationId = reservation.Id,
             ReservationNumber = reservation.ReservationNumber,
             CustomerId = reservation.CustomerId,
-            CustomerName = customer?.Name ?? string.Empty,
-            HallName = hall?.Name ?? string.Empty,
+            CustomerName = customerName,
+            HallName = hallName,
             EventDate = reservation.EventDate,
             StartTime = reservation.StartTime,
             TotalPrice = reservation.TotalPrice,
@@ -372,24 +297,6 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
         return liabilityEntry.Lines
             .Where(line => line.AccountId == refundLiabilityAccountId)
             .Sum(line => line.Credit);
-    }
-
-    private async Task<Account> GetRefundLiabilityAccountAsync()
-    {
-        var query = await _accountRepository.GetQueryableAsync();
-
-        var account = await AsyncExecuter.FirstOrDefaultAsync(
-            query.Where(candidate =>
-                candidate.Code == FinanceAccountCodes.CustomerRefundLiabilities &&
-                candidate.IsActive));
-
-        if (account == null)
-        {
-            throw new Volo.Abp.BusinessException(BanquetHallManagementDomainErrorCodes.AccountNotFound)
-                .WithData("AccountCode", FinanceAccountCodes.CustomerRefundLiabilities);
-        }
-
-        return account;
     }
 
     private async Task<string?> ResolveProcessedByAsync(JournalEntry? refundPaymentEntry)
@@ -431,27 +338,5 @@ public class RefundAppService : BanquetHallManagementAppService, IRefundAppServi
         }
 
         return null;
-    }
-
-    private static bool MatchesFilter(
-        Reservation reservation,
-        IReadOnlyDictionary<Guid, Customer> customerMap,
-        string? filter)
-    {
-        if (string.IsNullOrWhiteSpace(filter))
-        {
-            return true;
-        }
-
-        customerMap.TryGetValue(reservation.CustomerId, out var customer);
-
-        return ContainsIgnoreCase(reservation.ReservationNumber, filter) ||
-               (customer != null && ContainsIgnoreCase(customer.Name, filter));
-    }
-
-    private static bool ContainsIgnoreCase(string? source, string filter)
-    {
-        return source != null &&
-               source.Contains(filter, StringComparison.OrdinalIgnoreCase);
     }
 }

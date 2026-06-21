@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using BanquetHallManagement.Customers;
+using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Enums;
 using BanquetHallManagement.Finance.Accounts;
 using BanquetHallManagement.Finance.JournalEntries;
+using BanquetHallManagement.Halls;
 using BanquetHallManagement.Reports;
 using BanquetHallManagement.Reservations;
 using Microsoft.EntityFrameworkCore;
@@ -19,20 +23,121 @@ public class EfCoreReportQueryExecutor :
     ITransientDependency
 {
     private readonly IAsyncQueryableExecuter _asyncExecuter;
+    private readonly IRepository<Reservation, Guid> _reservationRepository;
+    private readonly IRepository<Hall, Guid> _hallRepository;
+    private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly IRepository<JournalEntry, Guid> _journalEntryRepository;
     private readonly IRepository<JournalEntryLine, Guid> _journalEntryLineRepository;
     private readonly IRepository<Account, Guid> _accountRepository;
 
     public EfCoreReportQueryExecutor(
         IAsyncQueryableExecuter asyncExecuter,
+        IRepository<Reservation, Guid> reservationRepository,
+        IRepository<Hall, Guid> hallRepository,
+        IRepository<Customer, Guid> customerRepository,
         IRepository<JournalEntry, Guid> journalEntryRepository,
         IRepository<JournalEntryLine, Guid> journalEntryLineRepository,
         IRepository<Account, Guid> accountRepository)
     {
         _asyncExecuter = asyncExecuter;
+        _reservationRepository = reservationRepository;
+        _hallRepository = hallRepository;
+        _customerRepository = customerRepository;
         _journalEntryRepository = journalEntryRepository;
         _journalEntryLineRepository = journalEntryLineRepository;
         _accountRepository = accountRepository;
+    }
+
+    public async Task<IQueryable<Reservation>> CreateFilteredReservationQueryAsync(
+        DateTime dateFrom,
+        DateTime dateTo,
+        Guid? hallId,
+        ReservationStatus? status,
+        CancellationToken cancellationToken = default)
+    {
+        var query = await _reservationRepository.GetQueryableAsync();
+        query = query.WhereActive();
+
+        if (hallId.HasValue)
+        {
+            query = query.Where(reservation => reservation.HallId == hallId.Value);
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(reservation => reservation.Status == status.Value);
+        }
+
+        return query.Where(reservation =>
+            reservation.EventDate.Date >= dateFrom &&
+            reservation.EventDate.Date <= dateTo);
+    }
+
+    public async Task<PeriodStatisticsAggregate> GetPeriodStatisticsAsync(
+        IQueryable<Reservation> filteredQuery,
+        CancellationToken cancellationToken = default)
+    {
+        var aggregate = await _asyncExecuter.FirstOrDefaultAsync(
+            filteredQuery
+                .GroupBy(_ => 1)
+                .Select(group => new PeriodStatisticsAggregate
+                {
+                    TotalReservations = group.Count(),
+                    ActiveCustomers = group
+                        .Where(reservation => reservation.Status != ReservationStatus.Cancelled)
+                        .Select(reservation => reservation.CustomerId)
+                        .Distinct()
+                        .Count(),
+                    PendingCount = group.Count(reservation =>
+                        reservation.Status == ReservationStatus.Pending),
+                    ConfirmedCount = group.Count(reservation =>
+                        reservation.Status == ReservationStatus.Confirmed),
+                    CancelledCount = group.Count(reservation =>
+                        reservation.Status == ReservationStatus.Cancelled),
+                    CompletedCount = group.Count(reservation =>
+                        reservation.Status == ReservationStatus.Completed),
+                }),
+            cancellationToken);
+
+        return aggregate ?? new PeriodStatisticsAggregate();
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> GetHallNamesByIdsAsync(
+        IReadOnlyCollection<Guid> hallIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (hallIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var hallQuery = await _hallRepository.GetQueryableAsync();
+        var rows = await _asyncExecuter.ToListAsync(
+            hallQuery
+                .Where(hall => hallIds.Contains(hall.Id))
+                .Select(hall => new { hall.Id, hall.Name }),
+            cancellationToken);
+
+        return rows.ToDictionary(row => row.Id, row => row.Name);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> GetCustomerNamesByIdsAsync(
+        IReadOnlyCollection<Guid> customerIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (customerIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var customerQuery = await _customerRepository.GetQueryableAsync();
+        var rows = await _asyncExecuter.ToListAsync(
+            customerQuery
+                .Where(customer => customerIds.Contains(customer.Id))
+                .Select(customer => new { customer.Id, customer.Name }),
+            cancellationToken);
+
+        return rows.ToDictionary(row => row.Id, row => row.Name);
     }
 
     public async Task<IReadOnlyList<HallPerformanceAggregate>> GetHallPerformanceAggregatesAsync(

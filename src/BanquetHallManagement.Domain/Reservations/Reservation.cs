@@ -282,6 +282,12 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
         CompleteReservation(completedAt);
     }
 
+    public bool CanConfirmHallEntry(DateTime now)
+    {
+        return Status == ReservationStatus.FullyPaid &&
+               EventDate.Date == now.Date;
+    }
+
     public void CompleteReservation(DateTime completedAt)
     {
         EnsureCanComplete();

@@ -3,15 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using BanquetHallManagement.Customers;
-using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
-using BanquetHallManagement.Enums;
 using BanquetHallManagement.Finance.Accounts;
-using BanquetHallManagement.Reservations;
 using BanquetHallManagement.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
-using Volo.Abp.Domain.Repositories;
 
 namespace BanquetHallManagement.Reports;
 
@@ -20,22 +15,13 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
 {
     private const decimal OperatingHoursPerDay = 12m;
 
-    private readonly IRepository<Reservation, Guid> _reservationRepository;
-    private readonly IRepository<Hall, Guid> _hallRepository;
-    private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly IReportQueryExecutor _reportQueryExecutor;
     private readonly IAccountBalanceService _accountBalanceService;
 
     public ReportsAppService(
-        IRepository<Reservation, Guid> reservationRepository,
-        IRepository<Hall, Guid> hallRepository,
-        IRepository<Customer, Guid> customerRepository,
         IReportQueryExecutor reportQueryExecutor,
         IAccountBalanceService accountBalanceService)
     {
-        _reservationRepository = reservationRepository;
-        _hallRepository = hallRepository;
-        _customerRepository = customerRepository;
         _reportQueryExecutor = reportQueryExecutor;
         _accountBalanceService = accountBalanceService;
     }
@@ -51,60 +37,33 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
             throw new UserFriendlyException(L["Validation:ReportDateRangeInvalid"]);
         }
 
-        var reservationQuery = await _reservationRepository.GetQueryableAsync();
-        var hallQuery = await _hallRepository.GetQueryableAsync();
-        var customerQuery = await _customerRepository.GetQueryableAsync();
-
-        var filteredQuery = ApplyFilters(reservationQuery, input, dateFrom, dateTo);
+        var filteredQuery = await _reportQueryExecutor.CreateFilteredReservationQueryAsync(
+            dateFrom,
+            dateTo,
+            input.HallId,
+            input.Status);
 
         var periodDays = Math.Max(1, (dateTo.Date - dateFrom.Date).Days + 1);
         var availableHoursPerHall = periodDays * OperatingHoursPerDay;
 
-        var periodAggregate = await AsyncExecuter.FirstOrDefaultAsync(
-            filteredQuery
-                .GroupBy(_ => 1)
-                .Select(g => new PeriodAggregateResult
-                {
-                    TotalReservations = g.Count(),
-                    RevenueReservationCount = g.Count(r => r.Status == ReservationStatus.Completed),
-                    ActiveCustomers = g
-                        .Where(r => r.Status != ReservationStatus.Cancelled)
-                        .Select(r => r.CustomerId)
-                        .Distinct()
-                        .Count(),
-                    PendingCount = g.Count(r => r.Status == ReservationStatus.Pending),
-                    ConfirmedCount = g.Count(r => r.Status == ReservationStatus.Confirmed),
-                    CancelledCount = g.Count(r => r.Status == ReservationStatus.Cancelled),
-                    CompletedCount = g.Count(r => r.Status == ReservationStatus.Completed),
-                }));
-
-        periodAggregate ??= new PeriodAggregateResult();
+        var periodAggregate = await _reportQueryExecutor.GetPeriodStatisticsAsync(filteredQuery);
 
         var earnedRevenue = await _accountBalanceService.GetEarnedRevenueForPeriodAsync(
             dateFrom,
             dateTo);
-        periodAggregate.TotalRevenue = earnedRevenue;
-        periodAggregate.RevenueReservationCount = periodAggregate.CompletedCount;
 
         var revenueAnalytics = await BuildRevenueAnalyticsAsync();
 
         var hallAggregates = await _reportQueryExecutor.GetHallPerformanceAggregatesAsync(
             filteredQuery);
 
-        var hallIds = hallAggregates.Select(x => x.HallId).ToList();
-
-        var hallNames = hallIds.Count == 0
-            ? new Dictionary<Guid, string>()
-            : (await AsyncExecuter.ToListAsync(
-                hallQuery
-                    .Where(h => hallIds.Contains(h.Id))
-                    .Select(h => new { h.Id, h.Name })))
-                .ToDictionary(x => x.Id, x => x.Name);
+        var hallNames = await _reportQueryExecutor.GetHallNamesByIdsAsync(
+            hallAggregates.Select(row => row.HallId).ToList());
 
         var hallPerformanceRows = hallAggregates
             .Select(row => new HallPerformanceRow
             {
-                HallName = hallNames.GetValueOrDefault(row.HallId, string.Empty),
+                HallName = GetName(hallNames, row.HallId),
                 ReservationCount = row.ReservationCount,
                 Revenue = row.Revenue,
                 AverageGuests = row.AverageGuests,
@@ -115,20 +74,13 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
         var customerAggregates = await _reportQueryExecutor.GetCustomerActivityAggregatesAsync(
             filteredQuery);
 
-        var customerIds = customerAggregates.Select(x => x.CustomerId).ToList();
-
-        var customerNames = customerIds.Count == 0
-            ? new Dictionary<Guid, string>()
-            : (await AsyncExecuter.ToListAsync(
-                customerQuery
-                    .Where(c => customerIds.Contains(c.Id))
-                    .Select(c => new { c.Id, c.Name })))
-                .ToDictionary(x => x.Id, x => x.Name);
+        var customerNames = await _reportQueryExecutor.GetCustomerNamesByIdsAsync(
+            customerAggregates.Select(row => row.CustomerId).ToList());
 
         var customerActivityRows = customerAggregates
             .Select(row => new CustomerActivityRow
             {
-                CustomerName = customerNames.GetValueOrDefault(row.CustomerId, string.Empty),
+                CustomerName = GetName(customerNames, row.CustomerId),
                 ReservationCount = row.ReservationCount,
                 TotalSpent = row.TotalSpent,
             })
@@ -143,10 +95,10 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
             Summary = new ReportSummaryDto
             {
                 TotalReservations = periodAggregate.TotalReservations,
-                TotalRevenue = periodAggregate.TotalRevenue,
-                AverageReservationValue = periodAggregate.RevenueReservationCount > 0
+                TotalRevenue = earnedRevenue,
+                AverageReservationValue = periodAggregate.CompletedCount > 0
                     ? Math.Round(
-                        earnedRevenue / periodAggregate.RevenueReservationCount,
+                        earnedRevenue / periodAggregate.CompletedCount,
                         2)
                     : 0,
                 ActiveCustomers = periodAggregate.ActiveCustomers,
@@ -246,36 +198,9 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
         return (dateFrom, dateTo);
     }
 
-    private static IQueryable<Reservation> ApplyFilters(
-        IQueryable<Reservation> query,
-        GetReportsInput input,
-        DateTime dateFrom,
-        DateTime dateTo)
+    private static string GetName(IReadOnlyDictionary<Guid, string> names, Guid id)
     {
-        query = ApplyContextualFilters(query, input);
-
-        return query.Where(r =>
-            r.EventDate.Date >= dateFrom &&
-            r.EventDate.Date <= dateTo);
-    }
-
-    private static IQueryable<Reservation> ApplyContextualFilters(
-        IQueryable<Reservation> query,
-        GetReportsInput input)
-    {
-        query = query.WhereActive();
-
-        if (input.HallId.HasValue)
-        {
-            query = query.Where(r => r.HallId == input.HallId.Value);
-        }
-
-        if (input.Status.HasValue)
-        {
-            query = query.Where(r => r.Status == input.Status.Value);
-        }
-
-        return query;
+        return names.TryGetValue(id, out var name) ? name : string.Empty;
     }
 
     private static decimal CalculateOccupancyRate(double bookedHours, decimal availableHours)
@@ -295,40 +220,6 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
         var culture = CultureInfo.GetCultureInfo("ar-SA");
 
         return new DateTime(year, month, 1).ToString("MMMM yyyy", culture);
-    }
-
-    private sealed class PeriodAggregateResult
-    {
-        public long TotalReservations { get; set; }
-
-        public decimal TotalRevenue { get; set; }
-
-        public long RevenueReservationCount { get; set; }
-
-        public long ActiveCustomers { get; set; }
-
-        public long PendingCount { get; set; }
-
-        public long ConfirmedCount { get; set; }
-
-        public long CancelledCount { get; set; }
-
-        public long CompletedCount { get; set; }
-    }
-
-    private sealed class RevenueAggregateResult
-    {
-        public decimal Today { get; set; }
-
-        public decimal Yesterday { get; set; }
-
-        public decimal ThisMonth { get; set; }
-
-        public decimal PreviousMonth { get; set; }
-
-        public decimal ThisYear { get; set; }
-
-        public decimal PreviousYear { get; set; }
     }
 
     private sealed class HallPerformanceRow
@@ -351,16 +242,5 @@ public class ReportsAppService : BanquetHallManagementAppService, IReportsAppSer
         public long ReservationCount { get; set; }
 
         public decimal TotalSpent { get; set; }
-    }
-
-    private sealed class MonthlyAggregateRow
-    {
-        public int Year { get; set; }
-
-        public int Month { get; set; }
-
-        public long ReservationCount { get; set; }
-
-        public decimal Revenue { get; set; }
     }
 }
