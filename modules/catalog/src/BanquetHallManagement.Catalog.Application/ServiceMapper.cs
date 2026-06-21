@@ -2,6 +2,8 @@
 using Riok.Mapperly.Abstractions;
 using Volo.Abp.Mapperly;
 
+namespace BanquetHallManagement;
+
 [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
 public partial class ServiceToServiceDtoMapper : MapperBase<Service, ServiceDto>
 {

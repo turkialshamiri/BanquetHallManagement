@@ -6,7 +6,7 @@ namespace BanquetHallManagement.Catalog;
 /// <summary>
 /// Catalog bounded context (Halls, Customers, Services) — domain layer module.
 /// </summary>
-[DependsOn(typeof(BanquetHallManagementDomainSharedModule))]
+[DependsOn(typeof(CatalogDomainSharedModule))]
 public class CatalogDomainModule : AbpModule
 {
 }

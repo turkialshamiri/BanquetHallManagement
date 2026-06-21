@@ -2,6 +2,13 @@
     <Configurations>
         <Platform Name="Any CPU" />
     </Configurations>
+    <Folder Name="/modules/catalog/">
+        <Project Path="modules/catalog/src/BanquetHallManagement.Catalog.Domain.Shared/BanquetHallManagement.Catalog.Domain.Shared.csproj" />
+        <Project Path="modules/catalog/src/BanquetHallManagement.Catalog.Domain/BanquetHallManagement.Catalog.Domain.csproj" />
+        <Project Path="modules/catalog/src/BanquetHallManagement.Catalog.Application.Contracts/BanquetHallManagement.Catalog.Application.Contracts.csproj" />
+        <Project Path="modules/catalog/src/BanquetHallManagement.Catalog.Application/BanquetHallManagement.Catalog.Application.csproj" />
+        <Project Path="modules/catalog/src/BanquetHallManagement.Catalog.EntityFrameworkCore/BanquetHallManagement.Catalog.EntityFrameworkCore.csproj" />
+    </Folder>
     <Folder Name="/src/">
         <Project Path="src/BanquetHallManagement.Domain/BanquetHallManagement.Domain.csproj" />
         <Project Path="src/BanquetHallManagement.Application/BanquetHallManagement.Application.csproj" />

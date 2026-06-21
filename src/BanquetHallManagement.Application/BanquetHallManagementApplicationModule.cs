@@ -18,6 +18,7 @@ using Volo.Abp.TenantManagement;
 namespace BanquetHallManagement;
 
 [DependsOn(
+    typeof(CatalogApplicationModule),
     typeof(BanquetHallManagementDomainModule),
     typeof(BanquetHallManagementApplicationContractsModule),
     typeof(AbpPermissionManagementApplicationModule),

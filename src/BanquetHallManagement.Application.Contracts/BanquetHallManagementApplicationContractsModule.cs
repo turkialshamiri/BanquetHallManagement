@@ -9,6 +9,7 @@ using Volo.Abp.TenantManagement;
 namespace BanquetHallManagement;
 
 [DependsOn(
+    typeof(CatalogApplicationContractsModule),
     typeof(BanquetHallManagementDomainSharedModule),
     typeof(AbpFeatureManagementApplicationContractsModule),
     typeof(AbpSettingManagementApplicationContractsModule),

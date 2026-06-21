@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BanquetHallManagement.Domain\BanquetHallManagement.Domain.csproj" />
+    <ProjectReference Include="..\..\modules\catalog\src\BanquetHallManagement.Catalog.EntityFrameworkCore\BanquetHallManagement.Catalog.EntityFrameworkCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

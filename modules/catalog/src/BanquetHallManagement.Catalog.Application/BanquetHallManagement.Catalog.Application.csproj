@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>BanquetHallManagement</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BanquetHallManagement.Catalog.Application.Contracts\BanquetHallManagement.Catalog.Application.Contracts.csproj" />
+    <ProjectReference Include="..\BanquetHallManagement.Catalog.Domain\BanquetHallManagement.Catalog.Domain.csproj" />
+    <ProjectReference Include="..\..\..\..\src\BanquetHallManagement.Domain\BanquetHallManagement.Domain.csproj" />
+    <ProjectReference Include="..\..\..\..\src\BanquetHallManagement.Domain.Shared\BanquetHallManagement.Domain.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Ddd.Application" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.Mapperly" Version="10.3.0" />
+  </ItemGroup>
+
+</Project>

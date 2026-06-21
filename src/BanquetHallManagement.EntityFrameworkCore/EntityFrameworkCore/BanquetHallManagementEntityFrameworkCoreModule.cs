@@ -30,6 +30,7 @@ using Volo.Abp.Uow;
 namespace BanquetHallManagement.EntityFrameworkCore;
 
 [DependsOn(
+    typeof(CatalogEntityFrameworkCoreModule),
     typeof(BanquetHallManagementDomainModule),
     typeof(AbpPermissionManagementEntityFrameworkCoreModule),
     typeof(AbpSettingManagementEntityFrameworkCoreModule),

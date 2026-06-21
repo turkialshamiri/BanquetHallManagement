@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\BanquetHallManagement.Domain\BanquetHallManagement.Domain.csproj" />
     <ProjectReference Include="..\BanquetHallManagement.Application.Contracts\BanquetHallManagement.Application.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\catalog\src\BanquetHallManagement.Catalog.Application\BanquetHallManagement.Catalog.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
