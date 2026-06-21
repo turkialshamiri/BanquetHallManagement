@@ -378,7 +378,7 @@
   dependencies:
     tslib "^2.3.0"
 
-"@angular/aria@~21.2.0":
+"@angular/aria@21.2.10":
   version "21.2.10"
   resolved "https://registry.yarnpkg.com/@angular/aria/-/aria-21.2.10.tgz#cb18b26501b6550339072beda3a0407fdee67560"
   integrity sha512-mjFf5Ib13ZnCyk8Jgsa7kvHmCEnH1iSGLPgQBhMh9utMrAHL2x03hMW/FjfaqNff4XAkVVwO+PtRizxWnSc+gA==
@@ -420,18 +420,10 @@
   optionalDependencies:
     lmdb "3.5.1"
 
-"@angular/cdk@^21.0.0":
+"@angular/cdk@21.2.10", "@angular/cdk@^21.0.0":
   version "21.2.10"
   resolved "https://registry.yarnpkg.com/@angular/cdk/-/cdk-21.2.10.tgz#dcba2b4f5e79609f860ba655cc68ff6f78deab51"
   integrity sha512-yfCzUFNfeSMNnCkc0P5Pozqz1EViDe9KLPQyHVY/hApsNgBWvckpA+ZEWgKNfAf72f8bUJvZoHejaSMGYrpvuw==
-  dependencies:
-    parse5 "^8.0.0"
-    tslib "^2.3.0"
-
-"@angular/cdk@^21.2.10":
-  version "21.2.14"
-  resolved "https://registry.yarnpkg.com/@angular/cdk/-/cdk-21.2.14.tgz#26872a5b2ad5ced498f7e1c1e5a3180bf8026a45"
-  integrity sha512-806REq/CLf37nEhmmd8Q+ILN8z/RVG2vk2n8YZ/4TdHpcBCi5ux4AxLbpMmduLwGPOzPagJ6ggRzE5fnX0rmcQ==
   dependencies:
     parse5 "^8.0.0"
     tslib "^2.3.0"
@@ -518,10 +510,10 @@
     tinyglobby "^0.2.12"
     yargs "^18.0.0"
 
-"@angular/material@^21.2.10":
-  version "21.2.14"
-  resolved "https://registry.yarnpkg.com/@angular/material/-/material-21.2.14.tgz#66c17f1a1ae2d0671eb5f5924f5bbc75b936a698"
-  integrity sha512-fMQca8VRtei93JRRG9qQ+u08DCb0nga59Esoakq5yx3+A1NfdpFeUS1tBns56U04o8KAaIAwZK3NBqXz8ZKNqg==
+"@angular/material@21.2.10":
+  version "21.2.10"
+  resolved "https://registry.yarnpkg.com/@angular/material/-/material-21.2.10.tgz#4b00d5f509899efffcd48b1ff7ac8ac2064e4732"
+  integrity sha512-3sV3XJp9HaEbbMn2E/4DQcyrnitduSV5ZJIGaTb+3ayrlRMSGb3ABWhrKTt+cZGC5Tz0hH6tTsn5atETuZOmAQ==
   dependencies:
     tslib "^2.3.0"
 

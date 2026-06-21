@@ -1,3 +1,5 @@
+using BanquetHallManagement.Catalog;
+using BanquetHallManagement.Finance;
 using BanquetHallManagement.Finance.Invoices;
 using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.Refunds;
@@ -28,6 +30,9 @@ namespace BanquetHallManagement;
 
 [DependsOn(
     typeof(BanquetHallManagementDomainSharedModule),
+    typeof(CatalogDomainModule),
+    typeof(ReservationsDomainModule),
+    typeof(FinanceDomainModule),
     typeof(AbpAuditLoggingDomainModule),
     typeof(AbpCachingModule),
     typeof(AbpBackgroundJobsDomainModule),

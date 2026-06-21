@@ -89,6 +89,10 @@
       "path": "test/BanquetHallManagement.Domain.Tests/BanquetHallManagement.Domain.Tests.abppkg",
       "folder": "test"
     },
+    "BanquetHallManagement.Architecture.Tests": {
+      "path": "test/BanquetHallManagement.Architecture.Tests/BanquetHallManagement.Architecture.Tests.abppkg",
+      "folder": "test"
+    },
     "BanquetHallManagement.HttpApi.Client.ConsoleTestApp": {
       "path": "test/BanquetHallManagement.HttpApi.Client.ConsoleTestApp/BanquetHallManagement.HttpApi.Client.ConsoleTestApp.abppkg",
       "folder": "test"

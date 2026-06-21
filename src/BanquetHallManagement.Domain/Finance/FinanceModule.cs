@@ -1,9 +1,12 @@
+using BanquetHallManagement;
+using Volo.Abp.Modularity;
+
 namespace BanquetHallManagement.Finance;
 
 /// <summary>
-/// Marker for the Finance bounded context domain layer.
-/// Entity and domain service implementations begin in Phase 2+.
+/// Finance bounded context — domain layer module.
 /// </summary>
-public static class FinanceDomainModule
+[DependsOn(typeof(BanquetHallManagementDomainSharedModule))]
+public class FinanceDomainModule : AbpModule
 {
 }
