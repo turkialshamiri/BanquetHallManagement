@@ -9,5 +9,15 @@ namespace BanquetHallManagement.Services
     {
         public string Name { get; set; }
         public decimal Price { get; set; }
+
+        public bool HasValidPrice()
+        {
+            return Price >= 0;
+        }
+
+        public bool HasValidName()
+        {
+            return !string.IsNullOrWhiteSpace(Name);
+        }
     }
 }

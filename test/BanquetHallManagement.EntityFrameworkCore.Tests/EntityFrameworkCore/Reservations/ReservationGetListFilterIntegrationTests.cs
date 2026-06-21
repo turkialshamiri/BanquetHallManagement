@@ -152,19 +152,16 @@ public class ReservationGetListFilterIntegrationTests : BanquetHallManagementEnt
         string reservationNumber,
         ReservationStatus status = ReservationStatus.Pending)
     {
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            HallId = hallId,
-            CustomerId = customerId,
-            EventDate = eventDate,
-            StartTime = new TimeSpan(18, 0, 0),
-            EndTime = new TimeSpan(22, 0, 0),
-            GuestsCount = 50,
-            TotalPrice = 10_000m,
-            PaidAmount = 0m,
-            Status = status,
-        };
+        var reservation = Reservation.Create(
+            Guid.NewGuid(),
+            hallId,
+            customerId,
+            new TimeSlot(eventDate, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0)),
+            50);
 
+        reservation.Status = status;
+        reservation.TotalPrice = 10_000m;
+        reservation.PaidAmount = 0m;
         reservation.AssignReservationNumber(reservationNumber);
         return reservation;
     }

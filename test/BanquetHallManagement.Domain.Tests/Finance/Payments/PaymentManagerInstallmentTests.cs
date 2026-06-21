@@ -63,7 +63,7 @@ public class PaymentManagerInstallmentTests
 
         var result = await manager.RecordInstallmentAsync(reservation.Id, 20_000m);
 
-        reservation.PaidAmount.ShouldBe(50_000m);
+        ((decimal)reservation.PaidAmount).ShouldBe(50_000m);
         result.RemainingAmount.ShouldBe(50_000m);
         result.IsFullyPaid.ShouldBeFalse();
         result.HallAccessCardId.ShouldBeNull();
@@ -135,6 +135,8 @@ public class PaymentManagerInstallmentTests
                 Arg.Any<bool>(),
                 Arg.Any<CancellationToken>())
             .Returns(callInfo => reservations.First(r => r.Id == callInfo.Arg<Guid>()));
+
+        ReservationTestData.ConfigureSchedulingQueries(reservationRepository, reservations);
 
         reservationRepository.UpdateAsync(
                 Arg.Any<Reservation>(),
@@ -245,18 +247,15 @@ public class PaymentManagerInstallmentTests
 
     private static Reservation CreateConfirmedReservation(decimal totalPrice, decimal paidAmount)
     {
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            HallId = HallId,
-            CustomerId = Guid.NewGuid(),
-            EventDate = Now.Date.AddDays(7),
-            StartTime = new TimeSpan(18, 0, 0),
-            EndTime = new TimeSpan(22, 0, 0),
-            GuestsCount = 100,
-            TotalPrice = totalPrice,
-            PaidAmount = paidAmount,
-            Status = ReservationStatus.Confirmed,
-        };
+        var reservation = ReservationTestData.Create(
+            HallId,
+            Guid.NewGuid(),
+            Now.Date.AddDays(7),
+            new TimeSpan(18, 0, 0),
+            new TimeSpan(22, 0, 0),
+            totalPrice: totalPrice,
+            paidAmount: paidAmount,
+            status: ReservationStatus.Confirmed);
 
         ReservationTestData.AssignReservationNumber(reservation);
 

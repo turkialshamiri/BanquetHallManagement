@@ -54,7 +54,7 @@ public class PaymentManagerTests
         result.IsFullyPaid.ShouldBeFalse();
         result.HallAccessCardId.ShouldBeNull();
         var payment = result.Payment;
-        reservation.PaidAmount.ShouldBe(30_000m);
+        ((decimal)reservation.PaidAmount).ShouldBe(30_000m);
         payment.Amount.ShouldBe(30_000m);
         payment.PaymentType.ShouldBe(PaymentType.Deposit);
         payment.ReceiptNumber.ShouldBe("RC-2026-00001");
@@ -150,6 +150,8 @@ public class PaymentManagerTests
 
         reservationRepository.GetQueryableAsync()
             .Returns(Task.FromResult(reservations.AsQueryable()));
+
+        ReservationTestData.ConfigureSchedulingQueries(reservationRepository, reservations);
 
         reservationRepository.UpdateAsync(
                 Arg.Any<Reservation>(),
@@ -266,7 +268,7 @@ public class PaymentManagerTests
         var result = await manager.RecordDepositAsync(reservation.Id, amount);
 
         reservation.Status.ShouldBe(ReservationStatus.Confirmed);
-        reservation.PaidAmount.ShouldBe(amount);
+        ((decimal)reservation.PaidAmount).ShouldBe(amount);
         result.IsFullyPaid.ShouldBeFalse();
         result.HallAccessCardId.ShouldBeNull();
         result.Payment.Amount.ShouldBe(amount);
@@ -282,7 +284,7 @@ public class PaymentManagerTests
         var result = await manager.RecordDepositAsync(reservation.Id, 90_000m);
 
         reservation.Status.ShouldBe(ReservationStatus.FullyPaid);
-        reservation.PaidAmount.ShouldBe(90_000m);
+        ((decimal)reservation.PaidAmount).ShouldBe(90_000m);
         result.IsFullyPaid.ShouldBeTrue();
         result.HallAccessCardId.ShouldNotBeNull();
         result.Payment.Amount.ShouldBe(90_000m);
@@ -305,17 +307,14 @@ public class PaymentManagerTests
         TimeSpan? startTime = null,
         TimeSpan? endTime = null)
     {
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            HallId = HallId,
-            CustomerId = Guid.NewGuid(),
-            EventDate = Now.Date.AddDays(7),
-            StartTime = startTime ?? new TimeSpan(18, 0, 0),
-            EndTime = endTime ?? new TimeSpan(22, 0, 0),
-            GuestsCount = 100,
-            TotalPrice = totalPrice,
-            Status = ReservationStatus.Pending,
-        };
+        var reservation = ReservationTestData.Create(
+            HallId,
+            Guid.NewGuid(),
+            Now.Date.AddDays(7),
+            startTime ?? new TimeSpan(18, 0, 0),
+            endTime ?? new TimeSpan(22, 0, 0),
+            totalPrice: totalPrice,
+            status: ReservationStatus.Pending);
 
         ReservationTestData.AssignReservationNumber(reservation);
 

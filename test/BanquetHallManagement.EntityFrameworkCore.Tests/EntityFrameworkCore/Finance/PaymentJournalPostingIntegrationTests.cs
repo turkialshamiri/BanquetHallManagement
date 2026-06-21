@@ -197,18 +197,16 @@ public class PaymentJournalPostingIntegrationTests : BanquetHallManagementEntity
             },
             autoSave: true);
 
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            HallId = hall.Id,
-            CustomerId = customer.Id,
-            EventDate = new DateTime(2026, 7, 1),
-            StartTime = new TimeSpan(18, 0, 0),
-            EndTime = new TimeSpan(22, 0, 0),
-            GuestsCount = 100,
-            TotalPrice = 100_000m,
-            Status = ReservationStatus.Confirmed,
-            PaidAmount = 30_000m,
-        };
+        var reservation = Reservation.Create(
+            Guid.NewGuid(),
+            hall.Id,
+            customer.Id,
+            new TimeSlot(new DateTime(2026, 7, 1), new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0)),
+            100);
+
+        reservation.TotalPrice = 100_000m;
+        reservation.Status = ReservationStatus.Confirmed;
+        reservation.PaidAmount = 30_000m;
 
         reservation.AssignReservationNumber($"RES-2026-{Guid.NewGuid():N}"[..14]);
 

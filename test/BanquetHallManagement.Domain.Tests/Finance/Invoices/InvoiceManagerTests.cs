@@ -112,7 +112,7 @@ public class InvoiceManagerTests
         var invoice = await manager.EnsureFullyPaidInvoiceAsync(reservation);
 
         invoice.InvoiceType.ShouldBe(InvoiceType.Final);
-        invoice.Amount.ShouldBe(reservation.TotalPrice);
+        invoice.Amount.ShouldBe((decimal)reservation.TotalPrice);
         invoice.ReservationId.ShouldBe(reservation.Id);
         payment.InvoiceId.ShouldBe(invoice.Id);
 
@@ -287,11 +287,14 @@ public class InvoiceManagerTests
 
     private static Reservation CreateFullyPaidReservation(decimal totalPrice, decimal paidAmount)
     {
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            TotalPrice = totalPrice,
-            PaidAmount = paidAmount,
-        };
+        var reservation = ReservationTestData.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.Today,
+            TimeSpan.FromHours(18),
+            TimeSpan.FromHours(22),
+            totalPrice: totalPrice,
+            paidAmount: paidAmount);
 
         reservation.AssignReservationNumber("RSV-2026-00001");
         return reservation;

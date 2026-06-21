@@ -20,11 +20,15 @@ public class FullyPaidHandlerTests
     public async Task HandleEventAsync_Should_Ensure_Settlement_Invoice()
     {
         var reservationId = Guid.NewGuid();
-        var reservation = new Reservation(reservationId)
-        {
-            TotalPrice = 40_000m,
-            PaidAmount = 40_000m,
-        };
+        var reservation = ReservationTestData.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.UtcNow.Date,
+            TimeSpan.FromHours(18),
+            TimeSpan.FromHours(22),
+            totalPrice: 40_000m,
+            paidAmount: 40_000m,
+            id: reservationId);
         reservation.AssignReservationNumber("RSV-2026-00010");
 
         var invoice = new Invoice(

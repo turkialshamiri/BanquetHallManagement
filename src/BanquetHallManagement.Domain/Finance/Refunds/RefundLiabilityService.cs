@@ -230,8 +230,8 @@ public class RefundLiabilityService : DomainService, IRefundLiabilityService
             query.Where(payment => payment.ReservationId == reservation.Id),
             cancellationToken);
 
-        var totalPaid = reservation.PaidAmount > 0
-            ? reservation.PaidAmount
+        var totalPaid = reservation.PaidAmount > 0m
+            ? (decimal)reservation.PaidAmount
             : payments.Sum(payment => payment.Amount);
 
         return RefundEligibility.CalculateRefundableAmount(reservation.TotalPrice, totalPaid);

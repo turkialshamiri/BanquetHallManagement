@@ -44,14 +44,20 @@ namespace BanquetHallManagement.Configurations.ReservationConfigurations
                 .HasComment("عدد الضيوف المتوقع حضورهم للمناسبة.");
 
             builder.Property(x => x.TotalPrice)
+                .HasConversion(
+                    money => money.Amount,
+                    amount => new Money(amount))
                 .HasColumnType("decimal(18,2)")
                 .IsRequired()
                 .HasComment("التكلفة الإجمالية للحجز متضمنة الخدمات الإضافية.");
 
             builder.Property(x => x.PaidAmount)
+                .HasConversion(
+                    money => money.Amount,
+                    amount => new Money(amount))
                 .HasColumnType("decimal(18,2)")
                 .IsRequired()
-                .HasDefaultValue(0m)
+                .HasDefaultValueSql("0.00")
                 .HasComment("إجمالي المبالغ المدفوعة على الحجز.");
 
             builder.Property(x => x.ReservationNumber)

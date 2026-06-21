@@ -262,17 +262,14 @@ public class JournalPostingServiceTests
 
     private static Reservation CreateReservation(decimal totalPrice)
     {
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            HallId = Guid.NewGuid(),
-            CustomerId = Guid.NewGuid(),
-            EventDate = Now.Date.AddDays(7),
-            StartTime = new TimeSpan(18, 0, 0),
-            EndTime = new TimeSpan(22, 0, 0),
-            GuestsCount = 100,
-            TotalPrice = totalPrice,
-            Status = ReservationStatus.Confirmed,
-        };
+        var reservation = ReservationTestData.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Now.Date.AddDays(7),
+            new TimeSpan(18, 0, 0),
+            new TimeSpan(22, 0, 0),
+            totalPrice: totalPrice,
+            status: ReservationStatus.Confirmed);
 
         reservation.AssignReservationNumber("RES-2026-00001");
 

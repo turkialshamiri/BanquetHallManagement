@@ -225,18 +225,15 @@ public class RevenueRecognitionServiceTests
 
     private static Reservation CreateFullyPaidReservation()
     {
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            HallId = HallId,
-            CustomerId = Guid.NewGuid(),
-            EventDate = Now.Date.AddDays(7),
-            StartTime = new TimeSpan(18, 0, 0),
-            EndTime = new TimeSpan(22, 0, 0),
-            GuestsCount = 100,
-            TotalPrice = 100_000m,
-            PaidAmount = 100_000m,
-            Status = ReservationStatus.FullyPaid,
-        };
+        var reservation = ReservationTestData.Create(
+            HallId,
+            Guid.NewGuid(),
+            Now.Date.AddDays(7),
+            new TimeSpan(18, 0, 0),
+            new TimeSpan(22, 0, 0),
+            totalPrice: 100_000m,
+            paidAmount: 100_000m,
+            status: ReservationStatus.FullyPaid);
 
         ReservationTestData.AssignReservationNumber(reservation);
 

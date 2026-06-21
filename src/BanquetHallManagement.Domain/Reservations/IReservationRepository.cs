@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Volo.Abp.Domain.Repositories;
@@ -18,5 +19,20 @@ public interface IReservationRepository : IRepository<Reservation, Guid>
 
     Task<Reservation?> FindByReservationNumberAsync(
         string reservationNumber,
+        CancellationToken cancellationToken = default);
+
+    Task<List<Reservation>> GetListByHallAndEventDateAsync(
+        Guid hallId,
+        DateTime eventDate,
+        Guid? excludeReservationId = null,
+        CancellationToken cancellationToken = default);
+
+    Task<List<Reservation>> GetPendingByHallAndEventDateAsync(
+        Guid hallId,
+        DateTime eventDate,
+        Guid excludeReservationId,
+        CancellationToken cancellationToken = default);
+
+    Task<List<Reservation>> GetConfirmedWithoutPaymentsAsync(
         CancellationToken cancellationToken = default);
 }

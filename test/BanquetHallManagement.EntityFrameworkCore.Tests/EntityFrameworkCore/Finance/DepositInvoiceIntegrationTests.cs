@@ -157,18 +157,16 @@ public class DepositInvoiceIntegrationTests : BanquetHallManagementEntityFramewo
             },
             autoSave: true);
 
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            HallId = hall.Id,
-            CustomerId = customer.Id,
-            EventDate = new DateTime(2026, 7, 1),
-            StartTime = new TimeSpan(18, 0, 0),
-            EndTime = new TimeSpan(22, 0, 0),
-            GuestsCount = 100,
-            TotalPrice = totalPrice,
-            Status = ReservationStatus.Confirmed,
-            PaidAmount = totalPrice == 90_000m ? 0m : 30_000m,
-        };
+        var reservation = Reservation.Create(
+            Guid.NewGuid(),
+            hall.Id,
+            customer.Id,
+            new TimeSlot(new DateTime(2026, 7, 1), new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0)),
+            100);
+
+        reservation.TotalPrice = totalPrice;
+        reservation.Status = ReservationStatus.Confirmed;
+        reservation.PaidAmount = totalPrice == 90_000m ? 0m : 30_000m;
 
         reservation.AssignReservationNumber($"RES-2026-{Guid.NewGuid():N}"[..14]);
 

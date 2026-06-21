@@ -98,7 +98,7 @@ public class RefundLiabilityServiceTests
     public async Task ProcessRefundAsync_Should_Post_Balanced_Refund_Payment_Entry()
     {
         var reservation = CreateCancelledReservation();
-        var liabilityEntry = CreateLiabilityEntry(reservation.Id, 50_000m);
+        var liabilityEntry = CreateLiabilityEntry(reservation.Id, 20_000m);
         var service = CreateService(
             reservation,
             CreateInstallmentPayments(reservation.Id, 50_000m),
@@ -110,10 +110,10 @@ public class RefundLiabilityServiceTests
 
         entry.SourceType.ShouldBe(JournalEntrySourceType.RefundPayment);
         entry.IsBalanced().ShouldBeTrue();
-        entry.GetTotalDebit().ShouldBe(50_000m);
+        entry.GetTotalDebit().ShouldBe(20_000m);
 
-        entry.Lines.Single(line => line.AccountId == RefundLiabilityAccountId).Debit.ShouldBe(50_000m);
-        entry.Lines.Single(line => line.AccountId == CashAccountId).Credit.ShouldBe(50_000m);
+        entry.Lines.Single(line => line.AccountId == RefundLiabilityAccountId).Debit.ShouldBe(20_000m);
+        entry.Lines.Single(line => line.AccountId == CashAccountId).Credit.ShouldBe(20_000m);
 
         await journalEntryRepository.Received(1).InsertAsync(
             Arg.Any<JournalEntry>(),
@@ -187,27 +187,33 @@ public class RefundLiabilityServiceTests
 
     private static Reservation CreateCancelledReservation()
     {
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            TotalPrice = 100_000m,
-            PaidAmount = 50_000m,
-            Status = ReservationStatus.Confirmed,
-        };
+        var reservation = ReservationTestData.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.Today,
+            TimeSpan.FromHours(18),
+            TimeSpan.FromHours(22),
+            totalPrice: 100_000m,
+            paidAmount: 50_000m,
+            status: ReservationStatus.Confirmed);
 
         ReservationTestData.AssignReservationNumber(reservation);
-        reservation.CancelWithReason(CancellationType.NonPaymentAutoCancel);
+        reservation.CancelWithReason(CancellationType.Manual);
 
         return reservation;
     }
 
     private static Reservation CreateConfirmedReservation()
     {
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            TotalPrice = 100_000m,
-            PaidAmount = 80_000m,
-            Status = ReservationStatus.Confirmed,
-        };
+        var reservation = ReservationTestData.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.Today,
+            TimeSpan.FromHours(18),
+            TimeSpan.FromHours(22),
+            totalPrice: 100_000m,
+            paidAmount: 80_000m,
+            status: ReservationStatus.Confirmed);
 
         ReservationTestData.AssignReservationNumber(reservation);
 

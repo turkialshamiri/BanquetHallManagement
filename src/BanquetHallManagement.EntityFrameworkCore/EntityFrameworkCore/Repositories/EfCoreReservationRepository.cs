@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BanquetHallManagement.Enums;
 using BanquetHallManagement.Reservations;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.Domain.Repositories.EntityFrameworkCore;
@@ -50,6 +52,51 @@ IF @rc < 0
 
         return await AsyncExecuter.FirstOrDefaultAsync(
             query.Where(reservation => reservation.ReservationNumber == reservationNumber),
+            cancellationToken);
+    }
+
+    public async Task<List<Reservation>> GetListByHallAndEventDateAsync(
+        Guid hallId,
+        DateTime eventDate,
+        Guid? excludeReservationId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = await GetQueryableAsync();
+
+        return await AsyncExecuter.ToListAsync(
+            query.Where(reservation =>
+                reservation.HallId == hallId &&
+                reservation.EventDate.Date == eventDate.Date &&
+                (!excludeReservationId.HasValue || reservation.Id != excludeReservationId.Value)),
+            cancellationToken);
+    }
+
+    public async Task<List<Reservation>> GetPendingByHallAndEventDateAsync(
+        Guid hallId,
+        DateTime eventDate,
+        Guid excludeReservationId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = await GetQueryableAsync();
+
+        return await AsyncExecuter.ToListAsync(
+            query.Where(reservation =>
+                reservation.Id != excludeReservationId &&
+                reservation.HallId == hallId &&
+                reservation.EventDate.Date == eventDate.Date &&
+                reservation.Status == ReservationStatus.Pending),
+            cancellationToken);
+    }
+
+    public async Task<List<Reservation>> GetConfirmedWithoutPaymentsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var query = await GetQueryableAsync();
+
+        return await AsyncExecuter.ToListAsync(
+            query.Where(reservation =>
+                reservation.Status == ReservationStatus.Confirmed &&
+                reservation.PaidAmount <= 0m),
             cancellationToken);
     }
 

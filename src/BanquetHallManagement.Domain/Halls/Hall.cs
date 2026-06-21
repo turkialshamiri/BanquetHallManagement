@@ -26,7 +26,10 @@ namespace BanquetHallManagement.Entities
 
             public HallType Type { get; set; }
 
-
+            public bool CanHostGuests(int guestCount)
+            {
+                return guestCount > 0 && guestCount <= Capacity;
+            }
         }
     }
 }

@@ -44,6 +44,12 @@ public static class BanquetHallManagementDomainErrorCodes
     public const string ReservationSchedulingConflict =
         "BanquetHallManagement:Reservation:SchedulingConflict";
 
+    public const string ReservationInvalidTimeSlot =
+        "BanquetHallManagement:Reservation:InvalidTimeSlot";
+
+    public const string ReservationGuestsCountInvalid =
+        "BanquetHallManagement:Reservation:GuestsCountInvalid";
+
     public const string ReservationCannotMarkFullyPaid =
         "BanquetHallManagement:Reservation:CannotMarkFullyPaid";
 

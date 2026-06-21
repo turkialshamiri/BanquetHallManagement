@@ -75,12 +75,7 @@ public class ReservationPaymentMonitorService : DomainService, IReservationPayme
     {
         using var unitOfWork = _unitOfWorkManager.Begin(requiresNew: true);
 
-        var query = await _reservationRepository.GetQueryableAsync();
-
-        var confirmed = await AsyncExecuter.ToListAsync(
-            query.Where(reservation =>
-                reservation.Status == ReservationStatus.Confirmed &&
-                reservation.PaidAmount <= 0),
+        var confirmed = await _reservationRepository.GetConfirmedWithoutPaymentsAsync(
             cancellationToken);
 
         var candidateIds = confirmed

@@ -110,6 +110,8 @@ public class ReservationSchedulingManagerTests
 
         repository.GetQueryableAsync().Returns(Task.FromResult(reservations.AsQueryable()));
 
+        ReservationTestData.ConfigureSchedulingQueries(repository, reservations);
+
         repository.GetAsync(
                 Arg.Any<Guid>(),
                 Arg.Any<bool>(),
@@ -143,16 +145,12 @@ public class ReservationSchedulingManagerTests
         TimeSpan startTime,
         TimeSpan endTime)
     {
-        return new Reservation(Guid.NewGuid())
-        {
-            HallId = HallId,
-            CustomerId = Guid.NewGuid(),
-            EventDate = AsOf.Date,
-            StartTime = startTime,
-            EndTime = endTime,
-            GuestsCount = 100,
-            TotalPrice = 1000m,
-            Status = status,
-        };
+        return ReservationTestData.Create(
+            HallId,
+            Guid.NewGuid(),
+            AsOf.Date,
+            startTime,
+            endTime,
+            status: status);
     }
 }

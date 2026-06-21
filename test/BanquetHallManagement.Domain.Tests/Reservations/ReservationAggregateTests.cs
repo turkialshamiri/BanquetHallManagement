@@ -306,16 +306,12 @@ public class ReservationAggregateTests
         TimeSpan endTime,
         DateTime? eventDate = null)
     {
-        return new Reservation(Guid.NewGuid())
-        {
-            HallId = HallId,
-            CustomerId = Guid.NewGuid(),
-            EventDate = eventDate ?? AsOf.Date,
-            StartTime = startTime,
-            EndTime = endTime,
-            GuestsCount = 100,
-            TotalPrice = 1000m,
-            Status = status,
-        };
+        return ReservationTestData.Create(
+            HallId,
+            Guid.NewGuid(),
+            eventDate ?? AsOf.Date,
+            startTime,
+            endTime,
+            status: status);
     }
 }

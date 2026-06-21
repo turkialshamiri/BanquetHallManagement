@@ -81,14 +81,14 @@ public class ReservationPaymentMonitorServiceTests
         DateTime eventDate,
         TimeSpan startTime)
     {
-        return new Reservation(Guid.NewGuid())
-        {
-            Status = status,
-            TotalPrice = 100_000m,
-            PaidAmount = paidAmount,
-            EventDate = eventDate,
-            StartTime = startTime,
-            EndTime = startTime.Add(TimeSpan.FromHours(4)),
-        };
+        return ReservationTestData.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            eventDate,
+            startTime,
+            startTime.Add(TimeSpan.FromHours(4)),
+            status: status,
+            totalPrice: 100_000m,
+            paidAmount: paidAmount);
     }
 }

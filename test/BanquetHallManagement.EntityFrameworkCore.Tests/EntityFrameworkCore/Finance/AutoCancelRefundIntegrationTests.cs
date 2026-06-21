@@ -290,18 +290,16 @@ public class AutoCancelRefundIntegrationTests : BanquetHallManagementEntityFrame
             },
             autoSave: true);
 
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            HallId = hall.Id,
-            CustomerId = customer.Id,
-            EventDate = eventDate,
-            StartTime = startTime,
-            EndTime = startTime.Add(TimeSpan.FromHours(4)),
-            GuestsCount = 100,
-            TotalPrice = totalPrice,
-            PaidAmount = paidAmount,
-            Status = status,
-        };
+        var reservation = Reservation.Create(
+            Guid.NewGuid(),
+            hall.Id,
+            customer.Id,
+            new TimeSlot(eventDate, startTime, startTime.Add(TimeSpan.FromHours(4))),
+            100);
+
+        reservation.TotalPrice = totalPrice;
+        reservation.PaidAmount = paidAmount;
+        reservation.Status = status;
 
         reservation.AssignReservationNumber($"RES-2026-{Guid.NewGuid():N}"[..14]);
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,27 +37,21 @@ public class ReservationSchedulingManager : DomainService
             cancellationToken);
 
         var now = Clock.Now;
-        var query = await _reservationRepository.GetQueryableAsync();
 
-        var candidate = new Reservation
-        {
-            HallId = hallId,
-            EventDate = eventDate,
-            StartTime = startTime,
-            EndTime = endTime,
-            Status = candidateStatus,
-        };
-
-        var existingReservations = await AsyncExecuter.ToListAsync(
-            query.Where(r =>
-                r.HallId == hallId &&
-                r.EventDate.Date == eventDate.Date &&
-                (!excludeReservationId.HasValue || r.Id != excludeReservationId.Value)),
+        var existingReservations = await _reservationRepository.GetListByHallAndEventDateAsync(
+            hallId,
+            eventDate,
+            excludeReservationId,
             cancellationToken);
 
         var hasConflict = existingReservations.Any(existing =>
             existing.BlocksScheduling(now) &&
-            candidate.OverlapsSchedulingWith(existing));
+            Reservation.ProposedScheduleOverlaps(
+                hallId,
+                eventDate,
+                startTime,
+                endTime,
+                existing));
 
         if (hasConflict)
         {
@@ -79,14 +74,10 @@ public class ReservationSchedulingManager : DomainService
             return;
         }
 
-        var query = await _reservationRepository.GetQueryableAsync();
-
-        var pendingReservations = await AsyncExecuter.ToListAsync(
-            query.Where(r =>
-                r.Id != confirmedReservationId &&
-                r.HallId == confirmedReservation.HallId &&
-                r.EventDate.Date == confirmedReservation.EventDate.Date &&
-                r.Status == ReservationStatus.Pending),
+        var pendingReservations = await _reservationRepository.GetPendingByHallAndEventDateAsync(
+            confirmedReservation.HallId,
+            confirmedReservation.EventDate,
+            confirmedReservationId,
             cancellationToken);
 
         foreach (var pendingReservation in pendingReservations)

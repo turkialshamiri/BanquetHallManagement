@@ -41,7 +41,7 @@ public class InstallmentPaymentIntegrationTests : BanquetHallManagementEntityFra
 
             var reservation = await reservationRepository.GetAsync(reservationId);
             reservation.Status.ShouldBe(ReservationStatus.FullyPaid);
-            reservation.PaidAmount.ShouldBe(100_000m);
+            ((decimal)reservation.PaidAmount).ShouldBe(100_000m);
 
             var card = await hallAccessCardRepository.FindByReservationIdAsync(reservationId);
             card.ShouldNotBeNull();
@@ -83,18 +83,16 @@ public class InstallmentPaymentIntegrationTests : BanquetHallManagementEntityFra
             },
             autoSave: true);
 
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            HallId = hall.Id,
-            CustomerId = customer.Id,
-            EventDate = new DateTime(2026, 7, 1),
-            StartTime = new TimeSpan(18, 0, 0),
-            EndTime = new TimeSpan(22, 0, 0),
-            GuestsCount = 100,
-            TotalPrice = totalPrice,
-            PaidAmount = paidAmount,
-            Status = ReservationStatus.Confirmed,
-        };
+        var reservation = Reservation.Create(
+            Guid.NewGuid(),
+            hall.Id,
+            customer.Id,
+            new TimeSlot(new DateTime(2026, 7, 1), new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0)),
+            100);
+
+        reservation.TotalPrice = totalPrice;
+        reservation.PaidAmount = paidAmount;
+        reservation.Status = ReservationStatus.Confirmed;
 
         reservation.AssignReservationNumber($"RES-2026-{Guid.NewGuid():N}"[..14]);
 

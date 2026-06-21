@@ -28,8 +28,8 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
     public TimeSpan EndTime { get; set; }
 
     public int GuestsCount { get; set; }
-    public decimal TotalPrice { get; set; }
-    public decimal PaidAmount { get; set; }
+    public Money TotalPrice { get; set; } = Money.Zero;
+    public Money PaidAmount { get; set; } = Money.Zero;
 
     public string ReservationNumber { get; private set; } = null!;
 
@@ -43,16 +43,48 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
 
     public ICollection<ReservationService> Services { get; set; } = new List<ReservationService>();
 
+    public static Reservation Create(
+        Guid id,
+        Guid hallId,
+        Guid customerId,
+        TimeSlot timeSlot,
+        int guestsCount)
+    {
+        Check.NotNull(timeSlot, nameof(timeSlot));
+
+        if (guestsCount <= 0)
+        {
+            throw new BusinessException(BanquetHallManagementDomainErrorCodes.ReservationGuestsCountInvalid);
+        }
+
+        return new Reservation(id)
+        {
+            HallId = hallId,
+            CustomerId = customerId,
+            EventDate = timeSlot.EventDate,
+            StartTime = timeSlot.StartTime,
+            EndTime = timeSlot.EndTime,
+            GuestsCount = guestsCount,
+            TotalPrice = Money.Zero,
+            PaidAmount = Money.Zero,
+            Status = ReservationStatus.Pending,
+        };
+    }
+
+    public TimeSlot GetTimeSlot() => new(EventDate, StartTime, EndTime);
+
     public void AssignReservationNumber(string reservationNumber)
     {
-        ReservationNumber = Check.NotNullOrWhiteSpace(
-            reservationNumber,
-            nameof(reservationNumber),
-            maxLength: 50);
+        ReservationNumber = ReservationCode.Create(reservationNumber);
     }
 
     public void FinalizeCreation(decimal totalPrice)
     {
+        if (totalPrice < 0)
+        {
+            throw new BusinessException(BanquetHallManagementDomainErrorCodes.PaymentAmountInvalid);
+        }
+
         TotalPrice = totalPrice;
         AddLocalEvent(new ReservationCreatedDomainEvent(
             ReservationEventSnapshot.FromReservation(this)));
@@ -68,6 +100,15 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
         return (decimal)reservationHours * hallPricePerHour + servicePrices.Sum();
     }
 
+    public static decimal CalculateTotalPrice(
+        decimal hallPricePerHour,
+        TimeSlot timeSlot,
+        IEnumerable<decimal> servicePrices)
+    {
+        Check.NotNull(timeSlot, nameof(timeSlot));
+        return CalculateTotalPrice(hallPricePerHour, timeSlot.StartTime, timeSlot.EndTime, servicePrices);
+    }
+
     public void ApplyUpdate(
         Guid hallId,
         Guid customerId,
@@ -77,6 +118,13 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
         int guestsCount,
         decimal totalPrice)
     {
+        if (guestsCount <= 0)
+        {
+            throw new BusinessException(BanquetHallManagementDomainErrorCodes.ReservationGuestsCountInvalid);
+        }
+
+        _ = new TimeSlot(eventDate, startTime, endTime);
+
         HallId = hallId;
         CustomerId = customerId;
         EventDate = eventDate;
@@ -301,7 +349,7 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
 
     public DateTime GetEventEndDateTime()
     {
-        return EventDate.Date + EndTime;
+        return GetTimeSlot().GetEventEndDateTime();
     }
 
     public bool BlocksScheduling(DateTime asOf)
@@ -316,14 +364,29 @@ public class Reservation : FullAuditedAggregateRoot<Guid>
 
     public bool OverlapsSchedulingWith(Reservation other)
     {
-        if (HallId != other.HallId)
+        return ProposedScheduleOverlaps(
+            HallId,
+            EventDate,
+            StartTime,
+            EndTime,
+            other);
+    }
+
+    public static bool ProposedScheduleOverlaps(
+        Guid hallId,
+        DateTime eventDate,
+        TimeSpan startTime,
+        TimeSpan endTime,
+        Reservation existing)
+    {
+        if (hallId != existing.HallId)
         {
             return false;
         }
 
-        return EventDate.Date == other.EventDate.Date
-               && StartTime < other.EndTime
-               && EndTime > other.StartTime;
+        return eventDate.Date == existing.EventDate.Date
+               && startTime < existing.EndTime
+               && endTime > existing.StartTime;
     }
 
     public bool HasSchedulingConflictWith(

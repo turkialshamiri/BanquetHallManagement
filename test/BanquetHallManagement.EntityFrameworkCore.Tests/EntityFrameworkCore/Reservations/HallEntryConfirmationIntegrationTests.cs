@@ -126,18 +126,16 @@ public class HallEntryConfirmationIntegrationTests : BanquetHallManagementEntity
             },
             autoSave: true);
 
-        var reservation = new Reservation(Guid.NewGuid())
-        {
-            HallId = hall.Id,
-            CustomerId = customer.Id,
-            EventDate = clock.Now.Date,
-            StartTime = new TimeSpan(18, 0, 0),
-            EndTime = new TimeSpan(22, 0, 0),
-            GuestsCount = 100,
-            TotalPrice = 100_000m,
-            PaidAmount = 100_000m,
-            Status = ReservationStatus.FullyPaid,
-        };
+        var reservation = Reservation.Create(
+            Guid.NewGuid(),
+            hall.Id,
+            customer.Id,
+            new TimeSlot(clock.Now.Date, new TimeSpan(18, 0, 0), new TimeSpan(22, 0, 0)),
+            100);
+
+        reservation.TotalPrice = 100_000m;
+        reservation.PaidAmount = 100_000m;
+        reservation.Status = ReservationStatus.FullyPaid;
 
         reservation.AssignReservationNumber($"RES-2026-{Guid.NewGuid():N}"[..14]);
 
