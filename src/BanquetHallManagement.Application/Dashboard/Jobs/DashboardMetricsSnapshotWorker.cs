@@ -37,7 +37,7 @@ public class DashboardMetricsSnapshotWorker : AsyncPeriodicBackgroundWorkerBase
         try
         {
             var generator = workerContext.ServiceProvider.GetRequiredService<DashboardMetricsSnapshotGenerator>();
-            var repository = workerContext.ServiceProvider.GetRequiredService<IRepository<DashboardMetricsSnapshot, Guid>>();
+            var repository = workerContext.ServiceProvider.GetRequiredService<IDashboardMetricsSnapshotRepository>();
             var clock = workerContext.ServiceProvider.GetRequiredService<IClock>();
 
             var data = await generator.GenerateAsync(workerContext.CancellationToken);

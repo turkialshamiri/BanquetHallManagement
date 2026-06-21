@@ -10,9 +10,9 @@ namespace BanquetHallManagement.Finance.Services;
 
 public class FinanceNumberSequenceManager : DomainService
 {
-    private readonly IRepository<FinanceNumberSequence, Guid> _sequenceRepository;
+    private readonly IFinanceNumberSequenceRepository _sequenceRepository;
 
-    public FinanceNumberSequenceManager(IRepository<FinanceNumberSequence, Guid> sequenceRepository)
+    public FinanceNumberSequenceManager(IFinanceNumberSequenceRepository sequenceRepository)
     {
         _sequenceRepository = sequenceRepository;
     }

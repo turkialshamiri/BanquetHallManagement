@@ -101,7 +101,7 @@ public class HallAccessCardEntryWorkflowIntegrationTests : BanquetHallManagement
 
     private async Task PublishHallEntryConfirmedEventAsync(Guid reservationId)
     {
-        var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
+        var reservationRepository = GetRequiredService<IReservationRepository>();
         var reservation = await reservationRepository.GetAsync(reservationId, includeDetails: true);
         var handler = GetRequiredService<RevenueRecognitionHandler>();
         var domainEvent = new HallEntryConfirmedDomainEvent(
@@ -123,7 +123,7 @@ public class HallAccessCardEntryWorkflowIntegrationTests : BanquetHallManagement
         var hallRepository = GetRequiredService<IRepository<Hall, Guid>>();
         var customerRepository = GetRequiredService<IRepository<Customer, Guid>>();
         var serviceRepository = GetRequiredService<IRepository<ServiceEntity, Guid>>();
-        var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
+        var reservationRepository = GetRequiredService<IReservationRepository>();
         var paymentRepository = GetRequiredService<IRepository<Payment, Guid>>();
         var hallAccessCardManager = GetRequiredService<HallAccessCardManager>();
         var clock = GetRequiredService<IClock>();
@@ -172,13 +172,7 @@ public class HallAccessCardEntryWorkflowIntegrationTests : BanquetHallManagement
 
         await reservationRepository.InsertAsync(reservation, autoSave: true);
 
-        await GetRequiredService<IRepository<ReservationService, Guid>>().InsertAsync(
-            new ReservationService(Guid.NewGuid())
-            {
-                ReservationId = reservation.Id,
-                ServiceId = service.Id,
-            },
-            autoSave: true);
+        await reservationRepository.SyncReservationServicesAsync(reservation.Id, [service.Id]);
 
         if (includeDeferredPayment)
         {

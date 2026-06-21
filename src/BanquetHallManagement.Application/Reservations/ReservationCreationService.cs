@@ -9,7 +9,7 @@ using BanquetHallManagement.Finance.Services;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Halls;
 using Microsoft.Extensions.Localization;
-using BanquetHallManagement.ReservationServices;
+using BanquetHallManagement.Reservations;
 using BanquetHallManagement.Services;
 using Volo.Abp;
 using Volo.Abp.DependencyInjection;
@@ -23,7 +23,6 @@ public class ReservationCreationService : ITransientDependency
     private readonly IReservationRepository _reservationRepository;
     private readonly IRepository<Hall, Guid> _hallRepository;
     private readonly IRepository<Service, Guid> _serviceRepository;
-    private readonly IRepository<ReservationService, Guid> _reservationServiceRepository;
     private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly HallAvailabilityManager _hallAvailabilityManager;
     private readonly ReservationSchedulingManager _reservationSchedulingManager;
@@ -36,7 +35,6 @@ public class ReservationCreationService : ITransientDependency
         IReservationRepository reservationRepository,
         IRepository<Hall, Guid> hallRepository,
         IRepository<Service, Guid> serviceRepository,
-        IRepository<ReservationService, Guid> reservationServiceRepository,
         IRepository<Customer, Guid> customerRepository,
         HallAvailabilityManager hallAvailabilityManager,
         ReservationSchedulingManager reservationSchedulingManager,
@@ -48,7 +46,6 @@ public class ReservationCreationService : ITransientDependency
         _reservationRepository = reservationRepository;
         _hallRepository = hallRepository;
         _serviceRepository = serviceRepository;
-        _reservationServiceRepository = reservationServiceRepository;
         _customerRepository = customerRepository;
         _hallAvailabilityManager = hallAvailabilityManager;
         _reservationSchedulingManager = reservationSchedulingManager;
@@ -103,7 +100,9 @@ public class ReservationCreationService : ITransientDependency
             input.EndTime,
             services.Select(service => service.Price));
 
-        await InsertReservationServicesAsync(reservation.Id, services);
+        await _reservationRepository.SyncReservationServicesAsync(
+            reservation.Id,
+            services.Select(service => service.Id).ToList());
 
         reservation.FinalizeCreation(totalPrice);
 
@@ -162,7 +161,9 @@ public class ReservationCreationService : ITransientDependency
             input.EndTime,
             services.Select(service => service.Price));
 
-        await SyncReservationServicesAsync(reservation.Id, services);
+        await _reservationRepository.SyncReservationServicesAsync(
+            reservation.Id,
+            services.Select(service => service.Id).ToList());
 
         reservation.ApplyUpdate(
             input.HallId,
@@ -187,54 +188,6 @@ public class ReservationCreationService : ITransientDependency
         }
 
         return await _serviceRepository.GetListAsync(service => serviceIds.Contains(service.Id));
-    }
-
-    private async Task InsertReservationServicesAsync(
-        Guid reservationId,
-        IReadOnlyList<Service> services)
-    {
-        foreach (var service in services)
-        {
-            await _reservationServiceRepository.InsertAsync(
-                new ReservationService(_guidGenerator.Create())
-                {
-                    ReservationId = reservationId,
-                    ServiceId = service.Id
-                },
-                autoSave: false);
-        }
-    }
-
-    private async Task SyncReservationServicesAsync(
-        Guid reservationId,
-        IReadOnlyList<Service> requestedServices)
-    {
-        var existingLinks = await _reservationServiceRepository.GetListAsync(
-            link => link.ReservationId == reservationId);
-
-        var requestedServiceIds = requestedServices
-            .Select(service => service.Id)
-            .ToHashSet();
-
-        foreach (var link in existingLinks.Where(link => !requestedServiceIds.Contains(link.ServiceId)))
-        {
-            await _reservationServiceRepository.DeleteAsync(link, autoSave: false);
-        }
-
-        var existingServiceIds = existingLinks
-            .Select(link => link.ServiceId)
-            .ToHashSet();
-
-        foreach (var service in requestedServices.Where(service => !existingServiceIds.Contains(service.Id)))
-        {
-            await _reservationServiceRepository.InsertAsync(
-                new ReservationService(_guidGenerator.Create())
-                {
-                    ReservationId = reservationId,
-                    ServiceId = service.Id
-                },
-                autoSave: false);
-        }
     }
 
     private void ValidateReservationTimes(CreateUpdateReservationDto input)

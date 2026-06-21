@@ -5,19 +5,26 @@ using System.Threading;
 using System.Threading.Tasks;
 using BanquetHallManagement.Enums;
 using BanquetHallManagement.Reservations;
+using BanquetHallManagement.ReservationServices;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.Domain.Repositories.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
+using Volo.Abp.Guids;
 
-namespace BanquetHallManagement.EntityFrameworkCore.Repositories;
+namespace BanquetHallManagement.EntityFrameworkCore.Reservations.Repositories;
 
 public class EfCoreReservationRepository :
     EfCoreRepository<BanquetHallManagementDbContext, Reservation, Guid>,
     IReservationRepository
 {
-    public EfCoreReservationRepository(IDbContextProvider<BanquetHallManagementDbContext> dbContextProvider)
+    private readonly IGuidGenerator _guidGenerator;
+
+    public EfCoreReservationRepository(
+        IDbContextProvider<BanquetHallManagementDbContext> dbContextProvider,
+        IGuidGenerator guidGenerator)
         : base(dbContextProvider)
     {
+        _guidGenerator = guidGenerator;
     }
 
     public override async Task<IQueryable<Reservation>> WithDetailsAsync()
@@ -98,6 +105,50 @@ IF @rc < 0
                 reservation.Status == ReservationStatus.Confirmed &&
                 reservation.PaidAmount <= 0m),
             cancellationToken);
+    }
+
+    public async Task<bool> IsServiceReferencedAsync(
+        Guid serviceId,
+        CancellationToken cancellationToken = default)
+    {
+        var dbContext = await GetDbContextAsync();
+
+        return await dbContext.Set<ReservationService>()
+            .AnyAsync(link => link.ServiceId == serviceId, cancellationToken);
+    }
+
+    public async Task SyncReservationServicesAsync(
+        Guid reservationId,
+        IReadOnlyCollection<Guid> serviceIds,
+        CancellationToken cancellationToken = default)
+    {
+        var dbContext = await GetDbContextAsync();
+        var linkSet = dbContext.Set<ReservationService>();
+        var requestedServiceIds = serviceIds?.ToHashSet() ?? [];
+
+        var existingLinks = await linkSet
+            .Where(link => link.ReservationId == reservationId)
+            .ToListAsync(cancellationToken);
+
+        foreach (var link in existingLinks.Where(link => !requestedServiceIds.Contains(link.ServiceId)))
+        {
+            linkSet.Remove(link);
+        }
+
+        var existingServiceIds = existingLinks
+            .Select(link => link.ServiceId)
+            .ToHashSet();
+
+        foreach (var serviceId in requestedServiceIds.Where(id => !existingServiceIds.Contains(id)))
+        {
+            await linkSet.AddAsync(
+                new ReservationService(_guidGenerator.Create())
+                {
+                    ReservationId = reservationId,
+                    ServiceId = serviceId,
+                },
+                cancellationToken);
+        }
     }
 
     internal static string BuildSchedulingLockResource(Guid hallId, DateTime eventDate)

@@ -1,10 +1,10 @@
-ï»¿using BanquetHallManagement.ReservationServices;
+using BanquetHallManagement.ReservationServices;
 using BanquetHallManagement.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 
-namespace BanquetHallManagement.Configurations.ReservationServiceConfigurations
+namespace BanquetHallManagement.EntityFrameworkCore.Reservations.Configurations
 {
     public class ReservationServiceConfiguration : IEntityTypeConfiguration<ReservationService>
     {
@@ -12,18 +12,18 @@ namespace BanquetHallManagement.Configurations.ReservationServiceConfigurations
         {
             builder.ToTable("ReservationServices", t =>
             {
-                t.HasComment("Ø¬Ø¯ÙˆÙ„ ÙˆØ³ÙŠØ· Ù„Ø±Ø¨Ø· Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª Ø¨Ø§Ù„Ø®Ø¯Ù…Ø§Øª Ø§Ù„Ø¥Ø¶Ø§ÙÙŠØ©.");
+                t.HasComment("ÌÏæá æÓíØ áÑÈØ ÇáÍÌæÒÇÊ ÈÇáÎÏãÇÊ ÇáÅÖÇİíÉ.");
             });
 
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.ReservationId)
                 .IsRequired()
-                .HasComment("Ù…Ø¹Ø±Ù Ø§Ù„Ø­Ø¬Ø² Ø§Ù„Ù…Ø±ØªØ¨Ø· Ø¨Ø§Ù„Ø®Ø¯Ù…Ø©.");
+                .HasComment("ãÚÑİ ÇáÍÌÒ ÇáãÑÊÈØ ÈÇáÎÏãÉ.");
 
             builder.Property(x => x.ServiceId)
                 .IsRequired()
-                .HasComment("Ù…Ø¹Ø±Ù Ø§Ù„Ø®Ø¯Ù…Ø© Ø§Ù„Ù…Ø¶Ø§ÙØ© Ø¥Ù„Ù‰ Ø§Ù„Ø­Ø¬Ø².");
+                .HasComment("ãÚÑİ ÇáÎÏãÉ ÇáãÖÇİÉ Åáì ÇáÍÌÒ.");
 
             builder.HasOne<Service>()
                 .WithMany()

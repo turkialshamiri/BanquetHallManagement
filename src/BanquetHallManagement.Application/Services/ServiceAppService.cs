@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BanquetHallManagement.Permissions;
-using BanquetHallManagement.ReservationServices;
+using BanquetHallManagement.Reservations;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -18,14 +18,14 @@ namespace BanquetHallManagement.Services
         IServiceAppService
     {
         private readonly IRepository<Service, Guid> _serviceRepository;
-        private readonly IRepository<ReservationService, Guid> _reservationServiceRepository;
+        private readonly IReservationRepository _reservationRepository;
 
         public ServiceAppService(
             IRepository<Service, Guid> serviceRepository,
-            IRepository<ReservationService, Guid> reservationServiceRepository)
+            IReservationRepository reservationRepository)
         {
             _serviceRepository = serviceRepository;
-            _reservationServiceRepository = reservationServiceRepository;
+            _reservationRepository = reservationRepository;
         }
 
         public async Task<ServiceDto> GetAsync(Guid id)
@@ -126,8 +126,7 @@ namespace BanquetHallManagement.Services
         {
             await _serviceRepository.GetAsync(id);
 
-            var isUsedInReservations = await _reservationServiceRepository.AnyAsync(
-                rs => rs.ServiceId == id);
+            var isUsedInReservations = await _reservationRepository.IsServiceReferencedAsync(id);
 
             if (isUsedInReservations)
             {

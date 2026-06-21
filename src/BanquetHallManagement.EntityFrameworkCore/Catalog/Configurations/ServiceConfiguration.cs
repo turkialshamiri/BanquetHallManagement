@@ -1,9 +1,9 @@
-ï»¿using BanquetHallManagement.Services;
+using BanquetHallManagement.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 
-namespace BanquetHallManagement.Configurations.ServiceConfigurations
+namespace BanquetHallManagement.EntityFrameworkCore.Catalog.Configurations
 {
     public class ServiceConfiguration : IEntityTypeConfiguration<Service>
     {
@@ -11,7 +11,7 @@ namespace BanquetHallManagement.Configurations.ServiceConfigurations
         {
             builder.ToTable("Services", t =>
             {
-                t.HasComment("Ø¬Ø¯ÙˆÙ„ ÙŠØ­ØªÙˆÙŠ Ø¹Ù„Ù‰ Ø§Ù„Ø®Ø¯Ù…Ø§Øª Ø§Ù„Ø¥Ø¶Ø§ÙÙŠØ© Ø§Ù„Ù…ØªØ§Ø­Ø© Ù„Ù„Ø­Ø¬Ø².");
+                t.HasComment("ÌÏæá íÍÊæí Úáì ÇáÎÏãÇÊ ÇáÅÖÇÝíÉ ÇáãÊÇÍÉ ááÍÌÒ.");
             });
 
             builder.HasKey(x => x.Id);
@@ -19,12 +19,12 @@ namespace BanquetHallManagement.Configurations.ServiceConfigurations
             builder.Property(x => x.Name)
                 .IsRequired()
                 .HasMaxLength(200)
-                .HasComment("Ø§Ø³Ù… Ø§Ù„Ø®Ø¯Ù…Ø© Ø§Ù„Ø¥Ø¶Ø§ÙÙŠØ© Ù…Ø«Ù„ Ø§Ù„Ø¶ÙŠØ§ÙØ© Ø£Ùˆ Ø§Ù„ØªØµÙˆÙŠØ± Ø£Ùˆ Ø§Ù„ØªØ²ÙŠÙŠÙ†.");
+                .HasComment("ÇÓã ÇáÎÏãÉ ÇáÅÖÇÝíÉ ãËá ÇáÖíÇÝÉ Ãæ ÇáÊÕæíÑ Ãæ ÇáÊÒííä.");
 
             builder.Property(x => x.Price)
                 .HasColumnType("decimal(18,2)")
                 .IsRequired()
-                .HasComment("Ø³Ø¹Ø± Ø§Ù„Ø®Ø¯Ù…Ø© Ø§Ù„Ø¥Ø¶Ø§ÙÙŠØ©.");
+                .HasComment("ÓÚÑ ÇáÎÏãÉ ÇáÅÖÇÝíÉ.");
 
             builder.HasIndex(x => x.Name);
 

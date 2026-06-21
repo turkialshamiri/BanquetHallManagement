@@ -1,4 +1,4 @@
-ï»¿using BanquetHallManagement.Customers;
+using BanquetHallManagement.Customers;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Enums;
 using BanquetHallManagement.Reservations;
@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 
-namespace BanquetHallManagement.Configurations.ReservationConfigurations
+namespace BanquetHallManagement.EntityFrameworkCore.Reservations.Configurations
 {
     public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
     {
@@ -14,34 +14,34 @@ namespace BanquetHallManagement.Configurations.ReservationConfigurations
         {
             builder.ToTable("Reservations", t =>
             {
-                t.HasComment("Ø¬Ø¯ÙˆÙ„ ÙŠØ­ØªÙˆÙŠ Ø¹Ù„Ù‰ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø­Ø¬ÙˆØ²Ø§Øª Ø§Ù„Ø®Ø§ØµØ© Ø¨Ø§Ù„Ù‚Ø§Ø¹Ø§Øª ÙˆØ§Ù„Ù…Ù†Ø§Ø³Ø¨Ø§Øª.");
+                t.HasComment("ÌÏæá íÍÊæí Úáì ÈíÇäÇÊ ÇáÍÌæÒÇÊ ÇáÎÇÕÉ ÈÇáŞÇÚÇÊ æÇáãäÇÓÈÇÊ.");
             });
 
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.HallId)
                 .IsRequired()
-                .HasComment("Ù…Ø¹Ø±Ù Ø§Ù„Ù‚Ø§Ø¹Ø© Ø§Ù„Ù…Ø±ØªØ¨Ø·Ø© Ø¨Ø§Ù„Ø­Ø¬Ø².");
+                .HasComment("ãÚÑİ ÇáŞÇÚÉ ÇáãÑÊÈØÉ ÈÇáÍÌÒ.");
 
             builder.Property(x => x.CustomerId)
                 .IsRequired()
-                .HasComment("Ù…Ø¹Ø±Ù Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø§Ù„Ø°ÙŠ Ù‚Ø§Ù… Ø¨Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø¬Ø².");
+                .HasComment("ãÚÑİ ÇáÚãíá ÇáĞí ŞÇã ÈÅäÔÇÁ ÇáÍÌÒ.");
 
             builder.Property(x => x.EventDate)
                 .IsRequired()
-                .HasComment("ØªØ§Ø±ÙŠØ® Ø¥Ù‚Ø§Ù…Ø© Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø© Ø£Ùˆ Ø§Ù„ÙØ¹Ø§Ù„ÙŠØ©.");
+                .HasComment("ÊÇÑíÎ ÅŞÇãÉ ÇáãäÇÓÈÉ Ãæ ÇáİÚÇáíÉ.");
 
             builder.Property(x => x.StartTime)
                 .IsRequired()
-                .HasComment("ÙˆÙ‚Øª Ø¨Ø¯Ø§ÙŠØ© Ø§Ù„Ø­Ø¬Ø².");
+                .HasComment("æŞÊ ÈÏÇíÉ ÇáÍÌÒ.");
 
             builder.Property(x => x.EndTime)
                 .IsRequired()
-                .HasComment("ÙˆÙ‚Øª Ø§Ù†ØªÙ‡Ø§Ø¡ Ø§Ù„Ø­Ø¬Ø².");
+                .HasComment("æŞÊ ÇäÊåÇÁ ÇáÍÌÒ.");
 
             builder.Property(x => x.GuestsCount)
                 .IsRequired()
-                .HasComment("Ø¹Ø¯Ø¯ Ø§Ù„Ø¶ÙŠÙˆÙ Ø§Ù„Ù…ØªÙˆÙ‚Ø¹ Ø­Ø¶ÙˆØ±Ù‡Ù… Ù„Ù„Ù…Ù†Ø§Ø³Ø¨Ø©.");
+                .HasComment("ÚÏÏ ÇáÖíæİ ÇáãÊæŞÚ ÍÖæÑåã ááãäÇÓÈÉ.");
 
             builder.Property(x => x.TotalPrice)
                 .HasConversion(
@@ -49,7 +49,7 @@ namespace BanquetHallManagement.Configurations.ReservationConfigurations
                     amount => new Money(amount))
                 .HasColumnType("decimal(18,2)")
                 .IsRequired()
-                .HasComment("Ø§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ© Ù„Ù„Ø­Ø¬Ø² Ù…ØªØ¶Ù…Ù†Ø© Ø§Ù„Ø®Ø¯Ù…Ø§Øª Ø§Ù„Ø¥Ø¶Ø§ÙÙŠØ©.");
+                .HasComment("ÇáÊßáİÉ ÇáÅÌãÇáíÉ ááÍÌÒ ãÊÖãäÉ ÇáÎÏãÇÊ ÇáÅÖÇİíÉ.");
 
             builder.Property(x => x.PaidAmount)
                 .HasConversion(
@@ -58,31 +58,31 @@ namespace BanquetHallManagement.Configurations.ReservationConfigurations
                 .HasColumnType("decimal(18,2)")
                 .IsRequired()
                 .HasDefaultValueSql("0.00")
-                .HasComment("Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø¨Ø§Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø© Ø¹Ù„Ù‰ Ø§Ù„Ø­Ø¬Ø².");
+                .HasComment("ÅÌãÇáí ÇáãÈÇáÛ ÇáãÏİæÚÉ Úáì ÇáÍÌÒ.");
 
             builder.Property(x => x.ReservationNumber)
                 .IsRequired()
                 .HasMaxLength(50)
-                .HasComment("Ø±Ù‚Ù… Ø§Ù„Ø­Ø¬Ø² Ø§Ù„ØªØ´ØºÙŠÙ„ÙŠ Ù…Ø«Ù„ RES-2026-00001.");
+                .HasComment("ÑŞã ÇáÍÌÒ ÇáÊÔÛíáí ãËá RES-2026-00001.");
 
             builder.Property(x => x.CancellationReason)
                 .HasMaxLength(500)
-                .HasComment("Ø³Ø¨Ø¨ Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø­Ø¬Ø² Ø¹Ù†Ø¯ ØªÙˆÙØ±Ù‡.");
+                .HasComment("ÓÈÈ ÅáÛÇÁ ÇáÍÌÒ ÚäÏ ÊæİÑå.");
 
             builder.Property(x => x.CancellationType)
                 .HasConversion<string>()
                 .HasMaxLength(50)
-                .HasComment("Ù†ÙˆØ¹ Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø­Ø¬Ø² Ù…Ø«Ù„ ØªØ¹Ø§Ø±Ø¶ Ø£Ùˆ Ø¥Ù„ØºØ§Ø¡ ÙŠØ¯ÙˆÙŠ Ø£Ùˆ Ø¥Ù„ØºØ§Ø¡ ØªÙ„Ù‚Ø§Ø¦ÙŠ.");
+                .HasComment("äæÚ ÅáÛÇÁ ÇáÍÌÒ ãËá ÊÚÇÑÖ Ãæ ÅáÛÇÁ íÏæí Ãæ ÅáÛÇÁ ÊáŞÇÆí.");
 
             builder.Property(x => x.Status)
                 .IsRequired()
                 .HasConversion<string>()
                 .HasMaxLength(50)
                 .HasDefaultValue(ReservationStatus.Pending)
-                .HasComment("Ø§Ù„Ø­Ø§Ù„Ø© Ø§Ù„Ø­Ø§Ù„ÙŠØ© Ù„Ù„Ø­Ø¬Ø² Ù…Ø«Ù„ Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø± Ø£Ùˆ Ù…Ø¤ÙƒØ¯ Ø£Ùˆ Ù…Ù„ØºÙŠ Ø£Ùˆ Ù…ÙƒØªÙ…Ù„.");
+                .HasComment("ÇáÍÇáÉ ÇáÍÇáíÉ ááÍÌÒ ãËá ŞíÏ ÇáÇäÊÙÇÑ Ãæ ãÄßÏ Ãæ ãáÛí Ãæ ãßÊãá.");
 
             builder.Property(x => x.CompletedAt)
-                .HasComment("ØªØ§Ø±ÙŠØ® ÙˆÙˆÙ‚Øª Ø¥ÙƒÙ…Ø§Ù„ Ø§Ù„Ø­Ø¬Ø² Ø¹Ù†Ø¯ ØªÙˆÙØ±Ù‡.");
+                .HasComment("ÊÇÑíÎ ææŞÊ ÅßãÇá ÇáÍÌÒ ÚäÏ ÊæİÑå.");
 
             builder.HasOne<Hall>()
                 .WithMany()

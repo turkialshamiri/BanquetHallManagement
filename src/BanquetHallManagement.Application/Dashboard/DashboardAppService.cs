@@ -2,20 +2,20 @@ using System;
 using System.Threading.Tasks;
 using BanquetHallManagement.Permissions;
 using Microsoft.AspNetCore.Authorization;
-using Volo.Abp.Domain.Repositories;
 using Microsoft.Extensions.Options;
+using Volo.Abp.Domain.Repositories;
 
 namespace BanquetHallManagement.Dashboard;
 
 [Authorize(BanquetHallManagementPermissions.Dashboard.Default)]
 public class DashboardAppService : BanquetHallManagementAppService, IDashboardAppService
 {
-    private readonly IRepository<DashboardMetricsSnapshot, Guid> _snapshotRepository;
+    private readonly IDashboardMetricsSnapshotRepository _snapshotRepository;
     private readonly DashboardMetricsSnapshotGenerator _snapshotGenerator;
     private readonly DashboardMetricsSnapshotOptions _snapshotOptions;
 
     public DashboardAppService(
-        IRepository<DashboardMetricsSnapshot, Guid> snapshotRepository,
+        IDashboardMetricsSnapshotRepository snapshotRepository,
         DashboardMetricsSnapshotGenerator snapshotGenerator,
         IOptions<DashboardMetricsSnapshotOptions> snapshotOptions)
     {

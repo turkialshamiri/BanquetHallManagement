@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Volo.Abp.Domain.Repositories.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 
-namespace BanquetHallManagement.EntityFrameworkCore.Repositories;
+namespace BanquetHallManagement.EntityFrameworkCore.Finance.Repositories;
 
 public class EfCoreHallAccessCardRepository :
     EfCoreRepository<BanquetHallManagementDbContext, HallAccessCard, Guid>,

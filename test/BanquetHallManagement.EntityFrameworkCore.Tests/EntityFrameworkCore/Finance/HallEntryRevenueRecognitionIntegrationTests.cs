@@ -32,7 +32,7 @@ public class HallEntryRevenueRecognitionIntegrationTests : BanquetHallManagement
             await SeedAccountsAsync();
 
             var reservationId = await CreateFullyPaidReservationWithDeferredPaymentAsync();
-            var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
+            var reservationRepository = GetRequiredService<IReservationRepository>();
             var clock = GetRequiredService<IClock>();
             var reservation = await reservationRepository.GetAsync(reservationId, includeDetails: true);
 
@@ -87,7 +87,7 @@ public class HallEntryRevenueRecognitionIntegrationTests : BanquetHallManagement
         var hallRepository = GetRequiredService<IRepository<Hall, Guid>>();
         var customerRepository = GetRequiredService<IRepository<Customer, Guid>>();
         var serviceRepository = GetRequiredService<IRepository<ServiceEntity, Guid>>();
-        var reservationRepository = GetRequiredService<IRepository<Reservation, Guid>>();
+        var reservationRepository = GetRequiredService<IReservationRepository>();
         var paymentRepository = GetRequiredService<IRepository<Payment, Guid>>();
         var clock = GetRequiredService<IClock>();
 
@@ -135,13 +135,7 @@ public class HallEntryRevenueRecognitionIntegrationTests : BanquetHallManagement
 
         await reservationRepository.InsertAsync(reservation, autoSave: true);
 
-        await GetRequiredService<IRepository<ReservationService, Guid>>().InsertAsync(
-            new ReservationService(Guid.NewGuid())
-            {
-                ReservationId = reservation.Id,
-                ServiceId = service.Id,
-            },
-            autoSave: true);
+        await reservationRepository.SyncReservationServicesAsync(reservation.Id, [service.Id]);
 
         await paymentRepository.InsertAsync(
             new Payment(

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 
-namespace BanquetHallManagement.Configurations.Finance;
+namespace BanquetHallManagement.EntityFrameworkCore.Finance.Configurations;
 
 public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
 {

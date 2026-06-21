@@ -1,15 +1,17 @@
-using BanquetHallManagement.EntityFrameworkCore.Repositories;
+using BanquetHallManagement.Dashboard;
+using BanquetHallManagement.EntityFrameworkCore.Dashboard.Repositories;
 using BanquetHallManagement.EntityFrameworkCore.Finance.Refunds;
+using BanquetHallManagement.EntityFrameworkCore.Finance.Repositories;
 using BanquetHallManagement.EntityFrameworkCore.Reports;
+using BanquetHallManagement.EntityFrameworkCore.Reservations.Repositories;
 using BanquetHallManagement.Finance.HallAccessCards;
 using BanquetHallManagement.Finance.Invoices;
 using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.Refunds;
+using BanquetHallManagement.Finance.Sequences;
 using BanquetHallManagement.Reports;
 using BanquetHallManagement.Reservations;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
@@ -44,7 +46,6 @@ public class BanquetHallManagementEntityFrameworkCoreModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
-
         BanquetHallManagementEfCoreEntityExtensionMappings.Configure();
     }
 
@@ -52,13 +53,13 @@ public class BanquetHallManagementEntityFrameworkCoreModule : AbpModule
     {
         context.Services.AddAbpDbContext<BanquetHallManagementDbContext>(options =>
         {
-                /* Remove "includeAllEntities: true" to create
-                 * default repositories only for aggregate roots */
-            options.AddDefaultRepositories(includeAllEntities: true);
+            options.AddDefaultRepositories();
             options.AddRepository<Reservation, EfCoreReservationRepository>();
             options.AddRepository<JournalEntry, EfCoreJournalEntryRepository>();
             options.AddRepository<Invoice, EfCoreInvoiceRepository>();
             options.AddRepository<HallAccessCard, EfCoreHallAccessCardRepository>();
+            options.AddRepository<FinanceNumberSequence, EfCoreFinanceNumberSequenceRepository>();
+            options.AddRepository<DashboardMetricsSnapshot, EfCoreDashboardMetricsSnapshotRepository>();
         });
 
         context.Services.AddTransient<IReportQueryExecutor, EfCoreReportQueryExecutor>();
@@ -71,11 +72,7 @@ public class BanquetHallManagementEntityFrameworkCoreModule : AbpModule
 
         Configure<AbpDbContextOptions>(options =>
         {
-            /* The main point to change your DBMS.
-             * See also BanquetHallManagementDbContextFactory for EF Core tooling. */
-
             options.UseSqlServer();
-
         });
 
         Configure<AbpUnitOfWorkDefaultOptions>(options =>

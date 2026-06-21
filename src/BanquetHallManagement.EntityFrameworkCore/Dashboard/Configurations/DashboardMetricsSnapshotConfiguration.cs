@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 
-namespace BanquetHallManagement.Configurations.Dashboard;
+namespace BanquetHallManagement.EntityFrameworkCore.Dashboard.Configurations;
 
 public class DashboardMetricsSnapshotConfiguration : IEntityTypeConfiguration<DashboardMetricsSnapshot>
 {

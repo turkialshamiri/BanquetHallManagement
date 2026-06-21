@@ -6,24 +6,20 @@ using System.Threading.Tasks;
 using BanquetHallManagement.Finance.JournalEntries;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Services;
-using Volo.Abp.Linq;
 
 namespace BanquetHallManagement.Finance.Accounts;
 
 public class AccountBalanceService : DomainService, IAccountBalanceService
 {
     private readonly IRepository<Account, Guid> _accountRepository;
-    private readonly IRepository<JournalEntry, Guid> _journalEntryRepository;
-    private readonly IRepository<JournalEntryLine, Guid> _journalEntryLineRepository;
+    private readonly IJournalEntryRepository _journalEntryRepository;
 
     public AccountBalanceService(
         IRepository<Account, Guid> accountRepository,
-        IRepository<JournalEntry, Guid> journalEntryRepository,
-        IRepository<JournalEntryLine, Guid> journalEntryLineRepository)
+        IJournalEntryRepository journalEntryRepository)
     {
         _accountRepository = accountRepository;
         _journalEntryRepository = journalEntryRepository;
-        _journalEntryLineRepository = journalEntryLineRepository;
     }
 
     public Task<decimal> GetDeferredRevenueBalanceAsync(CancellationToken cancellationToken = default)
@@ -51,39 +47,18 @@ public class AccountBalanceService : DomainService, IAccountBalanceService
         DateTime to,
         CancellationToken cancellationToken = default)
     {
-        var accountQuery = await _accountRepository.GetQueryableAsync();
-        var journalEntryQuery = await _journalEntryRepository.GetQueryableAsync();
-        var journalEntryLineQuery = await _journalEntryLineRepository.GetQueryableAsync();
-
-        var revenueAccountIds = await AsyncExecuter.ToListAsync(
-            accountQuery
-                .Where(account =>
-                    account.IsActive &&
-                    (account.Code == FinanceAccountCodes.HallRevenue ||
-                     account.Code == FinanceAccountCodes.ServiceRevenue ||
-                     account.Code == FinanceAccountCodes.NonRefundableDepositRevenue))
-                .Select(account => account.Id),
-            cancellationToken);
+        var revenueAccountIds = await GetRevenueAccountIdsAsync(cancellationToken);
 
         if (revenueAccountIds.Count == 0)
         {
             return 0m;
         }
 
-        var periodStart = from.Date;
-        var periodEnd = to.Date.AddDays(1).AddTicks(-1);
-
-        var amount = await AsyncExecuter.SumAsync(
-            from line in journalEntryLineQuery
-            join entry in journalEntryQuery on line.JournalEntryId equals entry.Id
-            where revenueAccountIds.Contains(line.AccountId) &&
-                  entry.IsPosted &&
-                  entry.PostedTime >= periodStart &&
-                  entry.PostedTime <= periodEnd
-            select line.Credit - line.Debit,
+        return await _journalEntryRepository.SumPostedRevenueForPeriodAsync(
+            from,
+            to,
+            revenueAccountIds,
             cancellationToken);
-
-        return amount < 0 ? 0m : amount;
     }
 
     public async Task<IReadOnlyList<MonthlyEarnedRevenueResult>> GetMonthlyEarnedRevenueAsync(
@@ -91,51 +66,17 @@ public class AccountBalanceService : DomainService, IAccountBalanceService
         DateTime to,
         CancellationToken cancellationToken = default)
     {
-        var accountQuery = await _accountRepository.GetQueryableAsync();
-        var journalEntryQuery = await _journalEntryRepository.GetQueryableAsync();
-        var journalEntryLineQuery = await _journalEntryLineRepository.GetQueryableAsync();
-
-        var revenueAccountIds = await AsyncExecuter.ToListAsync(
-            accountQuery
-                .Where(account =>
-                    account.IsActive &&
-                    (account.Code == FinanceAccountCodes.HallRevenue ||
-                     account.Code == FinanceAccountCodes.ServiceRevenue ||
-                     account.Code == FinanceAccountCodes.NonRefundableDepositRevenue))
-                .Select(account => account.Id),
-            cancellationToken);
+        var revenueAccountIds = await GetRevenueAccountIdsAsync(cancellationToken);
 
         if (revenueAccountIds.Count == 0)
         {
             return [];
         }
 
-        var periodStart = from.Date;
-        var periodEnd = to.Date.AddDays(1).AddTicks(-1);
-
-        return await AsyncExecuter.ToListAsync(
-            from line in journalEntryLineQuery
-            join entry in journalEntryQuery on line.JournalEntryId equals entry.Id
-            where revenueAccountIds.Contains(line.AccountId) &&
-                  entry.IsPosted &&
-                  entry.PostedTime >= periodStart &&
-                  entry.PostedTime <= periodEnd
-            group line by new
-            {
-                entry.PostedTime!.Value.Year,
-                entry.PostedTime!.Value.Month,
-            }
-            into grouped
-            orderby grouped.Key.Year, grouped.Key.Month
-            select new MonthlyEarnedRevenueResult
-            {
-                Year = grouped.Key.Year,
-                Month = grouped.Key.Month,
-                Revenue = grouped.Sum(item => item.Credit - item.Debit) < 0
-                    ? 0m
-                    : grouped.Sum(item => item.Credit - item.Debit),
-                RecognitionCount = grouped.Select(item => item.JournalEntryId).Distinct().Count(),
-            },
+        return await _journalEntryRepository.GetMonthlyPostedRevenueAsync(
+            from,
+            to,
+            revenueAccountIds,
             cancellationToken);
     }
 
@@ -144,8 +85,6 @@ public class AccountBalanceService : DomainService, IAccountBalanceService
         CancellationToken cancellationToken)
     {
         var accountQuery = await _accountRepository.GetQueryableAsync();
-        var journalEntryQuery = await _journalEntryRepository.GetQueryableAsync();
-        var journalEntryLineQuery = await _journalEntryLineRepository.GetQueryableAsync();
 
         var accountId = await AsyncExecuter.FirstOrDefaultAsync(
             accountQuery
@@ -158,13 +97,24 @@ public class AccountBalanceService : DomainService, IAccountBalanceService
             return 0m;
         }
 
-        var balance = await AsyncExecuter.SumAsync(
-            from line in journalEntryLineQuery
-            join entry in journalEntryQuery on line.JournalEntryId equals entry.Id
-            where line.AccountId == accountId.Value && entry.IsPosted
-            select line.Credit - line.Debit,
+        return await _journalEntryRepository.SumPostedBalanceForAccountAsync(
+            accountId.Value,
             cancellationToken);
+    }
 
-        return balance < 0 ? 0m : balance;
+    private async Task<IReadOnlyList<Guid>> GetRevenueAccountIdsAsync(
+        CancellationToken cancellationToken)
+    {
+        var accountQuery = await _accountRepository.GetQueryableAsync();
+
+        return await AsyncExecuter.ToListAsync(
+            accountQuery
+                .Where(account =>
+                    account.IsActive &&
+                    (account.Code == FinanceAccountCodes.HallRevenue ||
+                     account.Code == FinanceAccountCodes.ServiceRevenue ||
+                     account.Code == FinanceAccountCodes.NonRefundableDepositRevenue))
+                .Select(account => account.Id),
+            cancellationToken);
     }
 }

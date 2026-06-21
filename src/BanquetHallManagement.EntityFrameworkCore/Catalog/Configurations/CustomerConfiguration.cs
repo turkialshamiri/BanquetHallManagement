@@ -1,9 +1,9 @@
-ï»¿using BanquetHallManagement.Customers;
+using BanquetHallManagement.Customers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 
-namespace BanquetHallManagement.Configurations.CustomerConfigurations
+namespace BanquetHallManagement.EntityFrameworkCore.Catalog.Configurations
 {
     public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
     {
@@ -11,7 +11,7 @@ namespace BanquetHallManagement.Configurations.CustomerConfigurations
         {
             builder.ToTable("Customers", t =>
             {
-                t.HasComment("Ø¬Ø¯ÙˆÙ„ ÙŠØ­ØªÙˆÙŠ Ø¹Ù„Ù‰ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ø­Ø¬Ø².");
+                t.HasComment("ÌÏæá íÍÊæí Úáì ÈíÇäÇÊ ÇáÚãáÇÁ ÇáãÓÊÎÏãíä áäÙÇã ÇáÍÌÒ.");
             });
 
             builder.HasKey(x => x.Id);
@@ -19,16 +19,16 @@ namespace BanquetHallManagement.Configurations.CustomerConfigurations
             builder.Property(x => x.Name)
                 .IsRequired()
                 .HasMaxLength(200)
-                .HasComment("Ø§Ù„Ø§Ø³Ù… Ø§Ù„ÙƒØ§Ù…Ù„ Ù„Ù„Ø¹Ù…ÙŠÙ„.");
+                .HasComment("ÇáÇÓã ÇáßÇãá ááÚãíá.");
 
             builder.Property(x => x.Phone)
                 .IsRequired()
                 .HasMaxLength(20)
-                .HasComment("Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ù„Ù„ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ø§Ù„Ø¹Ù…ÙŠÙ„ ÙˆØ¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª.");
+                .HasComment("ÑÞã ÇáåÇÊÝ ÇáãÓÊÎÏã ááÊæÇÕá ãÚ ÇáÚãíá æÅÑÓÇá ÇáÅÔÚÇÑÇÊ.");
 
             builder.Property(x => x.Company)
                 .HasMaxLength(300)
-                .HasComment("Ø§Ø³Ù… Ø§Ù„Ø´Ø±ÙƒØ© Ø£Ùˆ Ø§Ù„Ø¬Ù‡Ø© Ø§Ù„ØªØ§Ø¨Ø¹Ø© Ù„Ù„Ø¹Ù…ÙŠÙ„ Ø¥Ù† ÙˆØ¬Ø¯Øª.");
+                .HasComment("ÇÓã ÇáÔÑßÉ Ãæ ÇáÌåÉ ÇáÊÇÈÚÉ ááÚãíá Åä æÌÏÊ.");
 
             builder.HasIndex(x => x.Phone)
                 .IsUnique();

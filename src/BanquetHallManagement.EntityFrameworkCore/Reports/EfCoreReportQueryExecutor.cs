@@ -27,7 +27,6 @@ public class EfCoreReportQueryExecutor :
     private readonly IRepository<Hall, Guid> _hallRepository;
     private readonly IRepository<Customer, Guid> _customerRepository;
     private readonly IRepository<JournalEntry, Guid> _journalEntryRepository;
-    private readonly IRepository<JournalEntryLine, Guid> _journalEntryLineRepository;
     private readonly IRepository<Account, Guid> _accountRepository;
 
     public EfCoreReportQueryExecutor(
@@ -36,7 +35,6 @@ public class EfCoreReportQueryExecutor :
         IRepository<Hall, Guid> hallRepository,
         IRepository<Customer, Guid> customerRepository,
         IRepository<JournalEntry, Guid> journalEntryRepository,
-        IRepository<JournalEntryLine, Guid> journalEntryLineRepository,
         IRepository<Account, Guid> accountRepository)
     {
         _asyncExecuter = asyncExecuter;
@@ -44,7 +42,6 @@ public class EfCoreReportQueryExecutor :
         _hallRepository = hallRepository;
         _customerRepository = customerRepository;
         _journalEntryRepository = journalEntryRepository;
-        _journalEntryLineRepository = journalEntryLineRepository;
         _accountRepository = accountRepository;
     }
 
@@ -211,7 +208,6 @@ public class EfCoreReportQueryExecutor :
 
         var accountQuery = await _accountRepository.GetQueryableAsync();
         var journalEntryQuery = await _journalEntryRepository.GetQueryableAsync();
-        var journalEntryLineQuery = await _journalEntryLineRepository.GetQueryableAsync();
 
         var revenueAccountIds = await _asyncExecuter.ToListAsync(
             accountQuery
@@ -227,13 +223,13 @@ public class EfCoreReportQueryExecutor :
         }
 
         var rows = await _asyncExecuter.ToListAsync(
-            from line in journalEntryLineQuery
-            join entry in journalEntryQuery on line.JournalEntryId equals entry.Id
-            where revenueAccountIds.Contains(line.AccountId) &&
-                  entry.IsPosted &&
+            from entry in journalEntryQuery
+            where entry.IsPosted &&
                   entry.SourceType == JournalEntrySourceType.RevenueRecognition &&
                   entry.ReservationId.HasValue &&
                   reservationIds.Contains(entry.ReservationId.Value)
+            from line in entry.Lines
+            where revenueAccountIds.Contains(line.AccountId)
             group line by entry.ReservationId!.Value
             into grouped
             select new

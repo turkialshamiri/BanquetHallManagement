@@ -1,22 +1,21 @@
-using BanquetHallManagement.Configurations.CustomerConfigurations;
-using BanquetHallManagement.Configurations.HallConfigurations;
-using BanquetHallManagement.Configurations.ReservationConfigurations;
-using BanquetHallManagement.Configurations.ReservationServiceConfigurations;
-using BanquetHallManagement.Configurations.ServiceConfigurations;
-using BanquetHallManagement.Configurations.Finance;
 using BanquetHallManagement.Customers;
+using BanquetHallManagement.Dashboard;
 using BanquetHallManagement.Entities.BanquetHallManagement.Entities;
 using BanquetHallManagement.Finance.Accounts;
-using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.HallAccessCards;
 using BanquetHallManagement.Finance.Invoices;
+using BanquetHallManagement.Finance.JournalEntries;
 using BanquetHallManagement.Finance.Payments;
 using BanquetHallManagement.Finance.Sequences;
-using BanquetHallManagement.Dashboard;
 using BanquetHallManagement.Reservations;
-using BanquetHallManagement.ReservationServices;
 using BanquetHallManagement.Services;
-using BanquetHallManagement.Configurations.Dashboard;
+using BanquetHallManagement.EntityFrameworkCore.Catalog;
+using BanquetHallManagement.EntityFrameworkCore.Catalog.Configurations;
+using BanquetHallManagement.EntityFrameworkCore.Dashboard.Configurations;
+using BanquetHallManagement.EntityFrameworkCore.Finance;
+using BanquetHallManagement.EntityFrameworkCore.Finance.Configurations;
+using BanquetHallManagement.EntityFrameworkCore.Reservations;
+using BanquetHallManagement.EntityFrameworkCore.Reservations.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
@@ -24,7 +23,6 @@ using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EntityFrameworkCore;
-using Volo.Abp.EntityFrameworkCore.Modeling;
 using Volo.Abp.FeatureManagement.EntityFrameworkCore;
 using Volo.Abp.Identity;
 using Volo.Abp.Identity.EntityFrameworkCore;
@@ -38,40 +36,32 @@ namespace BanquetHallManagement.EntityFrameworkCore;
 
 [ReplaceDbContext(typeof(IIdentityDbContext))]
 [ReplaceDbContext(typeof(ITenantManagementDbContext))]
+[ReplaceDbContext(typeof(ICatalogDbContext))]
+[ReplaceDbContext(typeof(IReservationsDbContext))]
+[ReplaceDbContext(typeof(IFinanceDbContext))]
 [ConnectionStringName("Default")]
 public class BanquetHallManagementDbContext :
     AbpDbContext<BanquetHallManagementDbContext>,
+    ICatalogDbContext,
+    IReservationsDbContext,
+    IFinanceDbContext,
     ITenantManagementDbContext,
     IIdentityDbContext
 {
-    /* Add DbSet properties for your Aggregate Roots / Entities here. */
     public DbSet<Hall> Halls { get; set; }
     public DbSet<Service> Services { get; set; }
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Reservation> Reservations { get; set; }
-    public DbSet<ReservationService> ReservationServices { get; set; }
     public DbSet<Account> FinanceAccounts { get; set; }
     public DbSet<JournalEntry> JournalEntries { get; set; }
-    public DbSet<JournalEntryLine> JournalEntryLines { get; set; }
     public DbSet<FinanceNumberSequence> FinanceNumberSequences { get; set; }
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<HallAccessCard> HallAccessCards { get; set; }
     public DbSet<DashboardMetricsSnapshot> DashboardMetricsSnapshots { get; set; }
+
     #region Entities from the modules
 
-    /* Notice: We only implemented IIdentityProDbContext and ISaasDbContext
-     * and replaced them for this DbContext. This allows you to perform JOIN
-     * queries for the entities of these modules over the repositories easily. You
-     * typically don't need that for other modules. But, if you need, you can
-     * implement the DbContext interface of the needed module and use ReplaceDbContext
-     * attribute just like IIdentityProDbContext and ISaasDbContext.
-     *
-     * More info: Replacing a DbContext of a module ensures that the related module
-     * uses this DbContext on runtime. Otherwise, it will use its own DbContext class.
-     */
-
-    // Identity
     public DbSet<IdentityUser> Users { get; set; }
     public DbSet<IdentityRole> Roles { get; set; }
     public DbSet<IdentityClaimType> ClaimTypes { get; set; }
@@ -81,7 +71,6 @@ public class BanquetHallManagementDbContext :
     public DbSet<IdentityUserDelegation> UserDelegations { get; set; }
     public DbSet<IdentitySession> Sessions { get; set; }
 
-    // Tenant Management
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<TenantConnectionString> TenantConnectionStrings { get; set; }
 
@@ -90,14 +79,11 @@ public class BanquetHallManagementDbContext :
     public BanquetHallManagementDbContext(DbContextOptions<BanquetHallManagementDbContext> options)
         : base(options)
     {
-
     }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-
-        /* Include modules to your migration db context */
 
         builder.ConfigurePermissionManagement();
         builder.ConfigureSettingManagement();
@@ -109,28 +95,9 @@ public class BanquetHallManagementDbContext :
         builder.ConfigureTenantManagement();
         builder.ConfigureBlobStoring();
 
-        /* Configure your own tables/entities inside here */
-
-        //builder.Entity<YourEntity>(b =>
-        //{
-        //    b.ToTable(BanquetHallManagementConsts.DbTablePrefix + "YourEntities", BanquetHallManagementConsts.DbSchema);
-        //    b.ConfigureByConvention(); //auto configure for the base class props
-        //    //...
-        //});
-
-
-        builder.ApplyConfiguration(new HallConfiguration());
-        builder.ApplyConfiguration(new ReservationConfiguration());
-        builder.ApplyConfiguration(new ReservationServiceConfiguration());
-        builder.ApplyConfiguration(new ServiceConfiguration());
-        builder.ApplyConfiguration(new CustomerConfiguration());
-        builder.ApplyConfiguration(new AccountConfiguration());
-        builder.ApplyConfiguration(new JournalEntryConfiguration());
-        builder.ApplyConfiguration(new JournalEntryLineConfiguration());
-        builder.ApplyConfiguration(new FinanceNumberSequenceConfiguration());
-        builder.ApplyConfiguration(new PaymentConfiguration());
-        builder.ApplyConfiguration(new InvoiceConfiguration());
-        builder.ApplyConfiguration(new HallAccessCardConfiguration());
-        builder.ApplyConfiguration(new DashboardMetricsSnapshotConfiguration());
+        builder.ConfigureCatalog();
+        builder.ConfigureReservations();
+        builder.ConfigureFinance();
+        builder.ConfigureDashboard();
     }
 }

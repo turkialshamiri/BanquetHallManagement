@@ -35,4 +35,13 @@ public interface IReservationRepository : IRepository<Reservation, Guid>
 
     Task<List<Reservation>> GetConfirmedWithoutPaymentsAsync(
         CancellationToken cancellationToken = default);
+
+    Task<bool> IsServiceReferencedAsync(
+        Guid serviceId,
+        CancellationToken cancellationToken = default);
+
+    Task SyncReservationServicesAsync(
+        Guid reservationId,
+        IReadOnlyCollection<Guid> serviceIds,
+        CancellationToken cancellationToken = default);
 }
